@@ -71,14 +71,35 @@
 		<dependency>
 			<groupId>com.github.javaparser</groupId>
 			<artifactId>javaparser-symbol-solver-core</artifactId>
-			<version>LATEST</version>
+			<version>3.26.3</version>
 		</dependency>
 
 		<!-- Lombok: Library that helps to reduce boilerplate code by generating getters, setters, and other methods -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<optional>true</optional>
+			<version>1.18.36</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<!-- SLF4J: Simple Logging Facade for Java -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>2.0.17</version>
+		</dependency>
+
+		<!-- SLF4J Simple: Simple implementation of the SLF4J API -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-simple</artifactId>
+			<version>2.0.17</version>
+		</dependency>
+
+		<!-- Springfox: Library for generating API documentation for Spring Boot applications -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
 	</dependencies>
 
@@ -92,6 +113,7 @@
 						<path>
 							<groupId>org.projectlombok</groupId>
 							<artifactId>lombok</artifactId>
+							<version>1.18.36</version>
 						</path>
 					</annotationProcessorPaths>
 				</configuration>
