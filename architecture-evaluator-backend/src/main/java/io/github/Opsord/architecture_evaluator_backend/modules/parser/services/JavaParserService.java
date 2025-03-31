@@ -6,13 +6,12 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.*;
 import com.github.javaparser.ast.comments.Comment;
-import com.github.javaparser.ast.expr.AnnotationExpr;
-import com.github.javaparser.ast.expr.MemberValuePair;
 import com.github.javaparser.ast.stmt.*;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.Type;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.dto.*;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.dto.types.*;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.dto.parts.*;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.services.parts.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -27,6 +26,11 @@ import java.util.stream.Collectors;
 public class JavaParserService {
 
     private static final Logger logger = LoggerFactory.getLogger(JavaParserService.class);
+    private final Annotation annotationService;
+
+    public JavaParserService(Annotation annotationService) {
+        this.annotationService = annotationService;
+    }
 
     public CompilationUnitDTO parseJavaFile(File file) throws FileNotFoundException {
         logger.info("Starting to parse file: {}", file.getAbsolutePath());
@@ -51,6 +55,10 @@ public class JavaParserService {
         dto.setGenericUsages(getGenericUsages(compilationUnit));
 
         return dto;
+    }
+
+    private List<AnnotationDTO> getAnnotations(CompilationUnit compilationUnit) {
+        return annotationService.getAnnotations(compilationUnit);
     }
 
     private List<String> getClassNames(CompilationUnit compilationUnit) {
@@ -158,23 +166,6 @@ public class JavaParserService {
                 .flatMap(c -> c.getImplementedTypes().stream())
                 .map(ClassOrInterfaceType::getNameAsString)
                 .collect(Collectors.toList());
-    }
-
-    private List<AnnotationDTO> getAnnotations(CompilationUnit compilationUnit) {
-        List<AnnotationDTO> annotations = new ArrayList<>();
-        for (AnnotationExpr annotation : compilationUnit.findAll(AnnotationExpr.class)) {
-            AnnotationDTO annotationDTO = new AnnotationDTO();
-            annotationDTO.setName(annotation.getNameAsString());
-            annotationDTO.setAttributes(annotation.getChildNodes().stream()
-                    .filter(node -> node instanceof MemberValuePair)
-                    .map(node -> (MemberValuePair) node)
-                    .collect(Collectors.toMap(
-                            MemberValuePair::getNameAsString,
-                            memberValuePair -> memberValuePair.getValue().toString()
-                    )));
-            annotations.add(annotationDTO);
-        }
-        return annotations;
     }
 
     private List<GenericUsageDTO> getGenericUsages(CompilationUnit compilationUnit) {

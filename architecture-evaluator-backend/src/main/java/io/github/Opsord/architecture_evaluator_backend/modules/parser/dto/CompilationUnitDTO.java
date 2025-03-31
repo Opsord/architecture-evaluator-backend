@@ -1,7 +1,7 @@
 // CompilationUnitDTO.java
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.dto;
 
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.dto.types.*;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.dto.parts.*;
 import lombok.Getter;
 import lombok.Setter;
 
