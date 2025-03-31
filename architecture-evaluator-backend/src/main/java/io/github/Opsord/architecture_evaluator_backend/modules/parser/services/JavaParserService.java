@@ -3,12 +3,6 @@ package io.github.Opsord.architecture_evaluator_backend.modules.parser.services;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.Node;
-import com.github.javaparser.ast.body.*;
-import com.github.javaparser.ast.comments.Comment;
-import com.github.javaparser.ast.stmt.*;
-import com.github.javaparser.ast.type.ClassOrInterfaceType;
-import com.github.javaparser.ast.type.Type;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.dto.*;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.dto.parts.*;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.services.parts.*;
@@ -18,9 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class JavaParserService {
@@ -31,6 +23,11 @@ public class JavaParserService {
     private final InterfaceService interfaceService;
     private final ControlStatementService controlStatementService;
     private final GenericUsageService genericUsageService;
+    private final ExceptionHandlingService exceptionHandlingService;
+    private final VariableService variableService;
+    private final MethodService methodService;
+    private final CommentService commentService;
+    private final PackageService packageService;
 
     public JavaParserService(AnnotationService annotationService) {
         this.annotationService = annotationService;
@@ -38,6 +35,11 @@ public class JavaParserService {
         this.interfaceService = new InterfaceService();
         this.controlStatementService = new ControlStatementService();
         this.genericUsageService = new GenericUsageService();
+        this.exceptionHandlingService = new ExceptionHandlingService();
+        this.variableService = new VariableService();
+        this.methodService = new MethodService();
+        this.commentService = new CommentService();
+        this.packageService = new PackageService();
     }
 
     public CompilationUnitDTO parseJavaFile(File file) throws FileNotFoundException {
@@ -93,61 +95,23 @@ public class JavaParserService {
         return genericUsageService.getGenericUsages(compilationUnit);
     }
 
-
-
-    private List<MethodDTO> getMethods(CompilationUnit compilationUnit) {
-        List<MethodDTO> methods = new ArrayList<>();
-        for (MethodDeclaration method : compilationUnit.findAll(MethodDeclaration.class)) {
-            MethodDTO methodDTO = new MethodDTO();
-            methodDTO.setName(method.getNameAsString());
-            methodDTO.setAccessModifier(method.getAccessSpecifier().asString());
-            methodDTO.setReturnType(method.getType().asString());
-            methodDTO.setParameters(method.getParameters().stream()
-                    .map(p -> {
-                        ParameterDTO parameterDTO = new ParameterDTO();
-                        parameterDTO.setName(p.getNameAsString());
-                        parameterDTO.setType(p.getType().asString());
-                        return parameterDTO;
-                    }).collect(Collectors.toList()));
-            methods.add(methodDTO);
-        }
-        return methods;
+    private List<ExceptionHandlingDTO> getExceptionHandling(CompilationUnit compilationUnit) {
+        return exceptionHandlingService.getExceptionHandling(compilationUnit);
     }
 
     private List<VariableDTO> getVariables(CompilationUnit compilationUnit) {
-        List<VariableDTO> variables = new ArrayList<>();
-        for (VariableDeclarator variable : compilationUnit.findAll(VariableDeclarator.class)) {
-            VariableDTO variableDTO = new VariableDTO();
-            variableDTO.setName(variable.getNameAsString());
-            variableDTO.setType(variable.getType().asString());
-            variables.add(variableDTO);
-        }
-        return variables;
+        return variableService.getVariables(compilationUnit);
     }
 
-    private List<String> getImportedPackages(CompilationUnit compilationUnit) {
-        return compilationUnit.getImports().stream()
-                .map(importDeclaration -> importDeclaration.getName().asString())
-                .collect(Collectors.toList());
+    private List<MethodDTO> getMethods(CompilationUnit compilationUnit) {
+        return methodService.getMethods(compilationUnit);
     }
 
     private List<String> getComments(CompilationUnit compilationUnit) {
-        return compilationUnit.getAllContainedComments().stream()
-                .map(Comment::getContent)
-                .collect(Collectors.toList());
+        return commentService.getComments(compilationUnit);
     }
 
-    private List<ExceptionHandlingDTO> getExceptionHandling(CompilationUnit compilationUnit) {
-        List<ExceptionHandlingDTO> exceptionHandling = new ArrayList<>();
-        for (TryStmt tryStmt : compilationUnit.findAll(TryStmt.class)) {
-            ExceptionHandlingDTO exceptionHandlingDTO = new ExceptionHandlingDTO();
-            exceptionHandlingDTO.setTryBlock(tryStmt.getTryBlock().toString());
-            exceptionHandlingDTO.setCatchBlocks(tryStmt.getCatchClauses().stream()
-                    .map(Node::toString)
-                    .collect(Collectors.toList()));
-            exceptionHandlingDTO.setFinallyBlock(tryStmt.getFinallyBlock().map(BlockStmt::toString).orElse(null));
-            exceptionHandling.add(exceptionHandlingDTO);
-        }
-        return exceptionHandling;
+    private List<String> getImportedPackages(CompilationUnit compilationUnit) {
+        return packageService.getImportedPackages(compilationUnit);
     }
 }
