@@ -11,7 +11,8 @@ import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.Type;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.dto.*;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.dto.parts.*;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.services.parts.Annotation;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.services.parts.AnnotationService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.services.parts.ControlStatementService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -26,10 +27,12 @@ import java.util.stream.Collectors;
 public class JavaParserService {
 
     private static final Logger logger = LoggerFactory.getLogger(JavaParserService.class);
-    private final Annotation annotationService;
+    private final AnnotationService annotationService;
+    private final ControlStatementService controlStatementService;
 
-    public JavaParserService(Annotation annotationService) {
+    public JavaParserService(AnnotationService annotationService) {
         this.annotationService = annotationService;
+        this.controlStatementService = new ControlStatementService();
     }
 
     public CompilationUnitDTO parseJavaFile(File file) throws FileNotFoundException {
@@ -59,6 +62,10 @@ public class JavaParserService {
 
     private List<AnnotationDTO> getAnnotations(CompilationUnit compilationUnit) {
         return annotationService.getAnnotations(compilationUnit);
+    }
+
+    private List<ControlStatementDTO> getControlStatements(CompilationUnit compilationUnit) {
+        return controlStatementService.getControlStatements(compilationUnit);
     }
 
     private List<String> getClassNames(CompilationUnit compilationUnit) {
@@ -115,29 +122,6 @@ public class JavaParserService {
         return compilationUnit.getAllContainedComments().stream()
                 .map(Comment::getContent)
                 .collect(Collectors.toList());
-    }
-
-    private List<ControlStatementDTO> getControlStatements(CompilationUnit compilationUnit) {
-        List<ControlStatementDTO> controlStatements = new ArrayList<>();
-        for (IfStmt ifStmt : compilationUnit.findAll(IfStmt.class)) {
-            ControlStatementDTO controlStatementDTO = new ControlStatementDTO();
-            controlStatementDTO.setType("if");
-            controlStatementDTO.setStructure(ifStmt.toString());
-            controlStatements.add(controlStatementDTO);
-        }
-        for (ForStmt forStmt : compilationUnit.findAll(ForStmt.class)) {
-            ControlStatementDTO controlStatementDTO = new ControlStatementDTO();
-            controlStatementDTO.setType("for");
-            controlStatementDTO.setStructure(forStmt.toString());
-            controlStatements.add(controlStatementDTO);
-        }
-        for (WhileStmt whileStmt : compilationUnit.findAll(WhileStmt.class)) {
-            ControlStatementDTO controlStatementDTO = new ControlStatementDTO();
-            controlStatementDTO.setType("while");
-            controlStatementDTO.setStructure(whileStmt.toString());
-            controlStatements.add(controlStatementDTO);
-        }
-        return controlStatements;
     }
 
     private List<ExceptionHandlingDTO> getExceptionHandling(CompilationUnit compilationUnit) {

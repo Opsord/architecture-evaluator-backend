@@ -13,9 +13,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public class Annotation {
+public class AnnotationService {
 
-    private static final Logger logger = LoggerFactory.getLogger(Annotation.class);
+    private static final Logger logger = LoggerFactory.getLogger(AnnotationService.class);
 
     public List<AnnotationDTO> getAnnotations(CompilationUnit compilationUnit) {
         logger.info("Extracting annotations from compilation unit");
