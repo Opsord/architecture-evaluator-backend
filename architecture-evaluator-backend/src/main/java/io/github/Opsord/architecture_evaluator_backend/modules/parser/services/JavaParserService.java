@@ -11,8 +11,7 @@ import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.Type;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.dto.*;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.dto.parts.*;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.services.parts.AnnotationService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.services.parts.ControlStatementService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.services.parts.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -28,11 +27,17 @@ public class JavaParserService {
 
     private static final Logger logger = LoggerFactory.getLogger(JavaParserService.class);
     private final AnnotationService annotationService;
+    private final ClassService classService;
+    private final InterfaceService interfaceService;
     private final ControlStatementService controlStatementService;
+    private final GenericUsageService genericUsageService;
 
     public JavaParserService(AnnotationService annotationService) {
         this.annotationService = annotationService;
+        this.classService = new ClassService();
+        this.interfaceService = new InterfaceService();
         this.controlStatementService = new ControlStatementService();
+        this.genericUsageService = new GenericUsageService();
     }
 
     public CompilationUnitDTO parseJavaFile(File file) throws FileNotFoundException {
@@ -69,18 +74,26 @@ public class JavaParserService {
     }
 
     private List<String> getClassNames(CompilationUnit compilationUnit) {
-        return compilationUnit.findAll(ClassOrInterfaceDeclaration.class).stream()
-                .filter(c -> !c.isInterface())
-                .map(ClassOrInterfaceDeclaration::getNameAsString)
-                .collect(Collectors.toList());
+        return classService.getClassNames(compilationUnit);
+    }
+
+    private List<String> getSuperClasses(CompilationUnit compilationUnit) {
+        return classService.getSuperClasses(compilationUnit);
     }
 
     private List<String> getInterfaceNames(CompilationUnit compilationUnit) {
-        return compilationUnit.findAll(ClassOrInterfaceDeclaration.class).stream()
-                .filter(ClassOrInterfaceDeclaration::isInterface)
-                .map(ClassOrInterfaceDeclaration::getNameAsString)
-                .collect(Collectors.toList());
+        return interfaceService.getInterfaceNames(compilationUnit);
     }
+
+    private List<String> getImplementedInterfaces(CompilationUnit compilationUnit) {
+        return interfaceService.getImplementedInterfaces(compilationUnit);
+    }
+
+    private List<GenericUsageDTO> getGenericUsages(CompilationUnit compilationUnit) {
+        return genericUsageService.getGenericUsages(compilationUnit);
+    }
+
+
 
     private List<MethodDTO> getMethods(CompilationUnit compilationUnit) {
         List<MethodDTO> methods = new ArrayList<>();
@@ -136,34 +149,5 @@ public class JavaParserService {
             exceptionHandling.add(exceptionHandlingDTO);
         }
         return exceptionHandling;
-    }
-
-    private List<String> getSuperClasses(CompilationUnit compilationUnit) {
-        return compilationUnit.findAll(ClassOrInterfaceDeclaration.class).stream()
-                .filter(c -> !c.getExtendedTypes().isEmpty())
-                .map(c -> c.getExtendedTypes().get(0).getNameAsString())
-                .collect(Collectors.toList());
-    }
-
-    private List<String> getImplementedInterfaces(CompilationUnit compilationUnit) {
-        return compilationUnit.findAll(ClassOrInterfaceDeclaration.class).stream()
-                .flatMap(c -> c.getImplementedTypes().stream())
-                .map(ClassOrInterfaceType::getNameAsString)
-                .collect(Collectors.toList());
-    }
-
-    private List<GenericUsageDTO> getGenericUsages(CompilationUnit compilationUnit) {
-        List<GenericUsageDTO> genericUsages = new ArrayList<>();
-        for (ClassOrInterfaceType genericType : compilationUnit.findAll(ClassOrInterfaceType.class)) {
-            if (genericType.getTypeArguments().isPresent()) {
-                GenericUsageDTO genericUsageDTO = new GenericUsageDTO();
-                genericUsageDTO.setType(genericType.getNameAsString());
-                genericUsageDTO.setGenericTypes(genericType.getTypeArguments().get().stream()
-                        .map(Type::asString)
-                        .collect(Collectors.toList()));
-                genericUsages.add(genericUsageDTO);
-            }
-        }
-        return genericUsages;
     }
 }
