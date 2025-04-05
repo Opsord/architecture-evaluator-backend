@@ -1,5 +1,5 @@
 // AnnotationDTO.java
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.dto.parts;
+package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -1,8 +1,8 @@
 // JavaParserController.java
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.controllers;
+package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.controllers;
 
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.dto.CompilationUnitDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.services.JavaParserService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.CompilationUnitDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.CompilationUnitService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,20 +15,20 @@ import java.io.FileNotFoundException;
 
 @RestController
 @RequestMapping("/api/parser")
-public class JavaParserController {
+public class CompilationUnitController {
 
-    private static final Logger logger = LoggerFactory.getLogger(JavaParserController.class);
-    private final JavaParserService javaParserService;
+    private static final Logger logger = LoggerFactory.getLogger(CompilationUnitController.class);
+    private final CompilationUnitService compilationUnitService;
 
-    public JavaParserController(JavaParserService javaParserService) {
-        this.javaParserService = javaParserService;
+    public CompilationUnitController(CompilationUnitService compilationUnitService) {
+        this.compilationUnitService = compilationUnitService;
     }
 
     @GetMapping("/parse")
     public CompilationUnitDTO parseJavaFile(@RequestParam String filePath) throws FileNotFoundException {
         logger.info("Received request to parse file: {}", filePath);
         File file = new File(filePath);
-        CompilationUnitDTO compilationUnitDTO = javaParserService.parseJavaFile(file);
+        CompilationUnitDTO compilationUnitDTO = compilationUnitService.parseJavaFile(file);
         logger.info("Returning parsed AST for file: {}", filePath);
         return compilationUnitDTO;
     }

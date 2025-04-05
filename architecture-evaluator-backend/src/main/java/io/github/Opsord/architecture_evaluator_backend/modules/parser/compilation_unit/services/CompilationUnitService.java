@@ -1,11 +1,12 @@
 // JavaParserService.java
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.services;
+package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.dto.*;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.dto.parts.*;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.services.parts.*;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.CompilationUnitDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.*;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -15,9 +16,9 @@ import java.io.FileNotFoundException;
 import java.util.List;
 
 @Service
-public class JavaParserService {
+public class CompilationUnitService {
 
-    private static final Logger logger = LoggerFactory.getLogger(JavaParserService.class);
+    private static final Logger logger = LoggerFactory.getLogger(CompilationUnitService.class);
     private final AnnotationService annotationService;
     private final ClassService classService;
     private final InterfaceService interfaceService;
@@ -29,7 +30,7 @@ public class JavaParserService {
     private final CommentService commentService;
     private final PackageService packageService;
 
-    public JavaParserService(AnnotationService annotationService) {
+    public CompilationUnitService(AnnotationService annotationService) {
         this.annotationService = annotationService;
         this.classService = new ClassService();
         this.interfaceService = new InterfaceService();

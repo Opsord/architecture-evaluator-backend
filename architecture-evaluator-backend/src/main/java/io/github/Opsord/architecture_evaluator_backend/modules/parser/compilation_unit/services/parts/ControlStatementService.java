@@ -1,11 +1,11 @@
 // ControlStatementService.java
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.services.parts;
+package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts;
 
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.stmt.ForStmt;
 import com.github.javaparser.ast.stmt.IfStmt;
 import com.github.javaparser.ast.stmt.WhileStmt;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.dto.parts.ControlStatementDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.ControlStatementDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

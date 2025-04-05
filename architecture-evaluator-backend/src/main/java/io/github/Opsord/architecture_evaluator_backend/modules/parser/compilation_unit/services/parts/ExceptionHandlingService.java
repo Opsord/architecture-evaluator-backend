@@ -1,9 +1,10 @@
 // ExceptionHandlingService.java
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.services.parts;
+package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts;
 
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.stmt.TryStmt;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.dto.parts.ExceptionHandlingDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.ExceptionHandlingDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,7 @@ public class ExceptionHandlingService {
             ExceptionHandlingDTO exceptionHandlingDTO = new ExceptionHandlingDTO();
             exceptionHandlingDTO.setTryBlock(tryStmt.getTryBlock().toString());
             exceptionHandlingDTO.setCatchBlocks(tryStmt.getCatchClauses().stream()
-                    .map(catchClause -> catchClause.toString())
+                    .map(Node::toString)
                     .collect(Collectors.toList()));
             exceptionHandlingDTO.setFinallyBlock(tryStmt.getFinallyBlock().map(finallyBlock -> finallyBlock.toString()).orElse(null));
             exceptionHandling.add(exceptionHandlingDTO);

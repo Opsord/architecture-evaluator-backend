@@ -1,10 +1,10 @@
 // GenericUsageService.java
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.services.parts;
+package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts;
 
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.Type;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.dto.parts.GenericUsageDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.GenericUsageDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

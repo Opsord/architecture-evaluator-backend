@@ -1,4 +1,4 @@
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.services.parts;
+package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts;
 
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.comments.Comment;
