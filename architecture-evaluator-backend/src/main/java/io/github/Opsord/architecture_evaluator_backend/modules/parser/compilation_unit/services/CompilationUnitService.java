@@ -3,10 +3,12 @@ package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilati
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.CompilationUnitDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.CustomCompilationUnitDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.*;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.*;
 
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.annotation.AnnotationService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.control_statement.ControlStatementService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -19,10 +21,10 @@ import java.util.List;
 public class CompilationUnitService {
 
     private static final Logger logger = LoggerFactory.getLogger(CompilationUnitService.class);
+
     private final AnnotationService annotationService;
     private final ClassService classService;
     private final InterfaceService interfaceService;
-    private final ControlStatementService controlStatementService;
     private final GenericUsageService genericUsageService;
     private final ExceptionHandlingService exceptionHandlingService;
     private final VariableService variableService;
@@ -34,46 +36,23 @@ public class CompilationUnitService {
         this.annotationService = annotationService;
         this.classService = new ClassService();
         this.interfaceService = new InterfaceService();
-        this.controlStatementService = new ControlStatementService();
+        ControlStatementService controlStatementService = new ControlStatementService();
         this.genericUsageService = new GenericUsageService();
         this.exceptionHandlingService = new ExceptionHandlingService();
         this.variableService = new VariableService();
-        this.methodService = new MethodService();
+        this.methodService = new MethodService(controlStatementService);
         this.commentService = new CommentService();
         this.packageService = new PackageService();
     }
 
-    public CompilationUnitDTO parseJavaFile(File file) throws FileNotFoundException {
-        logger.info("Starting to parse file: {}", file.getAbsolutePath());
-        JavaParser javaParser = new JavaParser();
-        CompilationUnit compilationUnit = javaParser.parse(file).getResult()
-                .orElseThrow(() -> new FileNotFoundException("File not found or could not be parsed"));
-        logger.info("Successfully parsed file: {}", file.getAbsolutePath());
-
-        CompilationUnitDTO dto = new CompilationUnitDTO();
-        dto.setPackageName(compilationUnit.getPackageDeclaration().map(pd -> pd.getName().toString()).orElse("default"));
-        dto.setClassNames(getClassNames(compilationUnit));
-        dto.setInterfaceNames(getInterfaceNames(compilationUnit));
-        dto.setMethods(getMethods(compilationUnit));
-        dto.setVariables(getVariables(compilationUnit));
-        dto.setImportedPackages(getImportedPackages(compilationUnit));
-        dto.setComments(getComments(compilationUnit));
-        dto.setControlStatements(getControlStatements(compilationUnit));
-        dto.setExceptionHandling(getExceptionHandling(compilationUnit));
-        dto.setSuperClasses(getSuperClasses(compilationUnit));
-        dto.setImplementedInterfaces(getImplementedInterfaces(compilationUnit));
-        dto.setAnnotations(getAnnotations(compilationUnit));
-        dto.setGenericUsages(getGenericUsages(compilationUnit));
-
-        return dto;
-    }
+    /**
+     * Simple getter for the annotations in the compilation unit.
+     * @param compilationUnit Compilation unit to get the annotations from
+     * @return List of annotations in the compilation unit
+     */
 
     private List<AnnotationDTO> getAnnotations(CompilationUnit compilationUnit) {
         return annotationService.getAnnotations(compilationUnit);
-    }
-
-    private List<ControlStatementDTO> getControlStatements(CompilationUnit compilationUnit) {
-        return controlStatementService.getControlStatements(compilationUnit);
     }
 
     private List<String> getClassNames(CompilationUnit compilationUnit) {
@@ -115,4 +94,36 @@ public class CompilationUnitService {
     private List<String> getImportedPackages(CompilationUnit compilationUnit) {
         return packageService.getImportedPackages(compilationUnit);
     }
+
+    /**
+     * Parses a Java file and returns a CompilationUnitDTO object containing the parsed information.
+     * @param file Path to the Java file to be parsed
+     * @return CompilationUnitDTO object containing the parsed information
+     */
+
+    public CustomCompilationUnitDTO parseJavaFile(File file) throws FileNotFoundException {
+        logger.info("Starting to parse file: {}", file.getAbsolutePath());
+        JavaParser javaParser = new JavaParser();
+        CompilationUnit compilationUnit = javaParser.parse(file).getResult()
+                .orElseThrow(() -> new FileNotFoundException("File not found or could not be parsed"));
+        logger.info("Successfully parsed file: {}", file.getAbsolutePath());
+
+        CustomCompilationUnitDTO dto = new CustomCompilationUnitDTO();
+        dto.setPackageName(compilationUnit.getPackageDeclaration().map(pd -> pd.getName().toString()).orElse("default"));
+        dto.setClassNames(getClassNames(compilationUnit));
+        dto.setInterfaceNames(getInterfaceNames(compilationUnit));
+        dto.setMethods(getMethods(compilationUnit));
+        dto.setVariables(getVariables(compilationUnit));
+        dto.setImportedPackages(getImportedPackages(compilationUnit));
+        dto.setComments(getComments(compilationUnit));
+        dto.setExceptionHandling(getExceptionHandling(compilationUnit));
+        dto.setSuperClasses(getSuperClasses(compilationUnit));
+        dto.setImplementedInterfaces(getImplementedInterfaces(compilationUnit));
+        dto.setAnnotations(getAnnotations(compilationUnit));
+        dto.setGenericUsages(getGenericUsages(compilationUnit));
+
+        return dto;
+    }
+
+
 }
