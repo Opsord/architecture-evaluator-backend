@@ -1,13 +1,13 @@
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts;
+// CommentService.java
+package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.comment;
 
 import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.comments.Comment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class CommentService {
@@ -16,8 +16,9 @@ public class CommentService {
 
     public List<String> getComments(CompilationUnit compilationUnit) {
         logger.info("Extracting comments from compilation unit");
-        return compilationUnit.getAllContainedComments().stream()
-                .map(Comment::getContent)
-                .collect(Collectors.toList());
+        List<String> comments = new ArrayList<>();
+        CommentVisitor visitor = new CommentVisitor();
+        compilationUnit.accept(visitor, comments);
+        return comments;
     }
 }

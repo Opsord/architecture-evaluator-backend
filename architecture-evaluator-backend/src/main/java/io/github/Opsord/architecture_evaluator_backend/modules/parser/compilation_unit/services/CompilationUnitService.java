@@ -5,10 +5,17 @@ import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.CustomCompilationUnitDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.*;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.*;
 
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.annotation.AnnotationService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.class_part.ClassService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.comment.CommentService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.control_statement.ControlStatementService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.exception_handler.ExceptionHandlerService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.generic_usage.GenericUsageService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.interface_part.InterfaceService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.method.MethodService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.package_part.PackageService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.variable.VariableService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -26,19 +33,19 @@ public class CompilationUnitService {
     private final ClassService classService;
     private final InterfaceService interfaceService;
     private final GenericUsageService genericUsageService;
-    private final ExceptionHandlingService exceptionHandlingService;
+    private final ExceptionHandlerService exceptionHandlerService;
     private final VariableService variableService;
     private final MethodService methodService;
     private final CommentService commentService;
     private final PackageService packageService;
 
     public CompilationUnitService(AnnotationService annotationService) {
+        ControlStatementService controlStatementService = new ControlStatementService();
         this.annotationService = annotationService;
         this.classService = new ClassService();
         this.interfaceService = new InterfaceService();
-        ControlStatementService controlStatementService = new ControlStatementService();
         this.genericUsageService = new GenericUsageService();
-        this.exceptionHandlingService = new ExceptionHandlingService();
+        this.exceptionHandlerService = new ExceptionHandlerService();
         this.variableService = new VariableService();
         this.methodService = new MethodService(controlStatementService);
         this.commentService = new CommentService();
@@ -76,7 +83,7 @@ public class CompilationUnitService {
     }
 
     private List<ExceptionHandlingDTO> getExceptionHandling(CompilationUnit compilationUnit) {
-        return exceptionHandlingService.getExceptionHandling(compilationUnit);
+        return exceptionHandlerService.getExceptionHandling(compilationUnit);
     }
 
     private List<VariableDTO> getVariables(CompilationUnit compilationUnit) {

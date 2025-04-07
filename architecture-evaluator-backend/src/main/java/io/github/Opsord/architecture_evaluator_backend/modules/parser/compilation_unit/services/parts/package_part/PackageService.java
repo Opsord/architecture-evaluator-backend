@@ -1,13 +1,13 @@
 // PackageService.java
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts;
+package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.package_part;
 
 import com.github.javaparser.ast.CompilationUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class PackageService {
@@ -16,8 +16,9 @@ public class PackageService {
 
     public List<String> getImportedPackages(CompilationUnit compilationUnit) {
         logger.info("Extracting imported packages from compilation unit");
-        return compilationUnit.getImports().stream()
-                .map(importDeclaration -> importDeclaration.getName().asString())
-                .collect(Collectors.toList());
+        List<String> importedPackages = new ArrayList<>();
+        PackageVisitor visitor = new PackageVisitor();
+        compilationUnit.accept(visitor, importedPackages);
+        return importedPackages;
     }
 }
