@@ -1,0 +1,290 @@
+Para calcular métricas como la complejidad ciclomática, el acoplamiento y la cohesión utilizando JavaParser y
+enfocándote en la clase CompilationUnit, necesitarás extraer diversos elementos del árbol de sintaxis (AST).
+Aquí tienes un desglose de lo que necesitarías para cada métrica:
+
+1. Complejidad Ciclomática
+
+La complejidad ciclomática mide el número de caminos lineales independientes a través del código y se puede calcular
+a partir de los flujos de control. Los elementos que necesitas considerar son:
+
+- Sentencias de control:
+
+- Contar el número de estructuras de control como if, switch, for, while, do-while, y try-catch.
+
+- Métodos:
+
+- Para cada método, contar cuántas de estas estructuras de control contiene.
+
+La fórmula básica para calcular la complejidad ciclomática (V(G)) es:
+V(G)=E−N+2P
+donde:
+
+- E = número de aristas en el grafo de flujo
+
+- N = número de nodos en el grafo de flujo
+
+- P = número de componentes conectados (normalmente 1 para un método).
+
+Ejemplo de Extracción:
+
+int complexity = 1; // Cuenta el método como un camino
+cu.findAll(IfStmt.class).forEach(ifStmt -> complexity++);
+cu.findAll(ForStmt.class).forEach(forStmt -> complexity++);
+cu.findAll(WhileStmt.class).forEach(whileStmt -> complexity++);
+cu.findAll(SwitchStmt.class).forEach(switchStmt -> complexity++);
+
+2. Acoplamiento
+
+El acoplamiento se refiere al grado en que un componente depende de otros componentes. Para calcularlo, se deben
+considerar los siguientes elementos:
+
+- Importaciones:
+
+- Contar las importaciones para ver de cuántas clases externas depende la clase.
+
+- Uso de Clases Externas:
+
+- Contar las instancias de otras clases en los métodos. Puedes buscar en el abstract syntax tree las declaraciones
+de variables de tipo que no sean de la misma clase o los métodos que devuelven tipos de otras clases.
+
+Ejemplo de Extracción:
+
+Set<String> importedClasses = new HashSet<>();
+cu.getImports().forEach(importDeclaration -> importedClasses.add(importDeclaration.getNameAsString()));
+
+cu.findAll(MethodCallExpr.class).forEach(methodCall -> {
+String className = methodCall.getScope().map(Object::toString).orElse("");
+if (!className.isEmpty() && !importedClasses.contains(className)) {
+// Incrementar acoplamiento
+}
+});
+
+3. Cohesión
+
+La cohesión mide cuán relacionados están los métodos dentro de una clase. Para calcularla, se pueden considerar:
+
+- Número de Métodos:
+
+- Contar cuántos métodos hay en una clase.
+
+- Uso de Variables de Instancia:
+
+- Comprobar cuántos métodos utilizan las mismas variables de instancia.
+
+Ejemplo de Extracción:
+
+List<VariableDeclarator> instanceVariables = cu.findAll(FieldDeclaration.class)
+.stream()
+.flatMap(field -> field.getVariables().stream())
+.collect(Collectors.toList());
+
+int methodCount = cu.findAll(MethodDeclaration.class).size();
+int cohesiveMethodCount = 0;
+
+cu.findAll(MethodDeclaration.class).forEach(method -> {
+method.getBody().ifPresent(body -> {
+for (VariableDeclarator var : instanceVariables) {
+if (body.toString().contains(var.getNameAsString())) {
+cohesiveMethodCount++;
+break;
+}
+}
+});
+});
+
+// Aquí puedes calcular la cohesión basada en methodCount y cohesiveMethodCount.
+
+Consideraciones Finales
+
+Cada métrica tiene sus propias complejidades y cómo decides implementarlas dependerá de tus requerimientos específicos.
+Utiliza el AST en JavaParser para extraer las estructuras necesarias y aplicar las fórmulas correspondientes.
+Si necesitas más ayuda sobre cómo implementar alguna de estas métricas, no dudes en preguntar.
+
+------------------------------------------------------------------------------------------------------------------------
+Para "escanear" todo un programa en Java utilizando JavaParser, tienes varias opciones, y no necesariamente tienes
+que procesar cada archivo de clase individualmente de forma manual. Aquí te explico cómo puedes abordar esta tarea:
+
+1. Procesar Múltiples Archivos Utilizando un Directorio
+
+Una forma eficaz es recorrer un directorio que contenga tus archivos .java y procesarlos automáticamente. Puedes usar
+Java NIO para listar todos los archivos en un directorio y sus subdirectorios. Aquí tienes un ejemplo básico:
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.DirectoryStream;
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ast.CompilationUnit;
+
+import java.util.stream.Stream;
+
+public class ScanJavaProject {
+public static void main(String[] args) {
+try {
+Path sourceDirectory = Paths.get("src/main/java"); // Ruta a tu directorio de src
+Files.walk(sourceDirectory).filter(Files::isRegularFile).forEach(filePath -> {
+if (filePath.toString().endsWith(".java")) {
+scanFile(filePath);
+}
+});
+} catch (IOException e) {
+e.printStackTrace();
+}
+}
+
+private static void scanFile(Path filePath) {
+try {
+CompilationUnit cu = JavaParser.parse(filePath);
+// Aquí puedes realizar tus cálculos de métricas
+} catch (IOException e) {
+e.printStackTrace();
+}
+}
+}
+
+2. Usar Un Visitor para Recorrer el AST Globalmente
+
+Una vez que has escaneado cada archivo y tienes acceso a todas las CompilationUnit, puedes usar un
+Visitor para recorrer el árbol de cada unidad de compilación y recopilar métricas a nivel de proyecto.
+
+Esto se puede hacer de la siguiente forma:
+
+import com.github.javaparser.ast.VoidVisitorAdapter;
+
+class MetricCollector extends VoidVisitorAdapter<Void> {
+@Override
+public void visit(MethodDeclaration method, Void arg) {
+super.visit(method, arg);
+// Aquí puedes calcular métricas específicas para métodos
+}
+
+@Override
+public void visit(ClassOrInterfaceDeclaration clazz, Void arg) {
+super.visit(clazz, arg);
+// Aquí puedes calcular métricas específicas para clases
+}
+}
+
+// En tu método scanFile
+MetricCollector collector = new MetricCollector();
+cu.accept(collector, null);
+
+3. Mantener un Acumulador de Métricas
+
+A medida que recorres cada archivo y su respectivo AST, puedes acumular las métricas en una estructura de
+datos que te permita mantener un resumen de las métricas de todo el proyecto. Por ejemplo, podrías utilizar
+un HashMap<String, Integer> para almacenar métricas por clase o mantener un objeto que contenga un resumen de métricas:
+
+class ProjectMetrics {
+int totalClasses;
+int totalMethods;
+// Otros campos para otras métricas
+
+public void addClass() { totalClasses++; }
+public void addMethod() { totalMethods++; }
+// Métodos para agregar y obtener otros valores
+}
+
+Conclusión
+
+Escanear una aplicación completa implica procesar múltiples archivos, pero con las herramientas adecuadas de
+JavaParser y Java NIO, puedes automatizar significativamente esta tarea. El patrón de visita es especialmente
+útil para extraer información de múltiples clases y métodos sin tener que reescribir mucho código. Al final,
+podrás obtener una visión completa y métricas del programa entero sin necesidad de manejar cada archivo manualmente.
+
+------------------------------------------------------------------------------------------------------------------------
+Para calcular la complejidad ciclomatica utilizando tu clase CustomCompilationUnitDTO, necesitarás
+enfocarte en los siguientes aspectos clave:
+
+1. Definición de Complejidad Ciclomatica
+
+La complejidad ciclomatica es una métrica que mide la cantidad de caminos lineales a través de un programa.
+Se puede calcular utilizando la fórmula:
+
+V(G)=E−N+2P
+
+donde:
+
+- E es el número de aristas en el grafo de control de flujo.
+
+- N es el número de nodos en el grafo.
+
+- P es el número de componentes conectados (normalmente se toma como 1 para métodos individuales).
+
+2. Modificación de la Clase DTO
+
+Para poder calcular la complejidad ciclomatica, tu DTO debe contener información sobre la forma en que los métodos y
+estructuras de control son representados. A continuación, se presentan algunos cambios y adiciones que puedes hacer:
+
+- Contar Estructuras de Control: Necesitarás registrar cuántas estructuras de control hay en cada
+método (if, for, while, switch, excepciones, etc.). Para esto, podrías agregar un campo en MethodDTO que cuente
+las estructuras de control identificadas.
+
+public class MethodDTO {
+private String name;
+private String returnType;
+private List<VariableDTO> parameters;
+private List<StatementDTO> statements;
+private int controlStructureCount; // Nuevo campo para contar estructuras de control
+
+// Metodos y constructores
+}
+
+3. Contadores de Estructuras de Control
+
+En el mismo MethodDTO, deberás implementar un método que analice las declaraciones de control dentro del método y
+aumente el contador correspondiente:
+
+public void calculateControlStructures() {
+for (StatementDTO statement : statements) {
+if (statement instanceof IfStatementDTO) {
+controlStructureCount++;
+} else if (statement instanceof ForStatementDTO || statement instanceof WhileStatementDTO) {
+controlStructureCount++;
+} else if (statement instanceof SwitchStatementDTO) {
+controlStructureCount++;
+}
+// Agregar más condiciones según otros tipos de control como try/catch
+}
+}
+
+4. Calculo de Complejidad Ciclomatica
+
+Después de haber contado las estructuras de control para cada método en MethodDTO, puedes implementar un
+método en CustomCompilationUnitDTO para calcular la complejidad ciclomatica de cada método:
+
+public Map<String, Integer> calculateCyclomaticComplexity() {
+Map<String, Integer> complexityMap = new HashMap<>();
+for (MethodDTO method : methods) {
+int E = method.controlStructureCount; // Número de estructuras de control
+int N = method.statements.size(); // Suponiendo que cada statement es un nodo
+int P = 1; // Solo un componente por método
+
+// Calcular complejidad
+int cyclomaticComplexity = E - N + 2 * P;
+complexityMap.put(method.getName(), cyclomaticComplexity);
+}
+return complexityMap;
+}
+
+5. Integración con Análisis de Código
+
+Para aplicar este cálculo en un contexto más amplio, asegúrate de:
+
+- Crear instancias de MethodDTO y llenar la lista de statements con representaciones adecuadas de las declaraciones.
+
+- Enlazar los métodos calculateControlStructures() al proceso de parsing si es posible, para que cada vez que se
+agregue un nuevo método, se ejecute automáticamente el conteo de estructuras de control.
+
+6. Consideraciones Finales
+
+- Asegúrate de manejar correctamente casos especiales en los métodos y las estructuras de control.
+
+- Considera cómo influiría el manejo de excepciones en tu conteo; podrías decidir si cada bloque try/catch se
+añade como estructura de control.
+
+- Puedes expandir el sistema para contabilizar más tipos de estructuras y hacer tu análisis aún más robusto.
+
+Siguiendo estos pasos y focos de atención, podrás implementar una forma efectiva de calcular la complejidad
+ciclomatica en tu clase CustomCompilationUnitDTO.

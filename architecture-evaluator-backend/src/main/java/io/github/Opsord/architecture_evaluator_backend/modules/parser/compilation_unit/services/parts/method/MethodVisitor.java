@@ -2,8 +2,10 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.method;
 
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.stmt.Statement;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.MethodDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.StatementDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.ParameterDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.control_statement.ControlStatementService;
 
@@ -33,6 +35,14 @@ public class MethodVisitor extends VoidVisitorAdapter<List<MethodDTO>> {
                     return parameterDTO;
                 }).collect(Collectors.toList()));
         methodDTO.setControlStatements(controlStatementService.getControlStatementsFromMethod(method));
+        methodDTO.setStatements(method.getBody().stream()
+                .flatMap(body -> body.getStatements().stream())
+                .map(statement -> {
+                    StatementDTO statementDTO = new StatementDTO();
+                    statementDTO.setType(statement.getClass().getSimpleName());
+                    statementDTO.setStructure(statement.toString());
+                    return statementDTO;
+                }).collect(Collectors.toList()));
         collector.add(methodDTO);
     }
 }

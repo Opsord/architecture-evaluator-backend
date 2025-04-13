@@ -89,13 +89,6 @@
 			<version>2.0.17</version>
 		</dependency>
 
-		<!-- SLF4J Simple: Simple implementation of the SLF4J API -->
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-simple</artifactId>
-			<version>2.0.17</version>
-		</dependency>
-
 		<!-- Springfox: Library for generating API documentation for Spring Boot applications -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

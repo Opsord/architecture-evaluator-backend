@@ -13,5 +13,6 @@ public class MethodDTO {
     private String accessModifier;
     private String returnType;
     private List<ParameterDTO> parameters;
+    private List<StatementDTO> statements;
     private List<ControlStatementDTO> controlStatements;
 }
