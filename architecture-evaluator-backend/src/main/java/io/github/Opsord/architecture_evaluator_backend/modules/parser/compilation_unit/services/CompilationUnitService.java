@@ -9,7 +9,7 @@ import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilatio
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.annotation.AnnotationService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.class_part.ClassService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.comment.CommentService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.control_statement.ControlStatementService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.statement.StatementService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.exception_handler.ExceptionHandlerService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.generic_usage.GenericUsageService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.interface_part.InterfaceService;
@@ -40,14 +40,14 @@ public class CompilationUnitService {
     private final PackageService packageService;
 
     public CompilationUnitService(AnnotationService annotationService) {
-        ControlStatementService controlStatementService = new ControlStatementService();
+        StatementService statementService = new StatementService();
         this.annotationService = annotationService;
         this.classService = new ClassService();
         this.interfaceService = new InterfaceService();
         this.genericUsageService = new GenericUsageService();
         this.exceptionHandlerService = new ExceptionHandlerService();
         this.variableService = new VariableService();
-        this.methodService = new MethodService(controlStatementService);
+        this.methodService = new MethodService(statementService);
         this.commentService = new CommentService();
         this.packageService = new PackageService();
     }

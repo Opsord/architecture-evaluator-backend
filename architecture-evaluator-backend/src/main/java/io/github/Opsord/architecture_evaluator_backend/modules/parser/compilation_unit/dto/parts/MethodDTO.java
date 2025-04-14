@@ -9,10 +9,17 @@ import java.util.List;
 @Getter
 @Setter
 public class MethodDTO {
+    // Basic information
     private String name;
     private String accessModifier;
     private String returnType;
-    private List<ParameterDTO> parameters;
+
+    // Parameters to calculate CC
     private List<StatementDTO> statements;
-    private List<ControlStatementDTO> controlStatements;
+    private List<StatementDTO> controlStatements;
+
+    // Parameters to calculate ICC
+    private List<ParameterDTO> inputs;
+    private List<String> outputs;
+    private int linesOfCode;
 }

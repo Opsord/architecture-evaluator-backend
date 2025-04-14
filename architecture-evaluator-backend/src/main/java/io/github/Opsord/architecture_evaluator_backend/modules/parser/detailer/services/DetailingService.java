@@ -18,8 +18,8 @@ public class DetailingService {
             detailedMethod.setName(method.getName());
             detailedMethod.setAccessModifier(method.getAccessModifier());
             detailedMethod.setReturnType(method.getReturnType());
-            detailedMethod.setStatementCount(method.getStatements() != null ? method.getStatements().size() : 0);
-            detailedMethod.setControlStatementCount(method.getControlStatements() != null ? method.getControlStatements().size() : 0);
+            detailedMethod.setNumberOfStatements(method.getStatements() != null ? method.getStatements().size() : 0);
+            detailedMethod.setNumberOfControlStatements(method.getControlStatements() != null ? method.getControlStatements().size() : 0);
             detailedMethod.setApproximateCC(calculateCyclomaticComplexity(method));
             return detailedMethod;
         }).collect(Collectors.toList());
@@ -35,7 +35,7 @@ public class DetailingService {
      */
     public int calculateCyclomaticComplexity(MethodDTO methodDTO) {
         int nodes = methodDTO.getStatements().size() + methodDTO.getControlStatements().size();
-        int edges = methodDTO.getStatements().size()+ 2 * methodDTO.getControlStatements().size();
+        int edges = methodDTO.getStatements().size() + 2 * methodDTO.getControlStatements().size();
         return edges - nodes + 2;
     }
 
