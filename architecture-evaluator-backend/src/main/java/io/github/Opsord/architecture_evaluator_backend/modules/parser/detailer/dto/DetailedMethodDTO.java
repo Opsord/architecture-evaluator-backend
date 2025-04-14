@@ -3,8 +3,6 @@ package io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
-
 @Getter
 @Setter
 public class DetailedMethodDTO {
@@ -13,5 +11,5 @@ public class DetailedMethodDTO {
     private String returnType;
     private int statementCount;
     private int controlStatementCount;
-
+    private int approximateCC;
 }
