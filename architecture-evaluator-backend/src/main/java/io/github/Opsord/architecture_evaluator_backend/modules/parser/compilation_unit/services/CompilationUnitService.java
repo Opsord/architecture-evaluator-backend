@@ -52,12 +52,6 @@ public class CompilationUnitService {
         this.packageService = new PackageService();
     }
 
-    /**
-     * Simple getter for the annotations in the compilation unit.
-     * @param compilationUnit Compilation unit to get the annotations from
-     * @return List of annotations in the compilation unit
-     */
-
     private List<AnnotationDTO> getAnnotations(CompilationUnit compilationUnit) {
         return annotationService.getAnnotations(compilationUnit);
     }

@@ -19,7 +19,7 @@ public class MethodDTO {
     private List<StatementDTO> controlStatements;
 
     // Parameters to calculate ICC
-    private List<ParameterDTO> inputs;
+    private List<String> inputs;
     private List<String> outputs;
     private int linesOfCode;
 }

@@ -2,6 +2,7 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.method;
 
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
 import com.github.javaparser.ast.stmt.Statement;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.MethodDTO;
@@ -24,6 +25,7 @@ public class MethodVisitor extends VoidVisitorAdapter<List<MethodDTO>> {
     public void visit(MethodDeclaration method, List<MethodDTO> collector) {
         super.visit(method, collector);
         MethodDTO methodDTO = new MethodDTO();
+        // Basic information
         methodDTO.setName(method.getNameAsString());
         methodDTO.setAccessModifier(method.getAccessSpecifier().asString());
         methodDTO.setReturnType(method.getType().asString());
@@ -37,7 +39,6 @@ public class MethodVisitor extends VoidVisitorAdapter<List<MethodDTO>> {
                     statementDTO.setStructure(statement.toString());
                     return statementDTO;
                 }).collect(Collectors.toList()));
-
         // Control statements only
         methodDTO.setControlStatements(method.getBody().stream()
                 .flatMap(body -> body.getStatements().stream())
@@ -49,6 +50,15 @@ public class MethodVisitor extends VoidVisitorAdapter<List<MethodDTO>> {
                     return statementDTO;
                 }).collect(Collectors.toList()));
 
+        // Inputs
+        methodDTO.setInputs(method.getParameters().stream()
+                .map(NodeWithSimpleName::getNameAsString)
+                .collect(Collectors.toList()));
+        // Outputs
+        methodDTO.setOutputs(extractOutputs(method));
+        // Lines of code
+        methodDTO.setLinesOfCode(method.getBody().map(body -> body.getStatements().size()).orElse(0));
+
         collector.add(methodDTO);
     }
 
@@ -58,11 +68,21 @@ public class MethodVisitor extends VoidVisitorAdapter<List<MethodDTO>> {
     }
 
     private List<String> extractOutputs(MethodDeclaration method) {
-        // Example: Collect return types or output-related variables
         return method.getBody().stream()
                 .flatMap(body -> body.getStatements().stream())
                 .filter(Statement::isReturnStmt)
-                .map(statement -> statement.asReturnStmt().getExpression().map(Object::toString).orElse("void"))
+                .map(statement -> statement.asReturnStmt().getExpression()
+                        .map(expression -> {
+                            if (expression.isLiteralExpr()) {
+                                return expression.toString(); // Literales como enteros, cadenas, etc.
+                            } else if (expression.isNameExpr()) {
+                                return expression.asNameExpr().getNameAsString(); // Variables
+                            } else if (expression.isObjectCreationExpr()) {
+                                return expression.asObjectCreationExpr().getType().asString(); // Instancias de clases
+                            } else {
+                                return expression.toString(); // Otros casos
+                            }
+                        }).orElse("void"))
                 .collect(Collectors.toList());
     }
 }
