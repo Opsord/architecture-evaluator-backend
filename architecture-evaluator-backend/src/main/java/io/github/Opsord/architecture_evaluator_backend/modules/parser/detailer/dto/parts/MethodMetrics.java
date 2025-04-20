@@ -7,5 +7,4 @@ import lombok.Setter;
 @Setter
 public class MethodMetrics {
     private int approxMcCabeCC;
-    private int improvedCC;
 }

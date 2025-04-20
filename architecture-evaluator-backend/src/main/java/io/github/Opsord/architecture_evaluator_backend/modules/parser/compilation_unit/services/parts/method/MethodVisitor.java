@@ -67,7 +67,9 @@ public class MethodVisitor extends VoidVisitorAdapter<List<MethodDTO>> {
         // Outputs
         methodDTO.setOutputs(extractOutputs(method));
         // Lines of code
-        methodDTO.setLinesOfCode(method.getBody().map(body -> body.getStatements().size()).orElse(0));
+        methodDTO.setLinesOfCode(method.getBody()
+                .map(body -> body.getEnd().map(end -> end.line).orElse(0) - body.getBegin().map(begin -> begin.line).orElse(0) + 1)
+                .orElse(0));
 
         collector.add(methodDTO);
     }
