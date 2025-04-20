@@ -49,6 +49,16 @@ public class MethodVisitor extends VoidVisitorAdapter<List<MethodDTO>> {
                     statementDTO.setStructure(statement.toString());
                     return statementDTO;
                 }).collect(Collectors.toList()));
+        // Executable statements
+        methodDTO.setExecutableStatements(method.getBody().stream()
+                .flatMap(body -> body.getStatements().stream())
+                .filter(statement -> !isControlStatement(statement) && isExecutableStatement(statement))
+                .map(statement -> {
+                    StatementDTO statementDTO = new StatementDTO();
+                    statementDTO.setType(statement.getClass().getSimpleName());
+                    statementDTO.setStructure(statement.toString());
+                    return statementDTO;
+                }).collect(Collectors.toList()));
 
         // Inputs
         methodDTO.setInputs(method.getParameters().stream()
@@ -84,5 +94,11 @@ public class MethodVisitor extends VoidVisitorAdapter<List<MethodDTO>> {
                             }
                         }).orElse("void"))
                 .collect(Collectors.toList());
+    }
+
+    private boolean isExecutableStatement(Statement statement) {
+        // Excluir declaraciones de variables
+        return !statement.isExpressionStmt() ||
+                (statement.isExpressionStmt() && !statement.asExpressionStmt().getExpression().isVariableDeclarationExpr());
     }
 }

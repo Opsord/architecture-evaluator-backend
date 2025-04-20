@@ -14,8 +14,9 @@ public class MethodDTO {
     private String accessModifier;
     private String returnType;
 
-    // Parameters to calculate CC
+    // Statements
     private List<StatementDTO> statements;
+    private List<StatementDTO> executableStatements;
     private List<StatementDTO> controlStatements;
 
     // Parameters to calculate ICC
