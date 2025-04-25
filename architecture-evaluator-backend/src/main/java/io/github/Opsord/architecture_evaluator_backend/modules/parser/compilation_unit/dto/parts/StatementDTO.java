@@ -8,5 +8,4 @@ import lombok.Setter;
 public class StatementDTO {
     private String type;
     private String structure;
-    private String name;
 }

@@ -123,6 +123,10 @@ public class CompilationUnitService {
         dto.setAnnotations(getAnnotations(compilationUnit));
         dto.setGenericUsages(getGenericUsages(compilationUnit));
 
+        // Calculate and set lines of code
+        int linesOfCode = compilationUnit.getEnd().map(end -> end.line).orElse(0) - compilationUnit.getBegin().map(begin -> begin.line).orElse(0) + 1;
+        dto.setLinesOfCode(linesOfCode);
+
         return dto;
     }
 

@@ -22,4 +22,6 @@ public class CustomCompilationUnitDTO {
     private List<String> implementedInterfaces;
     private List<AnnotationDTO> annotations;
     private List<GenericUsageDTO> genericUsages;
+
+    private int LinesOfCode;
 }

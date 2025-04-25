@@ -1,17 +1,17 @@
 // DetailingService.java
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.services;
+package io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.services.parts;
 
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.CustomCompilationUnitDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.MethodDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.DetailedMethodDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.parts.*;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.method.DetailedMethodDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.method.parts.*;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public class DetailingService {
+public class MethodDetailingService {
 
     public List<DetailedMethodDTO> generateDetailedMethods(CustomCompilationUnitDTO customCompilationUnit) {
         return customCompilationUnit.getMethods().stream().map(method -> {
