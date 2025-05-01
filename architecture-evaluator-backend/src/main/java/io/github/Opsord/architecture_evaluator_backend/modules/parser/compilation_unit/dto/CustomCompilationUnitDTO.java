@@ -2,6 +2,8 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto;
 
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.*;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.method.MethodDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.statement.StatementDTO;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,6 +15,7 @@ public class CustomCompilationUnitDTO {
     private String packageName;
     private List<String> classNames;
     private List<String> interfaceNames;
+    private List<StatementDTO> statements;
     private List<MethodDTO> methods;
     private List<VariableDTO> variables;
     private List<String> importedPackages;

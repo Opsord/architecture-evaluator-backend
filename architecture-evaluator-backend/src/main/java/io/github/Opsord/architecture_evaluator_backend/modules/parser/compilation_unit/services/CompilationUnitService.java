@@ -6,6 +6,8 @@ import com.github.javaparser.ast.CompilationUnit;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.CustomCompilationUnitDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.*;
 
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.method.MethodDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.statement.StatementDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.annotation.AnnotationService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.class_part.ClassService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.comment.CommentService;
@@ -16,6 +18,7 @@ import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilatio
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.method.MethodService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.package_part.PackageService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.variable.VariableService;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -25,6 +28,7 @@ import java.io.FileNotFoundException;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class CompilationUnitService {
 
     private static final Logger logger = LoggerFactory.getLogger(CompilationUnitService.class);
@@ -35,22 +39,10 @@ public class CompilationUnitService {
     private final GenericUsageService genericUsageService;
     private final ExceptionHandlerService exceptionHandlerService;
     private final VariableService variableService;
+    private final StatementService statementService;
     private final MethodService methodService;
     private final CommentService commentService;
     private final PackageService packageService;
-
-    public CompilationUnitService(AnnotationService annotationService) {
-        StatementService statementService = new StatementService();
-        this.annotationService = annotationService;
-        this.classService = new ClassService();
-        this.interfaceService = new InterfaceService();
-        this.genericUsageService = new GenericUsageService();
-        this.exceptionHandlerService = new ExceptionHandlerService();
-        this.variableService = new VariableService();
-        this.methodService = new MethodService(statementService);
-        this.commentService = new CommentService();
-        this.packageService = new PackageService();
-    }
 
     private List<AnnotationDTO> getAnnotations(CompilationUnit compilationUnit) {
         return annotationService.getAnnotations(compilationUnit);
@@ -84,6 +76,10 @@ public class CompilationUnitService {
         return variableService.getVariables(compilationUnit);
     }
 
+    private List<StatementDTO> getStatements(CompilationUnit compilationUnit) {
+        return statementService.getStatements(compilationUnit);
+    }
+
     private List<MethodDTO> getMethods(CompilationUnit compilationUnit) {
         return methodService.getMethods(compilationUnit);
     }
@@ -113,6 +109,7 @@ public class CompilationUnitService {
         dto.setPackageName(compilationUnit.getPackageDeclaration().map(pd -> pd.getName().toString()).orElse("default"));
         dto.setClassNames(getClassNames(compilationUnit));
         dto.setInterfaceNames(getInterfaceNames(compilationUnit));
+        dto.setStatements(getStatements(compilationUnit));
         dto.setMethods(getMethods(compilationUnit));
         dto.setVariables(getVariables(compilationUnit));
         dto.setImportedPackages(getImportedPackages(compilationUnit));
@@ -129,6 +126,4 @@ public class CompilationUnitService {
 
         return dto;
     }
-
-
 }
