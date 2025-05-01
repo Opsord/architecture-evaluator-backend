@@ -2,8 +2,8 @@ package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilati
 
 import com.github.javaparser.ast.stmt.*;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.statement.StatementDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.statement.StatementType;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.statement.StatementDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.statement.StatementType;
 
 import java.util.List;
 

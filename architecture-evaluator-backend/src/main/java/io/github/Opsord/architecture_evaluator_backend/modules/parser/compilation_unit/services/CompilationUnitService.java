@@ -7,7 +7,7 @@ import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilatio
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.*;
 
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.method.MethodDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.statement.StatementDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.statement.StatementDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.annotation.AnnotationService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.class_part.ClassService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.comment.CommentService;
@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.List;
+import java.util.stream.StreamSupport;
 
 @Service
 @RequiredArgsConstructor
@@ -121,7 +122,13 @@ public class CompilationUnitService {
         dto.setGenericUsages(getGenericUsages(compilationUnit));
 
         // Calculate and set lines of code
-        int linesOfCode = compilationUnit.getEnd().map(end -> end.line).orElse(0) - compilationUnit.getBegin().map(begin -> begin.line).orElse(0) + 1;
+        int linesOfCode = compilationUnit.getTokenRange()
+                .map(tokens -> Math.toIntExact(StreamSupport.stream(tokens.spliterator(), false)
+                        .filter(token -> !token.toString().startsWith("//") && !token.toString().startsWith("/*"))
+                        .map(token -> token.getRange().map(range -> range.begin.line).orElse(0))
+                        .distinct()
+                        .count()))
+                .orElse(0);
         dto.setLinesOfCode(linesOfCode);
 
         return dto;

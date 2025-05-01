@@ -1,4 +1,4 @@
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.statement;
+package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.statement;
 
 import lombok.Getter;
 import lombok.Setter;
