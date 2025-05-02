@@ -17,6 +17,15 @@ public class CustomCompUnitDetailingService {
 
     public DetailedCompUnitDTO generateDetailedCompUnit(CustomCompilationUnitDTO compilationUnitDTO) {
         DetailedCompUnitDTO detailedCompUnit = new DetailedCompUnitDTO();
+        // Set the class count
+        int classCount = compilationUnitDTO.getClassNames().size();
+        detailedCompUnit.setClassCount(classCount);
+        // Set the interface count
+        int interfaceCount = compilationUnitDTO.getInterfaceNames().size();
+        detailedCompUnit.setInterfaceCount(interfaceCount);
+        // Set the statement count
+        int statementCount = compilationUnitDTO.getStatements().size();
+        detailedCompUnit.setStatementCount(statementCount);
 
         // Set the program metrics
         ProgramMetricsDTO programMetrics = programMetricsService.generateProgramMetrics(compilationUnitDTO);
