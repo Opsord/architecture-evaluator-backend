@@ -4,10 +4,7 @@ package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilati
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.CustomCompilationUnitDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.*;
 
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.method.MethodDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.statement.StatementDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.annotation.AnnotationService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.class_part.ClassService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.comment.CommentService;
@@ -25,7 +22,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.List;
 import java.util.stream.StreamSupport;
 
 @Service
@@ -37,68 +33,19 @@ public class CompilationUnitService {
     private final AnnotationService annotationService;
     private final ClassService classService;
     private final InterfaceService interfaceService;
-    private final GenericUsageService genericUsageService;
-    private final ExceptionHandlerService exceptionHandlerService;
-    private final VariableService variableService;
     private final StatementService statementService;
     private final MethodService methodService;
-    private final CommentService commentService;
+    private final VariableService variableService;
     private final PackageService packageService;
-
-    private List<AnnotationDTO> getAnnotations(CompilationUnit compilationUnit) {
-        return annotationService.getAnnotations(compilationUnit);
-    }
-
-    private List<String> getClassNames(CompilationUnit compilationUnit) {
-        return classService.getClassNames(compilationUnit);
-    }
-
-    private List<String> getSuperClasses(CompilationUnit compilationUnit) {
-        return classService.getSuperClasses(compilationUnit);
-    }
-
-    private List<String> getInterfaceNames(CompilationUnit compilationUnit) {
-        return interfaceService.getInterfaceNames(compilationUnit);
-    }
-
-    private List<String> getImplementedInterfaces(CompilationUnit compilationUnit) {
-        return interfaceService.getImplementedInterfaces(compilationUnit);
-    }
-
-    private List<GenericUsageDTO> getGenericUsages(CompilationUnit compilationUnit) {
-        return genericUsageService.getGenericUsages(compilationUnit);
-    }
-
-    private List<ExceptionHandlingDTO> getExceptionHandling(CompilationUnit compilationUnit) {
-        return exceptionHandlerService.getExceptionHandling(compilationUnit);
-    }
-
-    private List<VariableDTO> getVariables(CompilationUnit compilationUnit) {
-        return variableService.getVariables(compilationUnit);
-    }
-
-    private List<StatementDTO> getStatements(CompilationUnit compilationUnit) {
-        return statementService.getStatements(compilationUnit);
-    }
-
-    private List<MethodDTO> getMethods(CompilationUnit compilationUnit) {
-        return methodService.getMethods(compilationUnit);
-    }
-
-    private List<String> getComments(CompilationUnit compilationUnit) {
-        return commentService.getComments(compilationUnit);
-    }
-
-    private List<String> getImportedPackages(CompilationUnit compilationUnit) {
-        return packageService.getImportedPackages(compilationUnit);
-    }
+    private final CommentService commentService;
+    private final ExceptionHandlerService exceptionHandlerService;
+    private final GenericUsageService genericUsageService;
 
     /**
      * Parses a Java file and returns a CompilationUnitDTO object containing the parsed information.
      * @param file Path to the Java file to be parsed
      * @return CompilationUnitDTO object containing the parsed information
      */
-
     public CustomCompilationUnitDTO parseJavaFile(File file) throws FileNotFoundException {
         logger.info("Starting to parse file: {}", file.getAbsolutePath());
         JavaParser javaParser = new JavaParser();
@@ -108,29 +55,37 @@ public class CompilationUnitService {
 
         CustomCompilationUnitDTO dto = new CustomCompilationUnitDTO();
         dto.setPackageName(compilationUnit.getPackageDeclaration().map(pd -> pd.getName().toString()).orElse("default"));
-        dto.setClassNames(getClassNames(compilationUnit));
-        dto.setInterfaceNames(getInterfaceNames(compilationUnit));
-        dto.setStatements(getStatements(compilationUnit));
-        dto.setMethods(getMethods(compilationUnit));
-        dto.setVariables(getVariables(compilationUnit));
-        dto.setImportedPackages(getImportedPackages(compilationUnit));
-        dto.setComments(getComments(compilationUnit));
-        dto.setExceptionHandling(getExceptionHandling(compilationUnit));
-        dto.setSuperClasses(getSuperClasses(compilationUnit));
-        dto.setImplementedInterfaces(getImplementedInterfaces(compilationUnit));
-        dto.setAnnotations(getAnnotations(compilationUnit));
-        dto.setGenericUsages(getGenericUsages(compilationUnit));
+        dto.setClassNames(classService.getClassNames(compilationUnit));
+        dto.setSuperClasses(classService.getSuperClasses(compilationUnit));
+        dto.setInterfaceNames(interfaceService.getInterfaceNames(compilationUnit));
+        dto.setStatements(statementService.getStatements(compilationUnit));
+        dto.setMethods(methodService.getMethods(compilationUnit));
+        dto.setVariables(variableService.getVariables(compilationUnit));
+        dto.setImportedPackages(packageService.getImportedPackages(compilationUnit));
+        dto.setComments(commentService.getComments(compilationUnit));
+        dto.setExceptionHandling(exceptionHandlerService.getExceptionHandling(compilationUnit));
+        dto.setImplementedInterfaces(interfaceService.getImplementedInterfaces(compilationUnit));
+        dto.setAnnotations(annotationService.getAnnotations(compilationUnit));
+        dto.setGenericUsages(genericUsageService.getGenericUsages(compilationUnit));
 
         // Calculate and set lines of code
-        int linesOfCode = compilationUnit.getTokenRange()
+        dto.setLinesOfCode(calculateLinesOfCode(compilationUnit));
+
+        return dto;
+    }
+
+    /**
+     * Calculates the number of lines of code in a given CompilationUnit.
+     * @param compilationUnit The CompilationUnit to calculate lines of code for
+     * @return The number of lines of code
+     */
+    private int calculateLinesOfCode(CompilationUnit compilationUnit) {
+        return compilationUnit.getTokenRange()
                 .map(tokens -> Math.toIntExact(StreamSupport.stream(tokens.spliterator(), false)
                         .filter(token -> !token.toString().startsWith("//") && !token.toString().startsWith("/*"))
                         .map(token -> token.getRange().map(range -> range.begin.line).orElse(0))
                         .distinct()
                         .count()))
                 .orElse(0);
-        dto.setLinesOfCode(linesOfCode);
-
-        return dto;
     }
 }
