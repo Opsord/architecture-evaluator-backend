@@ -7,5 +7,5 @@ import lombok.Setter;
 @Setter
 public class MethodMetrics {
     private int linesOfCode;
-    private int approxMcCabeCC;
+//    private int approxMcCabeCC;
 }

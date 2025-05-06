@@ -2,8 +2,8 @@ package io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.
 
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.CustomCompilationUnitDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.CompilationUnitService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.DetailedCompUnitDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.services.CustomCompUnitDetailingService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.SummarizedCompUnitDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.services.CCUSummarizingService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,14 +22,14 @@ public class DetailingController {
 
     private static final Logger logger = LoggerFactory.getLogger(DetailingController.class);
     private final CompilationUnitService compilationUnitService;
-    private final CustomCompUnitDetailingService customCompUnitDetailingService;
+    private final CCUSummarizingService summarizingService;
 
     @PostMapping("/parse")
-    public DetailedCompUnitDTO parseJavaFile(@RequestParam String filePath) throws FileNotFoundException {
+    public SummarizedCompUnitDTO parseJavaFile(@RequestParam String filePath) throws FileNotFoundException {
         logger.info("Received request to parse with details file: {}", filePath);
         File file = new File(filePath);
         CustomCompilationUnitDTO customCompilationUnitDTO = compilationUnitService.parseJavaFile(file);
         logger.info("Generating detailed compilation unit for file: {}", filePath);
-        return customCompUnitDetailingService.generateDetailedCompUnit(customCompilationUnitDTO);
+        return summarizingService.generateSummarizedCompUnit(customCompilationUnitDTO);
     }
 }
