@@ -43,7 +43,7 @@ public class ProjectScannerService {
      * @return A list of CustomCompilationUnitDTOs.
      * @throws IOException If an error occurs while reading files.
      */
-    private List<CustomCompilationUnitDTO> scanProject(String projectPath) throws IOException {
+    public List<CustomCompilationUnitDTO> scanProject(String projectPath) throws IOException {
         List<File> javaFiles = new ArrayList<>();
 
         // Walk through the project directory and collect all Java files
@@ -73,7 +73,7 @@ public class ProjectScannerService {
      * @param compilationUnits The list of CustomCompilationUnitDTOs to organize.
      * @return A ProjectDTO with the units organized into layers.
      */
-    private ProjectDTO organizeProject(List<CustomCompilationUnitDTO> compilationUnits) {
+    public ProjectDTO organizeProject(List<CustomCompilationUnitDTO> compilationUnits) {
         ProjectDTO projectDTO = new ProjectDTO();
         projectDTO.setEntities(filterByLayer(compilationUnits, "entity"));
         projectDTO.setDocuments(filterByLayer(compilationUnits, "document"));

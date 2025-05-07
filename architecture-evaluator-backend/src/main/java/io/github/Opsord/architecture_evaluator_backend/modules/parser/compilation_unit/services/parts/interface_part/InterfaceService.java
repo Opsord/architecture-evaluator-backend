@@ -15,7 +15,7 @@ public class InterfaceService {
     private static final Logger logger = LoggerFactory.getLogger(InterfaceService.class);
 
     public List<String> getInterfaceNames(CompilationUnit compilationUnit) {
-        logger.info("Extracting interface names from compilation unit");
+//        logger.info("Extracting interface names from compilation unit");
         List<String> interfaceNames = new ArrayList<>();
         InterfaceVisitor visitor = new InterfaceVisitor();
         compilationUnit.accept(visitor, interfaceNames);
@@ -23,7 +23,7 @@ public class InterfaceService {
     }
 
     public List<String> getImplementedInterfaces(CompilationUnit compilationUnit) {
-        logger.info("Extracting implemented interfaces from compilation unit");
+//        logger.info("Extracting implemented interfaces from compilation unit");
         List<String> implementedInterfaces = new ArrayList<>();
         InterfaceVisitor visitor = new InterfaceVisitor();
         compilationUnit.accept(visitor, implementedInterfaces);

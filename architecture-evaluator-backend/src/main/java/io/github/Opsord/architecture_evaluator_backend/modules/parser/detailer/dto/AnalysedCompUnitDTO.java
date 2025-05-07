@@ -6,7 +6,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class SummarizedCompUnitDTO {
+public class AnalysedCompUnitDTO {
     private int classCount;
     private int interfaceCount;
     private int statementCount;

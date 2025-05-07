@@ -15,7 +15,7 @@ public class PackageService {
     private static final Logger logger = LoggerFactory.getLogger(PackageService.class);
 
     public List<String> getImportedPackages(CompilationUnit compilationUnit) {
-        logger.info("Extracting imported packages from compilation unit");
+//        logger.info("Extracting imported packages from compilation unit");
         List<String> importedPackages = new ArrayList<>();
         PackageVisitor visitor = new PackageVisitor();
         compilationUnit.accept(visitor, importedPackages);

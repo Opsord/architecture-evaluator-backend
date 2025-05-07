@@ -17,7 +17,7 @@ public class ClassService {
     private static final Logger logger = LoggerFactory.getLogger(ClassService.class);
 
     public List<String> getClassNames(CompilationUnit compilationUnit) {
-        logger.info("Extracting class names from compilation unit");
+//        logger.info("Extracting class names from compilation unit");
         List<String> classNames = new ArrayList<>();
         ClassVisitor visitor = new ClassVisitor();
         compilationUnit.accept(visitor, classNames);
@@ -25,7 +25,7 @@ public class ClassService {
     }
 
     public List<String> getSuperClasses(CompilationUnit compilationUnit) {
-        logger.info("Extracting super classes from compilation unit");
+//        logger.info("Extracting super classes from compilation unit");
         return compilationUnit.findAll(ClassOrInterfaceDeclaration.class).stream()
                 .filter(c -> !c.getExtendedTypes().isEmpty())
                 .map(c -> c.getExtendedTypes().get(0).getNameAsString())

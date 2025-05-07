@@ -1,7 +1,7 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.services;
 
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.CustomCompilationUnitDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.SummarizedCompUnitDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.AnalysedCompUnitDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.parts.ProgramMetricsDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.services.parts.ProgramMetricsService;
 import lombok.RequiredArgsConstructor;
@@ -13,8 +13,8 @@ public class CCUSummarizingService {
 
     private final ProgramMetricsService programMetricsService;
 
-    public SummarizedCompUnitDTO generateSummarizedCompUnit(CustomCompilationUnitDTO compilationUnitDTO) {
-        SummarizedCompUnitDTO detailedCompUnit = new SummarizedCompUnitDTO();
+    public AnalysedCompUnitDTO analyseCompUnit(CustomCompilationUnitDTO compilationUnitDTO) {
+        AnalysedCompUnitDTO detailedCompUnit = new AnalysedCompUnitDTO();
         // Set the class count
         int classCount = compilationUnitDTO.getClassNames().size();
         detailedCompUnit.setClassCount(classCount);

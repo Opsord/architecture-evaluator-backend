@@ -15,7 +15,7 @@ public class VariableService {
     private static final Logger logger = LoggerFactory.getLogger(VariableService.class);
 
     public List<VariableDTO> getVariables(CompilationUnit compilationUnit) {
-        logger.info("Extracting variables from compilation unit");
+//        logger.info("Extracting variables from compilation unit");
         List<VariableDTO> variables = new ArrayList<>();
         VariableVisitor visitor = new VariableVisitor();
         compilationUnit.accept(visitor, variables);

@@ -1,10 +1,12 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.services;
 
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.AnalysedCompUnitDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto.CompUnitWithAnalysisDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto.ProjectAnalysisDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.services.CCUSummarizingService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_manager.dto.ProjectDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_manager.dto.LayerAnnotation;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_manager.services.ProjectScannerService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.CustomCompilationUnitDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.SummarizedCompUnitDTO;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,9 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -23,39 +23,62 @@ public class OrchestratorService {
     private static final Logger logger = LoggerFactory.getLogger(OrchestratorService.class);
 
     private final ProjectScannerService projectScannerService;
-    private final CCUSummarizingService detailingService;
+    private final CCUSummarizingService summarizingService;
 
-    public Map<CustomCompilationUnitDTO, SummarizedCompUnitDTO> orchestrateProjectAnalysis(String projectPath) throws IOException {
+    public ProjectAnalysisDTO orchestrateProjectAnalysis(String projectPath) throws IOException {
         logger.info("Starting orchestration for project at path: {}", projectPath);
 
-        // Step 1: Scan and organize the project
-        ProjectDTO projectDTO = projectScannerService.scanAndOrganizeProject(projectPath);
-        logger.info("Project scanned and organized: {}", projectDTO);
+        // Scan and parse the compilation units in the project
+        List<CustomCompilationUnitDTO> compilationUnitDTOS = projectScannerService.scanProject(projectPath);
 
-        // Step 2: Parse and detail each compilation unit, generating a map
-        List<CustomCompilationUnitDTO> allUnits = collectAllCompilationUnits(projectDTO);
-        logger.info("Collected {} compilation units", allUnits.size());
+        // Analyze the compilation units and generate CompUnitWithAnalysisDTO
+        List<CompUnitWithAnalysisDTO> compUnitWithAnalysisDTOS = compilationUnitDTOS.stream()
+                .map(compilationUnit -> {
+                    AnalysedCompUnitDTO analysis = summarizingService.analyseCompUnit(compilationUnit);
+                    CompUnitWithAnalysisDTO compUnitWithAnalysis = new CompUnitWithAnalysisDTO();
+                    compUnitWithAnalysis.setCompilationUnit(compilationUnit);
+                    compUnitWithAnalysis.setAnalysis(analysis);
+                    return compUnitWithAnalysis;
+                })
+                .toList();
 
-        return allUnits.stream()
-                .peek(unit -> logger.info("Processing unit: {}", unit.getPackageName()))
-                .collect(Collectors.toMap(
-                        unit -> unit,
-                        detailingService::generateSummarizedCompUnit
-                ));
+        // Organize the analyzed units into a ProjectAnalysisDTO
+        ProjectAnalysisDTO projectAnalysisDTO = organizeProjectAnalysis(compUnitWithAnalysisDTOS);
+        // Set the project path in the ProjectAnalysisDTO
+        projectAnalysisDTO.setProjectPath(projectPath);
+
+        logger.info("Orchestration completed for project at path: {}", projectPath);
+        return projectAnalysisDTO;
+    }
+
+    public ProjectAnalysisDTO organizeProjectAnalysis(List<CompUnitWithAnalysisDTO> compUnitWithAnalysisDTOS) {
+        ProjectAnalysisDTO projectAnalysisDTO = new ProjectAnalysisDTO();
+        projectAnalysisDTO.setEntities(filterByLayer(compUnitWithAnalysisDTOS, "entity"));
+        projectAnalysisDTO.setDocuments(filterByLayer(compUnitWithAnalysisDTOS, "document"));
+        projectAnalysisDTO.setRepositories(filterByLayer(compUnitWithAnalysisDTOS, "repository"));
+        projectAnalysisDTO.setServices(filterByLayer(compUnitWithAnalysisDTOS, "service"));
+        projectAnalysisDTO.setControllers(filterByLayer(compUnitWithAnalysisDTOS, "controller"));
+        return projectAnalysisDTO;
     }
 
     /**
-     * Collects all compilation units from the project DTO.
-     * @param projectDTO The project DTO containing all compilation units.
-     * @return A list of all compilation units.
+     * Filters the list of CompilationUnitAnalysisDTO by the specified layer.
+     *
+     * @param units List of CompilationUnitAnalysisDTO to filter.
+     * @param layer Layer to filter by (e.g., "entity", "repository", "service", "controller").
+     * @return List of CompilationUnitAnalysisDTO filtered by the specified layer.
      */
-    private List<CustomCompilationUnitDTO> collectAllCompilationUnits(ProjectDTO projectDTO) {
-        return Stream.of(
-                projectDTO.getEntities(),
-                projectDTO.getRepositories(),
-                projectDTO.getServices(),
-                projectDTO.getControllers(),
-                projectDTO.getDocuments()
-        ).flatMap(List::stream).collect(Collectors.toList());
+    private List<CompUnitWithAnalysisDTO> filterByLayer(List<CompUnitWithAnalysisDTO> units, String layer) {
+        return units.stream()
+                .filter(dto -> dto.getCompilationUnit().getAnnotations().stream()
+                        .anyMatch(annotation -> {
+                            try {
+                                return LayerAnnotation.valueOf(layer.toUpperCase()).getAnnotation()
+                                        .equalsIgnoreCase(annotation.getName());
+                            } catch (IllegalArgumentException e) {
+                                return false;
+                            }
+                        }))
+                .collect(Collectors.toList());
     }
 }

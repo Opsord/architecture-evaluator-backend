@@ -15,7 +15,7 @@ public class CommentService {
     private static final Logger logger = LoggerFactory.getLogger(CommentService.class);
 
     public List<String> getComments(CompilationUnit compilationUnit) {
-        logger.info("Extracting comments from compilation unit");
+//        logger.info("Extracting comments from compilation unit");
         List<String> comments = new ArrayList<>();
         CommentVisitor visitor = new CommentVisitor();
         compilationUnit.accept(visitor, comments);

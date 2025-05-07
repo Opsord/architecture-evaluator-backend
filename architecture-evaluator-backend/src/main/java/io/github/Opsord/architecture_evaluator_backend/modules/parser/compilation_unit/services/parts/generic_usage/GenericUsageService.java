@@ -16,7 +16,7 @@ public class GenericUsageService {
     private static final Logger logger = LoggerFactory.getLogger(GenericUsageService.class);
 
     public List<GenericUsageDTO> getGenericUsages(CompilationUnit compilationUnit) {
-        logger.info("Extracting generic usages from compilation unit");
+//        logger.info("Extracting generic usages from compilation unit");
         List<GenericUsageDTO> genericUsages = new ArrayList<>();
         GenericUsageVisitor visitor = new GenericUsageVisitor();
         compilationUnit.accept(visitor, genericUsages);

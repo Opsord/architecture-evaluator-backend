@@ -16,7 +16,7 @@ public class ExceptionHandlerService {
     private static final Logger logger = LoggerFactory.getLogger(ExceptionHandlerService.class);
 
     public List<ExceptionHandlingDTO> getExceptionHandling(CompilationUnit compilationUnit) {
-        logger.info("Extracting exception handling from compilation unit");
+//        logger.info("Extracting exception handling from compilation unit");
         List<ExceptionHandlingDTO> exceptionHandling = new ArrayList<>();
         ExceptionHandlerVisitor visitor = new ExceptionHandlerVisitor();
         compilationUnit.accept(visitor, exceptionHandling);

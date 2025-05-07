@@ -16,7 +16,7 @@ public class AnnotationService {
     private static final Logger logger = LoggerFactory.getLogger(AnnotationService.class);
 
     public List<AnnotationDTO> getAnnotations(CompilationUnit compilationUnit) {
-        logger.info("Extracting annotations from compilation unit");
+//        logger.info("Extracting annotations from compilation unit");
         List<AnnotationDTO> annotations = new ArrayList<>();
         AnnotationVisitor visitor = new AnnotationVisitor();
         compilationUnit.accept(visitor, annotations);

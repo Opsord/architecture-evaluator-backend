@@ -19,12 +19,12 @@ public class StatementService {
     private static final Logger logger = LoggerFactory.getLogger(StatementService.class);
 
     public List<StatementDTO> getStatements(CompilationUnit compilationUnit) {
-        logger.info("Extracting statements from compilation unit");
+//        logger.info("Extracting statements from compilation unit");
         return extractStatements(compilationUnit);
     }
 
     public List<StatementDTO> getStatementsFromMethod(MethodDeclaration method) {
-        logger.info("Extracting statements from method: {}", method.getNameAsString());
+//        logger.info("Extracting statements from method: {}", method.getNameAsString());
         return extractStatements(method);
     }
 

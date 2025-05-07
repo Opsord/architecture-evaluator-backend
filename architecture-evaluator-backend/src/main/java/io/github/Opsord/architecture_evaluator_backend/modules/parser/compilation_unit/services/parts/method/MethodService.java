@@ -16,7 +16,7 @@ public class MethodService {
     private static final Logger logger = LoggerFactory.getLogger(MethodService.class);
 
     public List<MethodDTO> getMethods(CompilationUnit compilationUnit) {
-        logger.info("Extracting methods from compilation unit");
+//        logger.info("Extracting methods from compilation unit");
         List<MethodDTO> methods = new ArrayList<>();
         MethodVisitor visitor = new MethodVisitor();
         compilationUnit.accept(visitor, methods);
