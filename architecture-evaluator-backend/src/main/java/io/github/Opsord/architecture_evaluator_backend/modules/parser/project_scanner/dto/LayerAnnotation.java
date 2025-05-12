@@ -1,4 +1,4 @@
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.project_manager.dto;
+package io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto;
 
 import lombok.Getter;
 

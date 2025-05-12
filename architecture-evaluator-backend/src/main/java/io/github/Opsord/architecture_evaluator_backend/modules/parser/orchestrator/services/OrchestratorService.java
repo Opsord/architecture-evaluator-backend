@@ -4,8 +4,8 @@ import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.d
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto.CompUnitWithAnalysisDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto.ProjectAnalysisDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.services.CCUSummarizingService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_manager.dto.LayerAnnotation;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_manager.services.ProjectScannerService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.LayerAnnotation;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.ProjectScannerService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.CustomCompilationUnitDTO;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
