@@ -34,7 +34,7 @@ public class OrchestratorService {
         // Analyze the compilation units and generate CompUnitWithAnalysisDTO
         List<CompUnitWithAnalysisDTO> compUnitWithAnalysisDTOS = compilationUnitDTOS.stream()
                 .map(compilationUnit -> {
-                    AnalysedCompUnitDTO analysis = summarizingService.analyseCompUnit(compilationUnit);
+                    AnalysedCompUnitDTO analysis = summarizingService.analyseCompUnit(compilationUnit, compilationUnitDTOS);
                     CompUnitWithAnalysisDTO compUnitWithAnalysis = new CompUnitWithAnalysisDTO();
                     compUnitWithAnalysis.setCompilationUnit(compilationUnit);
                     compUnitWithAnalysis.setAnalysis(analysis);
