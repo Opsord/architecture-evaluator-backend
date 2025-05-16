@@ -5,7 +5,8 @@ import io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrat
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto.ProjectAnalysisDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.services.CCUSummarizingService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.LayerAnnotation;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.ProjectScannerService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.parts.PomService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.parts.ProjectService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.CustomCompilationUnitDTO;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -22,14 +23,15 @@ public class OrchestratorService {
 
     private static final Logger logger = LoggerFactory.getLogger(OrchestratorService.class);
 
-    private final ProjectScannerService projectScannerService;
+    private final PomService pomService;
+    private final ProjectService projectService;
     private final CCUSummarizingService summarizingService;
 
     public ProjectAnalysisDTO orchestrateProjectAnalysis(String projectPath) throws IOException {
         logger.info("Starting orchestration for project at path: {}", projectPath);
 
         // Scan and parse the compilation units in the project
-        List<CustomCompilationUnitDTO> compilationUnitDTOS = projectScannerService.scanProject(projectPath);
+        List<CustomCompilationUnitDTO> compilationUnitDTOS = projectService.scanProject(projectPath);
 
         // Analyze the compilation units and generate CompUnitWithAnalysisDTO
         List<CompUnitWithAnalysisDTO> compUnitWithAnalysisDTOS = compilationUnitDTOS.stream()
@@ -47,7 +49,7 @@ public class OrchestratorService {
         // Set the project path in the ProjectAnalysisDTO
         projectAnalysisDTO.setProjectPath(projectPath);
         // Scan the pom.xml file and set it in the ProjectAnalysisDTO
-        projectAnalysisDTO.setPomFile(projectScannerService.scanPomFile(projectPath));
+        projectAnalysisDTO.setPomFile(pomService.scanPomFile(projectPath));
 
         logger.info("Orchestration completed for project at path: {}", projectPath);
         return projectAnalysisDTO;
