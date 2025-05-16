@@ -1,5 +1,6 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto;
 
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.PomFileDTO;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,4 +15,5 @@ public class ProjectAnalysisDTO {
     private List<CompUnitWithAnalysisDTO> repositories;
     private List<CompUnitWithAnalysisDTO> services;
     private List<CompUnitWithAnalysisDTO> controllers;
+    private PomFileDTO pomFile;
 }

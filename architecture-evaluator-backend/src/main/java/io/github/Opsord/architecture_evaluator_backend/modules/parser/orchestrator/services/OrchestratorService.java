@@ -46,6 +46,8 @@ public class OrchestratorService {
         ProjectAnalysisDTO projectAnalysisDTO = organizeProjectAnalysis(compUnitWithAnalysisDTOS);
         // Set the project path in the ProjectAnalysisDTO
         projectAnalysisDTO.setProjectPath(projectPath);
+        // Scan the pom.xml file and set it in the ProjectAnalysisDTO
+        projectAnalysisDTO.setPomFile(projectScannerService.scanPomFile(projectPath));
 
         logger.info("Orchestration completed for project at path: {}", projectPath);
         return projectAnalysisDTO;

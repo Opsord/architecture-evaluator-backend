@@ -31,8 +31,8 @@ public class CouplingMetricsService {
 
     public int calculateAfferentCoupling(CustomCompilationUnitDTO compilationUnit, List<CustomCompilationUnitDTO> allUnits) {
         List<String> importedClasses = compilationUnitService.getImportedClasses(compilationUnit, allUnits);
-//        System.out.println("Original class: " + compilationUnit.getClassNames());
-//        System.out.println("Imported classes: " + importedClasses);
+//        System.out.println("Original class: "+ compilationUnit.getClassNames());
+//        System.out.println("Imported classes: "+ importedClasses);
         return importedClasses.size();
     }
 
