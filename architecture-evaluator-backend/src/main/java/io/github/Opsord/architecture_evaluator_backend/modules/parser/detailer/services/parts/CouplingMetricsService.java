@@ -1,6 +1,7 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.services.parts;
 
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.CustomCompilationUnitDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.CompilationUnitService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.parts.CouplingMetricsDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -10,6 +11,8 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class CouplingMetricsService {
+
+    private final CompilationUnitService compilationUnitService;
 
     /**
      * Calculate the coupling metrics for a given compilation unit.
@@ -26,64 +29,21 @@ public class CouplingMetricsService {
         return metrics;
     }
 
-    /**
-     * Count the number of classes in the package of the compilation unit.
-     *
-     * @param compilationUnit The compilation unit to analyze.
-     * @param allUnits The list of all compilation units in the project.
-     * @return The number of classes in the package of the compilation unit.
-     */
-    public int countClassesInPackage(CustomCompilationUnitDTO compilationUnit, List<CustomCompilationUnitDTO> allUnits) {
-        return (int) allUnits.stream()
-                .filter(unit -> unit.getPackageName().equals(compilationUnit.getPackageName()))
-                .count();
-    }
-
-    /**
-     * Count the number of classes that imports a package.
-     *
-     * @param packageName The package name to analyze.
-     * @param allUnits The list of all compilation units in the project.
-     * @return The number of classes that import the package.
-     */
-    public int countClassesImportingPackage(String packageName, List<CustomCompilationUnitDTO> allUnits) {
-        return (int) allUnits.stream()
-                .filter(unit -> unit.getImportedPackages().stream()
-                        .anyMatch(importedPackage -> importedPackage.startsWith(packageName)))
-                .count();
-    }
-
-
-    /**
-     * Calculate the afferent coupling for a given compilation unit.
-     *
-     * @param compilationUnit The compilation unit to analyze.
-     * @param allUnits The list of all compilation units in the project.
-     * @return The afferent coupling for the given compilation unit.
-     */
     public int calculateAfferentCoupling(CustomCompilationUnitDTO compilationUnit, List<CustomCompilationUnitDTO> allUnits) {
-        int packageClasses = countClassesInPackage(compilationUnit, allUnits);
-        int packageImports = countClassesImportingPackage(compilationUnit.getPackageName(), allUnits);
-        /// The -1 is to remove the class itself from the count
-        return packageClasses + packageImports - 1;
+        List<String> importedClasses = compilationUnitService.getImportedClasses(compilationUnit, allUnits);
+//        System.out.println("Original class: " + compilationUnit.getClassNames());
+//        System.out.println("Imported classes: " + importedClasses);
+        return importedClasses.size();
     }
 
-    /**
-     * Calculate the efferent coupling for a given compilation unit.
-     *
-     * @param compilationUnit The compilation unit to analyze.
-     * @param allUnits The list of all compilation units in the project.
-     * @return The efferent coupling for the given compilation unit.
-     */
     public int calculateEfferentCoupling(CustomCompilationUnitDTO compilationUnit, List<CustomCompilationUnitDTO> allUnits) {
-        String packageName = compilationUnit.getPackageName();
-        int totalPackageImports = allUnits.stream()
-                .filter(unit -> unit.getImportedPackages().stream()
-                        .anyMatch(importedPackage -> importedPackage.startsWith(packageName)))
-                .mapToInt(unit -> countClassesInPackage(unit, allUnits))
-                .sum();
-        // The -1 is to remove the class itself from the count
-        return totalPackageImports - 1;
+        if (compilationUnit.getClassNames().isEmpty()) {
+            return 0; // No classes to calculate efferent coupling for
+        }
+        List<String> dependentClasses = compilationUnitService.getDependentClasses(compilationUnit.getClassNames().get(0), allUnits);
+//        System.out.println("Original class: " + compilationUnit.getClassNames());
+//        System.out.println("Dependent classes: " + dependentClasses);
+        return dependentClasses.size();
     }
 
     public double calculateInstability(int afferentCoupling, int efferentCoupling) {

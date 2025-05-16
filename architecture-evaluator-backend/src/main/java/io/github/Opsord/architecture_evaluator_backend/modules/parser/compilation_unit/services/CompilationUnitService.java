@@ -15,6 +15,7 @@ import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilatio
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.method.MethodService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.package_part.PackageService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.variable.VariableService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto.CompUnitWithAnalysisDTO;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +23,11 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 @Service
@@ -79,7 +85,7 @@ public class CompilationUnitService {
      * @param compilationUnit The CompilationUnit to calculate lines of code for
      * @return The number of lines of code
      */
-    private int calculateLinesOfCode(CompilationUnit compilationUnit) {
+    public int calculateLinesOfCode(CompilationUnit compilationUnit) {
         return compilationUnit.getTokenRange()
                 .map(tokens -> Math.toIntExact(StreamSupport.stream(tokens.spliterator(), false)
                         .filter(token -> !token.toString().startsWith("//") && !token.toString().startsWith("/*"))
@@ -87,5 +93,104 @@ public class CompilationUnitService {
                         .distinct()
                         .count()))
                 .orElse(0);
+    }
+
+    private List<String> findClassesInPackage(String packageName, List<CustomCompilationUnitDTO> allUnits) {
+        return allUnits.stream()
+                .filter(unit -> unit.getPackageName().equals(packageName))
+                .flatMap(unit -> unit.getClassNames().stream())
+                .toList();
+    }
+
+    public List<String> getImportedClasses(CustomCompilationUnitDTO compUnit, List<CustomCompilationUnitDTO> allUnits) {
+        // Convert class names to a Set for faster lookups
+        Set<String> selfClassNames = new HashSet<>(compUnit.getClassNames());
+
+        // Process imported packages and return the result directly
+        return compUnit.getImportedPackages().stream()
+                .flatMap(imported -> {
+                    if (imported.endsWith(".*")) {
+                        // If the import is a package, find all classes in that package
+                        String packageName = imported.substring(0, imported.length() - 2);
+                        return findClassesInPackage(packageName, allUnits).stream();
+                    } else {
+                        // If the import is a single class, return it as a single element
+                        return Stream.of(imported);
+                    }
+                })
+                .distinct() // Remove duplicates
+                .filter(className -> !selfClassNames.contains(className)) // Exclude self-class names
+                .toList(); // Collect the result as a list
+    }
+
+    public List<CustomCompilationUnitDTO> getImportedCompilationUnits(CustomCompilationUnitDTO compUnit, List<CustomCompilationUnitDTO> allUnits) {
+        // Convert class names to a Set for faster lookups
+        Set<String> selfClassNames = new HashSet<>(compUnit.getClassNames());
+
+        // Process imported packages and return the corresponding compilation units
+        return compUnit.getImportedPackages().stream()
+                .flatMap(imported -> {
+                    if (imported.endsWith(".*")) {
+                        // If the import is a package, find all compilation units in that package
+                        String packageName = imported.substring(0, imported.length() - 2);
+                        return allUnits.stream()
+                                .filter(unit -> unit.getPackageName().equals(packageName));
+                    } else {
+                        // If the import is a single class, find the corresponding compilation unit
+                        return allUnits.stream()
+                                .filter(unit -> unit.getClassNames().contains(imported));
+                    }
+                })
+                .distinct() // Remove duplicates
+                .filter(unit -> unit.getClassNames().stream().noneMatch(selfClassNames::contains)) // Exclude self-class units
+                .toList(); // Collect the result as a list
+    }
+
+//    public List<String> getImportedClasses(CustomCompilationUnitDTO compUnit, List<CustomCompilationUnitDTO> allUnits) {
+//        List<String> classList = new ArrayList<>(compUnit.getImportedPackages().stream()
+//                .flatMap(imported -> {
+//                    if (imported.endsWith(".*")) {
+//                        /// If the import is a package (e.g., "java.util.*"), find all classes in that package
+//                        String packageName = imported.substring(0, imported.length() - 2);
+//                        return findClassesInPackage(packageName, allUnits).stream();
+//                    } else {
+//                        /// If the import is a single class (e.g., "java.util.List"), return it as a single element
+//                        return Stream.of(imported);
+//                    }
+//                })
+//                .toList());
+//        /// Remove duplicates
+//        classList = classList.stream().distinct().toList();
+//        /// Remove self-class
+//        classList.removeIf(className -> compUnit.getClassNames().contains(className));
+//        return classList;
+//    }
+
+    public List<CustomCompilationUnitDTO> findCompilationUnitsFromPackage(String packageName, List<CustomCompilationUnitDTO> allUnits) {
+        return allUnits.stream()
+                .filter(unit -> unit.getPackageName().equals(packageName))
+                .toList();
+    }
+
+    public List<String> getDependentClasses(String targetClassOrPackage, List<CustomCompilationUnitDTO> allUnits) {
+        return allUnits.stream()
+                .filter(unit -> unit.getImportedPackages().stream()
+                        .anyMatch(imported ->
+                                imported.equals(targetClassOrPackage) || // Fully qualified name
+                                        (imported.endsWith(".*") && targetClassOrPackage.startsWith(imported.substring(0, imported.length() - 2))) || // Package import
+                                        imported.endsWith("." + targetClassOrPackage) // Simple class name match
+                        ))
+                .flatMap(unit -> unit.getClassNames().stream())
+                .distinct()
+                .toList();
+    }
+
+    public List<CustomCompilationUnitDTO> getDependentCompilationUnits(String targetClassOrPackage, List<CustomCompilationUnitDTO> allUnits) {
+        return allUnits.stream()
+                .filter(unit -> unit.getImportedPackages().stream()
+                        .anyMatch(imported -> imported.equals(targetClassOrPackage) ||
+                                (imported.endsWith(".*") && targetClassOrPackage.startsWith(imported.substring(0, imported.length() - 2)))))
+                .distinct()
+                .toList();
     }
 }
