@@ -22,7 +22,7 @@ public class CCUSummarizingService {
         AnalysedCompUnitDTO detailedCompUnit = new AnalysedCompUnitDTO();
 
         // Basic metrics
-        detailedCompUnit.setClassCount(compilationUnitDTO.getClassNames().size());
+        detailedCompUnit.setClassCount(compilationUnitDTO.getClassName().size());
         detailedCompUnit.setInterfaceCount(compilationUnitDTO.getInterfaceNames().size());
         detailedCompUnit.setStatementCount(compilationUnitDTO.getStatements().size());
 

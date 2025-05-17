@@ -15,7 +15,6 @@ import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilatio
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.method.MethodService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.package_part.PackageService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.variable.VariableService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto.CompUnitWithAnalysisDTO;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +22,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -61,7 +59,7 @@ public class CompilationUnitService {
 
         CustomCompilationUnitDTO dto = new CustomCompilationUnitDTO();
         dto.setPackageName(compilationUnit.getPackageDeclaration().map(pd -> pd.getName().toString()).orElse("default"));
-        dto.setClassNames(classService.getClassNames(compilationUnit));
+        dto.setClassName(classService.getClassNames(compilationUnit));
         dto.setSuperClasses(classService.getSuperClasses(compilationUnit));
         dto.setInterfaceNames(interfaceService.getInterfaceNames(compilationUnit));
         dto.setStatements(statementService.getStatements(compilationUnit));
@@ -98,13 +96,13 @@ public class CompilationUnitService {
     private List<String> findClassesInPackage(String packageName, List<CustomCompilationUnitDTO> allUnits) {
         return allUnits.stream()
                 .filter(unit -> unit.getPackageName().equals(packageName))
-                .flatMap(unit -> unit.getClassNames().stream())
+                .flatMap(unit -> unit.getClassName().stream())
                 .toList();
     }
 
     public List<String> getImportedClasses(CustomCompilationUnitDTO compUnit, List<CustomCompilationUnitDTO> allUnits) {
         // Convert class names to a Set for faster lookups
-        Set<String> selfClassNames = new HashSet<>(compUnit.getClassNames());
+        Set<String> selfClassNames = new HashSet<>(compUnit.getClassName());
 
         // Process imported packages and return the result directly
         return compUnit.getImportedPackages().stream()
@@ -125,7 +123,7 @@ public class CompilationUnitService {
 
     public List<CustomCompilationUnitDTO> getImportedCompilationUnits(CustomCompilationUnitDTO compUnit, List<CustomCompilationUnitDTO> allUnits) {
         // Convert class names to a Set for faster lookups
-        Set<String> selfClassNames = new HashSet<>(compUnit.getClassNames());
+        Set<String> selfClassNames = new HashSet<>(compUnit.getClassName());
 
         // Process imported packages and return the corresponding compilation units
         return compUnit.getImportedPackages().stream()
@@ -138,11 +136,11 @@ public class CompilationUnitService {
                     } else {
                         // If the import is a single class, find the corresponding compilation unit
                         return allUnits.stream()
-                                .filter(unit -> unit.getClassNames().contains(imported));
+                                .filter(unit -> unit.getClassName().contains(imported));
                     }
                 })
                 .distinct() // Remove duplicates
-                .filter(unit -> unit.getClassNames().stream().noneMatch(selfClassNames::contains)) // Exclude self-class units
+                .filter(unit -> unit.getClassName().stream().noneMatch(selfClassNames::contains)) // Exclude self-class units
                 .toList(); // Collect the result as a list
     }
 
@@ -180,7 +178,7 @@ public class CompilationUnitService {
                                         (imported.endsWith(".*") && targetClassOrPackage.startsWith(imported.substring(0, imported.length() - 2))) || // Package import
                                         imported.endsWith("." + targetClassOrPackage) // Simple class name match
                         ))
-                .flatMap(unit -> unit.getClassNames().stream())
+                .flatMap(unit -> unit.getClassName().stream())
                 .distinct()
                 .toList();
     }

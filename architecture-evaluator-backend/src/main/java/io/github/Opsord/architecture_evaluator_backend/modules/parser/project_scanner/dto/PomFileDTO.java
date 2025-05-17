@@ -11,5 +11,5 @@ public class PomFileDTO {
     private String groupId;
     private String artifactId;
     private String version;
-    private List<String> dependencies;
+    private List<DependencyDTO> dependencies;
 }

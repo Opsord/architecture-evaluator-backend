@@ -37,10 +37,10 @@ public class CouplingMetricsService {
     }
 
     public int calculateEfferentCoupling(CustomCompilationUnitDTO compilationUnit, List<CustomCompilationUnitDTO> allUnits) {
-        if (compilationUnit.getClassNames().isEmpty()) {
+        if (compilationUnit.getClassName().isEmpty()) {
             return 0; // No classes to calculate efferent coupling for
         }
-        List<String> dependentClasses = compilationUnitService.getDependentClasses(compilationUnit.getClassNames().get(0), allUnits);
+        List<String> dependentClasses = compilationUnitService.getDependentClasses(compilationUnit.getClassName().get(0), allUnits);
 //        System.out.println("Original class: " + compilationUnit.getClassNames());
 //        System.out.println("Dependent classes: " + dependentClasses);
         return dependentClasses.size();

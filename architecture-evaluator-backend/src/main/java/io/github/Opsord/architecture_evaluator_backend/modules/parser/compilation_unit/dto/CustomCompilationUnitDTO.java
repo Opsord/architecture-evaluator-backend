@@ -13,7 +13,7 @@ import java.util.List;
 @Setter
 public class CustomCompilationUnitDTO {
     private String packageName;
-    private List<String> classNames;
+    private List<String> className;
     private List<String> interfaceNames;
     private List<StatementDTO> statements;
     private List<MethodDTO> methods;
@@ -25,6 +25,5 @@ public class CustomCompilationUnitDTO {
     private List<String> implementedInterfaces;
     private List<AnnotationDTO> annotations;
     private List<GenericUsageDTO> genericUsages;
-
     private int LinesOfCode;
 }
