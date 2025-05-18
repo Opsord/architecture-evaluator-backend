@@ -1,7 +1,7 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.parts;
 
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.DependencyDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.PomFileDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.DependencyDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.PomFileDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.ScanningService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;

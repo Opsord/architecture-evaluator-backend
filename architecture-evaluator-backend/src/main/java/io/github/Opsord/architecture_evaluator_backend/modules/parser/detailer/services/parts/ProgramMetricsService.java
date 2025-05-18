@@ -17,7 +17,7 @@ public class ProgramMetricsService {
         ProgramMetricsDTO programMetrics = new ProgramMetricsDTO();
 
         int numberOfMethods = customCompilationUnit.getMethods().size();
-        int sumOfExecutableStatements = 0;
+        int sumOfExecutableStatements;
         int maxInputParameters = 0;
         int maxOutputParameters = 0;
         int approxMcCabeCC = 0;

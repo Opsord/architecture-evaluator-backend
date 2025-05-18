@@ -3,15 +3,18 @@ package io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.CustomCompilationUnitDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.AnalysedCompUnitDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.parts.CouplingMetricsDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.parts.ImportCategory;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.parts.ProgramMetricsDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.services.parts.CouplingMetricsService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.services.parts.ImportClassifierService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.services.parts.ProgramMetricsService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.PomFileDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.DependencyDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.PomFileDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +30,13 @@ public class CCUSummarizingService {
                                                PomFileDTO pomFileDTO) {
         AnalysedCompUnitDTO detailedCompUnit = new AnalysedCompUnitDTO();
 
+        // Set the classified dependencies
+        Map<ImportCategory, List<String>> classifiedDependencies = importClassifierService.classifyDependencies(
+                pomFileDTO,
+                compilationUnitDTO,
+                internalBasePackage);
+        detailedCompUnit.setClassifiedDependencies(classifiedDependencies);
+
         // Basic metrics
         detailedCompUnit.setClassCount(compilationUnitDTO.getClassName().size());
         detailedCompUnit.setInterfaceCount(compilationUnitDTO.getInterfaceNames().size());
@@ -39,9 +49,6 @@ public class CCUSummarizingService {
         // Set the coupling metrics
         CouplingMetricsDTO couplingMetrics = couplingMetricsService.calculateCouplingMetrics(compilationUnitDTO, allUnits);
         detailedCompUnit.setCouplingMetrics(couplingMetrics);
-
-        // Set the classified dependencies
-        importClassifierService.classifyDependencies(pomFileDTO, detailedCompUnit, internalBasePackage);
 
         return detailedCompUnit;
     }

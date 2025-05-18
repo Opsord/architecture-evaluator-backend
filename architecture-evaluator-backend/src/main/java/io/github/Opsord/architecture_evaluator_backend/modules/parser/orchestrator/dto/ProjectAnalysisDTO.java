@@ -1,6 +1,6 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto;
 
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.PomFileDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.PomFileDTO;
 import lombok.Getter;
 import lombok.Setter;
 
