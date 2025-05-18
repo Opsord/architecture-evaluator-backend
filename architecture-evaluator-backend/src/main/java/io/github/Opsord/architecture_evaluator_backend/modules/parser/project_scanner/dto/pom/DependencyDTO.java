@@ -1,12 +1,8 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+import lombok.*;
 
-@Getter
-@Setter
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class DependencyDTO {

@@ -1,6 +1,7 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.parts;
 
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.DependencyDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.ParentSectionDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.PomFileDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.ScanningService;
 import lombok.RequiredArgsConstructor;
@@ -38,9 +39,15 @@ public class PomService {
             document.getDocumentElement().normalize();
 
             PomFileDTO pomFileDTO = new PomFileDTO();
+            pomFileDTO.setParentSection(getParentInfo(document));
             pomFileDTO.setGroupId(getTagValue(document, "groupId"));
             pomFileDTO.setArtifactId(getTagValue(document, "artifactId"));
             pomFileDTO.setVersion(getTagValue(document, "version"));
+            pomFileDTO.setDescription(getTagValue(document, "description"));
+            pomFileDTO.setUrl(getTagValue(document, "url"));
+            pomFileDTO.setLicense(getLicense(document));
+            pomFileDTO.setDevelopers(getDevelopers(document));
+            pomFileDTO.setJavaVersion(getTagValue(document, "java.version"));
             pomFileDTO.setDependencies(parseDependencies(document));
 
             return pomFileDTO;
@@ -67,6 +74,43 @@ public class PomService {
         return dependencyList;
     }
 
+    private ParentSectionDTO getParentInfo(Document document) {
+        NodeList parentNodes = document.getElementsByTagName("parent");
+        if (parentNodes.getLength() > 0) {
+            Element parentElement = (Element) parentNodes.item(0);
+            ParentSectionDTO parentDTO = new ParentSectionDTO();
+            parentDTO.setGroupId(getTagValue(parentElement, "groupId"));
+            parentDTO.setArtifactId(getTagValue(parentElement, "artifactId"));
+            parentDTO.setVersion(getTagValue(parentElement, "version"));
+            return parentDTO;
+        }
+        return null;
+    }
+
+    private String getLicense(Document document) {
+        NodeList licenses = document.getElementsByTagName("license");
+        if (licenses.getLength() > 0) {
+            Element license = (Element) licenses.item(0);
+            return getTagValue(license, "name");
+        }
+        return null;
+    }
+
+    private List<String> getDevelopers(Document document) {
+        List<String> developers = new ArrayList<>();
+        NodeList developerNodes = document.getElementsByTagName("developer");
+
+        for (int i = 0; i < developerNodes.getLength(); i++) {
+            Element developer = (Element) developerNodes.item(i);
+            String name = getTagValue(developer, "name");
+            if (name != null) {
+                developers.add(name);
+            }
+        }
+
+        return developers;
+    }
+
     private String getTagValue(Element element, String tagName) {
         NodeList nodeList = element.getElementsByTagName(tagName);
         if (nodeList.getLength() > 0 && nodeList.item(0).getTextContent() != null) {
@@ -76,6 +120,17 @@ public class PomService {
     }
 
     private String getTagValue(Document document, String tagName) {
-        return getTagValue(document.getDocumentElement(), tagName);
+        try {
+            NodeList nodes = document.getDocumentElement().getElementsByTagName(tagName);
+            for (int i = 0; i < nodes.getLength(); i++) {
+                Element element = (Element) nodes.item(i);
+                if (element.getParentNode().getNodeName().equals("project")) {
+                    return element.getTextContent().trim();
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Error retrieving tag value for: {}", tagName, e);
+        }
+        return null;
     }
 }
