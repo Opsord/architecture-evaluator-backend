@@ -3,10 +3,12 @@ package io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.CustomCompilationUnitDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.CompilationUnitService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.parts.CouplingMetricsDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.parts.ImportCategory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -21,28 +23,42 @@ public class CouplingMetricsService {
      * @param allUnits The list of all compilation units in the project.
      * @return The coupling metrics for the given compilation unit.
      */
-    public CouplingMetricsDTO calculateCouplingMetrics(CustomCompilationUnitDTO compilationUnit, List<CustomCompilationUnitDTO> allUnits) {
+    public CouplingMetricsDTO calculateCouplingMetrics(CustomCompilationUnitDTO compilationUnit,
+                                                       List<CustomCompilationUnitDTO> allUnits,
+                                                       Map<ImportCategory, List<String>> classifiedDependencies) {
         CouplingMetricsDTO metrics = new CouplingMetricsDTO();
-        metrics.setAfferentCoupling(calculateAfferentCoupling(compilationUnit, allUnits));
         metrics.setEfferentCoupling(calculateEfferentCoupling(compilationUnit, allUnits));
+        metrics.setAfferentCoupling(calculateAfferentCoupling(compilationUnit, allUnits));
         metrics.setInstability(calculateInstability(metrics.getAfferentCoupling(), metrics.getEfferentCoupling()));
         return metrics;
     }
 
-    public int calculateAfferentCoupling(CustomCompilationUnitDTO compilationUnit, List<CustomCompilationUnitDTO> allUnits) {
+    /**
+     * Calculate the efferent coupling for a given compilation unit.
+     * (i.e., the number of classes that this class depends on)
+     *
+     * @param compilationUnit The compilation unit to analyze.
+     * @param allUnits The list of all compilation units in the project.
+     * @return The number of classes that this class depends on.
+     */
+    public int calculateEfferentCoupling(CustomCompilationUnitDTO compilationUnit, List<CustomCompilationUnitDTO> allUnits) {
         List<String> importedClasses = compilationUnitService.getImportedClasses(compilationUnit, allUnits);
-//        System.out.println("Original class: "+ compilationUnit.getClassNames());
-//        System.out.println("Imported classes: "+ importedClasses);
         return importedClasses.size();
     }
 
-    public int calculateEfferentCoupling(CustomCompilationUnitDTO compilationUnit, List<CustomCompilationUnitDTO> allUnits) {
+    /**
+     * Calculate the afferent coupling for a given compilation unit.
+     * (i.e., the number of classes that depend on this class)
+     *
+     * @param compilationUnit The compilation unit to analyze.
+     * @param allUnits The list of all compilation units in the project.
+     * @return The number of classes that depend on this class.
+     */
+    public int calculateAfferentCoupling(CustomCompilationUnitDTO compilationUnit, List<CustomCompilationUnitDTO> allUnits) {
         if (compilationUnit.getClassName().isEmpty()) {
             return 0; // No classes to calculate efferent coupling for
         }
         List<String> dependentClasses = compilationUnitService.getDependentClasses(compilationUnit.getClassName().get(0), allUnits);
-//        System.out.println("Original class: " + compilationUnit.getClassNames());
-//        System.out.println("Dependent classes: " + dependentClasses);
         return dependentClasses.size();
     }
 

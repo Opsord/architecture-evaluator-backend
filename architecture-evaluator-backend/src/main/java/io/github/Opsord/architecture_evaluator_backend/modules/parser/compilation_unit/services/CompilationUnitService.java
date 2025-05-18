@@ -100,6 +100,12 @@ public class CompilationUnitService {
                 .toList();
     }
 
+    /**
+     * Find all classes imported by a given compilation unit.
+     * @param compUnit The compilation unit to analyze.
+     * @param allUnits The list of all compilation units in the project.
+     * @return A list of class names imported by the given compilation unit.
+     */
     public List<String> getImportedClasses(CustomCompilationUnitDTO compUnit, List<CustomCompilationUnitDTO> allUnits) {
         // Convert class names to a Set for faster lookups
         Set<String> selfClassNames = new HashSet<>(compUnit.getClassName());
@@ -170,6 +176,12 @@ public class CompilationUnitService {
                 .toList();
     }
 
+    /**
+     * Find all classes that depend on a given class or package.
+     * @param targetClassOrPackage The class or package to check dependencies for.
+     * @param allUnits The list of all compilation units in the project.
+     * @return A list of class names that depend on the given class or package.
+     */
     public List<String> getDependentClasses(String targetClassOrPackage, List<CustomCompilationUnitDTO> allUnits) {
         return allUnits.stream()
                 .filter(unit -> unit.getImportedPackages().stream()

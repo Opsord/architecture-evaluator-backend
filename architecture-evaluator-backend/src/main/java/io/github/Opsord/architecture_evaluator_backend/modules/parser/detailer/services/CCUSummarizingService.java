@@ -47,7 +47,7 @@ public class CCUSummarizingService {
         detailedCompUnit.setProgramMetrics(programMetrics);
 
         // Set the coupling metrics
-        CouplingMetricsDTO couplingMetrics = couplingMetricsService.calculateCouplingMetrics(compilationUnitDTO, allUnits);
+        CouplingMetricsDTO couplingMetrics = couplingMetricsService.calculateCouplingMetrics(compilationUnitDTO, allUnits, classifiedDependencies);
         detailedCompUnit.setCouplingMetrics(couplingMetrics);
 
         return detailedCompUnit;
