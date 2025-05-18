@@ -5,6 +5,7 @@ import io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrat
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto.ProjectAnalysisDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.services.CCUSummarizingService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.LayerAnnotation;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.PomFileDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.parts.PomService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.parts.ProjectService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.CustomCompilationUnitDTO;
@@ -33,10 +34,24 @@ public class OrchestratorService {
         // Scan and parse the compilation units in the project
         List<CustomCompilationUnitDTO> compilationUnitDTOS = projectService.scanProject(projectPath);
 
+        // Scan the pom.xml file
+        PomFileDTO pomFileDTO = pomService.scanPomFile(projectPath);
+        if (pomFileDTO == null) {
+            throw new IllegalStateException("Failed to scan pom.xml file at path: " + projectPath);
+        }
+
+        // Define the internal base package (e.g., from the groupId in pom.xml)
+        String internalBasePackage = pomFileDTO.getGroupId();
+
         // Analyze the compilation units and generate CompUnitWithAnalysisDTO
         List<CompUnitWithAnalysisDTO> compUnitWithAnalysisDTOS = compilationUnitDTOS.stream()
                 .map(compilationUnit -> {
-                    AnalysedCompUnitDTO analysis = summarizingService.analyseCompUnit(compilationUnit, compilationUnitDTOS);
+                    AnalysedCompUnitDTO analysis = summarizingService.analyseCompUnit(
+                            compilationUnit,
+                            compilationUnitDTOS,
+                            internalBasePackage,
+                            pomFileDTO
+                    );
                     CompUnitWithAnalysisDTO compUnitWithAnalysis = new CompUnitWithAnalysisDTO();
                     compUnitWithAnalysis.setCompilationUnit(compilationUnit);
                     compUnitWithAnalysis.setAnalysis(analysis);
@@ -46,10 +61,8 @@ public class OrchestratorService {
 
         // Organize the analyzed units into a ProjectAnalysisDTO
         ProjectAnalysisDTO projectAnalysisDTO = organizeProjectAnalysis(compUnitWithAnalysisDTOS);
-        // Set the project path in the ProjectAnalysisDTO
         projectAnalysisDTO.setProjectPath(projectPath);
-        // Scan the pom.xml file and set it in the ProjectAnalysisDTO
-        projectAnalysisDTO.setPomFile(pomService.scanPomFile(projectPath));
+        projectAnalysisDTO.setPomFile(pomFileDTO);
 
         logger.info("Orchestration completed for project at path: {}", projectPath);
         return projectAnalysisDTO;
