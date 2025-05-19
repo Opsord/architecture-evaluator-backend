@@ -73,15 +73,11 @@ public class CouplingMetricsService {
         if (compilationUnit.getClassName().isEmpty()) {
             return 0; // No class name available
         }
+//        System.out.println("Class name: " + compilationUnit.getClassName().get(0));
         List<String> dependentClasses = compilationUnitService.getDependentClasses(compilationUnit.getClassName().get(0), allUnits);
-        // Filtrar dependencias según la categoría INTERNAL
+//        System.out.println("Dependent classes: " + dependentClasses);
         List<String> internalDependencies = classifiedDependencies.getOrDefault(ImportCategory.INTERNAL, List.of());
-        if (!includeNonInternal) {
-            dependentClasses = dependentClasses.stream()
-                    .filter(internalDependencies::contains)
-                    .toList();
-        }
-
+//        System.out.printf("Internal dependencies: %s%n", internalDependencies);
         return dependentClasses.size();
     }
 
