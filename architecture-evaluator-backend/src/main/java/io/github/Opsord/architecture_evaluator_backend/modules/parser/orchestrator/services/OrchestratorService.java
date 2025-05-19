@@ -28,7 +28,7 @@ public class OrchestratorService {
     private final ProjectService projectService;
     private final CCUSummarizingService summarizingService;
 
-    public ProjectAnalysisDTO orchestrateProjectAnalysis(String projectPath) throws IOException {
+    public ProjectAnalysisDTO orchestrateProjectAnalysis(String projectPath, boolean includeNonInternalDependencies) throws IOException {
         logger.info("Starting orchestration for project at path: {}", projectPath);
 
         // Scan and parse the compilation units in the project
@@ -50,7 +50,8 @@ public class OrchestratorService {
                             compilationUnit,
                             compilationUnitDTOS,
                             internalBasePackage,
-                            pomFileDTO
+                            pomFileDTO,
+                            includeNonInternalDependencies
                     );
                     CompUnitWithAnalysisDTO compUnitWithAnalysis = new CompUnitWithAnalysisDTO();
                     compUnitWithAnalysis.setCompilationUnit(compilationUnit);

@@ -25,10 +25,11 @@ public class CouplingMetricsService {
      */
     public CouplingMetricsDTO calculateCouplingMetrics(CustomCompilationUnitDTO compilationUnit,
                                                        List<CustomCompilationUnitDTO> allUnits,
-                                                       Map<ImportCategory, List<String>> classifiedDependencies) {
+                                                       Map<ImportCategory, List<String>> classifiedDependencies,
+                                                       boolean includeNonInternalDependencies) {
         CouplingMetricsDTO metrics = new CouplingMetricsDTO();
-        metrics.setEfferentCoupling(calculateEfferentCoupling(compilationUnit, allUnits));
-        metrics.setAfferentCoupling(calculateAfferentCoupling(compilationUnit, allUnits));
+        metrics.setEfferentCoupling(calculateEfferentCoupling(compilationUnit, allUnits, classifiedDependencies, includeNonInternalDependencies));
+        metrics.setAfferentCoupling(calculateAfferentCoupling(compilationUnit, allUnits, classifiedDependencies, includeNonInternalDependencies));
         metrics.setInstability(calculateInstability(metrics.getAfferentCoupling(), metrics.getEfferentCoupling()));
         return metrics;
     }
@@ -41,8 +42,19 @@ public class CouplingMetricsService {
      * @param allUnits The list of all compilation units in the project.
      * @return The number of classes that this class depends on.
      */
-    public int calculateEfferentCoupling(CustomCompilationUnitDTO compilationUnit, List<CustomCompilationUnitDTO> allUnits) {
+    public int calculateEfferentCoupling(CustomCompilationUnitDTO compilationUnit,
+                                         List<CustomCompilationUnitDTO> allUnits,
+                                         Map<ImportCategory, List<String>> classifiedDependencies,
+                                         boolean includeNonInternal) {
         List<String> importedClasses = compilationUnitService.getImportedClasses(compilationUnit, allUnits);
+
+        // Filter dependencies according to the category INTERNAL
+        List<String> internalDependencies = classifiedDependencies.getOrDefault(ImportCategory.INTERNAL, List.of());
+        if (!includeNonInternal) {
+            importedClasses = importedClasses.stream()
+                    .filter(internalDependencies::contains)
+                    .toList();
+        }
         return importedClasses.size();
     }
 
@@ -54,11 +66,22 @@ public class CouplingMetricsService {
      * @param allUnits The list of all compilation units in the project.
      * @return The number of classes that depend on this class.
      */
-    public int calculateAfferentCoupling(CustomCompilationUnitDTO compilationUnit, List<CustomCompilationUnitDTO> allUnits) {
+    public int calculateAfferentCoupling(CustomCompilationUnitDTO compilationUnit,
+                                         List<CustomCompilationUnitDTO> allUnits,
+                                         Map<ImportCategory, List<String>> classifiedDependencies,
+                                         boolean includeNonInternal) {
         if (compilationUnit.getClassName().isEmpty()) {
-            return 0; // No classes to calculate efferent coupling for
+            return 0; // No class name available
         }
         List<String> dependentClasses = compilationUnitService.getDependentClasses(compilationUnit.getClassName().get(0), allUnits);
+        // Filtrar dependencias según la categoría INTERNAL
+        List<String> internalDependencies = classifiedDependencies.getOrDefault(ImportCategory.INTERNAL, List.of());
+        if (!includeNonInternal) {
+            dependentClasses = dependentClasses.stream()
+                    .filter(internalDependencies::contains)
+                    .toList();
+        }
+
         return dependentClasses.size();
     }
 

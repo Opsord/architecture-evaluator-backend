@@ -27,7 +27,8 @@ public class CCUSummarizingService {
     public AnalysedCompUnitDTO analyseCompUnit(CustomCompilationUnitDTO compilationUnitDTO,
                                                List<CustomCompilationUnitDTO> allUnits,
                                                String internalBasePackage,
-                                               PomFileDTO pomFileDTO) {
+                                               PomFileDTO pomFileDTO,
+                                               boolean includeNonInternalDependencies) {
         AnalysedCompUnitDTO detailedCompUnit = new AnalysedCompUnitDTO();
 
         // Set the classified dependencies
@@ -47,7 +48,11 @@ public class CCUSummarizingService {
         detailedCompUnit.setProgramMetrics(programMetrics);
 
         // Set the coupling metrics
-        CouplingMetricsDTO couplingMetrics = couplingMetricsService.calculateCouplingMetrics(compilationUnitDTO, allUnits, classifiedDependencies);
+        CouplingMetricsDTO couplingMetrics = couplingMetricsService.calculateCouplingMetrics(
+                compilationUnitDTO,
+                allUnits,
+                classifiedDependencies,
+                includeNonInternalDependencies);
         detailedCompUnit.setCouplingMetrics(couplingMetrics);
 
         return detailedCompUnit;

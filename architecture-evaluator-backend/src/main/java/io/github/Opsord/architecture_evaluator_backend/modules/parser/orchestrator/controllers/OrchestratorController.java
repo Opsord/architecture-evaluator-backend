@@ -19,10 +19,11 @@ public class OrchestratorController {
     private final OrchestratorService orchestratorService;
 
     @PostMapping("/analyze")
-    public ResponseEntity<ProjectAnalysisDTO> analyzeProject(@RequestParam String projectPath) {
+    public ResponseEntity<ProjectAnalysisDTO> analyzeProject(@RequestParam String projectPath,
+                                                             @RequestParam(defaultValue = "false") boolean includeNonInternalDependencies) {
         try {
             logger.info("Received request to analyze project at path: {}", projectPath);
-            ProjectAnalysisDTO result = orchestratorService.orchestrateProjectAnalysis(projectPath);
+            ProjectAnalysisDTO result = orchestratorService.orchestrateProjectAnalysis(projectPath, includeNonInternalDependencies);
             return ResponseEntity.ok(result);
         } catch (IOException e) {
             logger.error("Error analyzing project at path: {}", projectPath, e);
