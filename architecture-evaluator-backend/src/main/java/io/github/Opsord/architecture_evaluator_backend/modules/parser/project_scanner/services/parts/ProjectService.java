@@ -62,7 +62,7 @@ public class ProjectService {
         projectDTO.setServices(filterByAnnotation(compilationUnits, "Service"));
         projectDTO.setControllers(filterByAnnotation(compilationUnits, "Controller"));
         projectDTO.setDocuments(filterByAnnotation(compilationUnits, "Document"));
-        projectDTO.setTestClasses(filterByAnnotation(compilationUnits, "Test"));
+        projectDTO.setTestClasses(filterByAnnotation(compilationUnits, "SpringBootTest"));
 
         return projectDTO;
     }
@@ -76,8 +76,11 @@ public class ProjectService {
      */
     private List<CustomCompilationUnitDTO> filterByAnnotation(List<CustomCompilationUnitDTO> units, String annotationName) {
         return units.stream()
-                .filter(unit -> unit.getAnnotations().stream()
-                        .anyMatch(annotation -> annotation.getName().equalsIgnoreCase(annotationName)))
+                .filter(unit -> {
+                    logger.info("Class: {}, Annotations: {}", unit.getClassName(), unit.getAnnotations());
+                    return unit.getAnnotations().stream()
+                            .anyMatch(annotation -> annotation.getName().equalsIgnoreCase(annotationName));
+                })
                 .toList();
     }
 }

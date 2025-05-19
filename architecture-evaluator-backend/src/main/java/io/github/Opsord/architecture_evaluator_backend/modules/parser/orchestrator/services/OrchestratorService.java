@@ -4,7 +4,7 @@ import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.d
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto.CompUnitWithAnalysisDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto.ProjectAnalysisDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.services.CCUSummarizingService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.LayerAnnotation;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.AnnotationType;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.ProjectDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.PomFileDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.parts.PomService;
@@ -30,6 +30,15 @@ public class OrchestratorService {
     private final ProjectService projectService;
     private final CCUSummarizingService summarizingService;
 
+    /**
+     * Orchestrates the project analysis by scanning the project and its pom.xml file, analyzing the compilation units,
+     * and organizing the results into a ProjectAnalysisDTO.
+     *
+     * @param projectPath The path to the project to be analyzed.
+     * @param includeNonInternalDependencies Whether to include non-internal dependencies in the analysis.
+     * @return A ProjectAnalysisDTO containing the organized analysis results.
+     * @throws IOException If an error occurs during scanning or analysis.
+     */
     public ProjectAnalysisDTO orchestrateProjectAnalysis(String projectPath, boolean includeNonInternalDependencies) throws IOException {
         logger.info("Starting orchestration for project at path: {}", projectPath);
 
@@ -53,10 +62,23 @@ public class OrchestratorService {
         return projectAnalysisDTO;
     }
 
+    /**
+     * Scans the project at the given path and returns a ProjectDTO containing the scanned compilation units.
+     *
+     * @param projectPath The path to the project to be scanned.
+     * @return A ProjectDTO containing the scanned compilation units.
+     * @throws IOException If an error occurs during scanning.
+     */
     private ProjectDTO scanProject(String projectPath) throws IOException {
         return projectService.scanProjectToDTO(projectPath);
     }
 
+    /**
+     * Scans the pom.xml file at the given path and returns a PomFileDTO containing the parsed information.
+     *
+     * @param projectPath The path to the project to be scanned.
+     * @return A PomFileDTO containing the parsed information from the pom.xml file.
+     */
     private PomFileDTO scanPomFile(String projectPath) {
         PomFileDTO pomFileDTO = pomService.scanPomFile(projectPath);
         if (pomFileDTO == null) {
@@ -65,10 +87,25 @@ public class OrchestratorService {
         return pomFileDTO;
     }
 
+    /**
+     * Determines the internal base package from the given PomFileDTO.
+     *
+     * @param pomFileDTO The PomFileDTO containing the parsed information from the pom.xml file.
+     * @return The internal base package as a String.
+     */
     private String determineInternalBasePackage(PomFileDTO pomFileDTO) {
         return pomFileDTO.getGroupId();
     }
 
+    /**
+     * Analyzes the compilation units in the given ProjectDTO and returns a list of CompUnitWithAnalysisDTO.
+     *
+     * @param projectDTO The ProjectDTO containing the compilation units to be analyzed.
+     * @param internalBasePackage The internal base package as a String.
+     * @param pomFileDTO The PomFileDTO containing the parsed information from the pom.xml file.
+     * @param includeNonInternalDependencies Whether to include non-internal dependencies in the analysis.
+     * @return A list of CompUnitWithAnalysisDTO containing the analyzed compilation units.
+     */
     private List<CompUnitWithAnalysisDTO> analyzeCompilationUnits(
             ProjectDTO projectDTO,
             String internalBasePackage,
@@ -95,6 +132,16 @@ public class OrchestratorService {
                 .toList();
     }
 
+    /**
+     * Creates a CompUnitWithAnalysisDTO containing the given compilation unit and its analysis.
+     *
+     * @param compilationUnit The CustomCompilationUnitDTO to be analyzed.
+     * @param allEntities The list of all entities in the project.
+     * @param internalBasePackage The internal base package as a String.
+     * @param pomFileDTO The PomFileDTO containing the parsed information from the pom.xml file.
+     * @param includeNonInternalDependencies Whether to include non-internal dependencies in the analysis.
+     * @return A CompUnitWithAnalysisDTO containing the compilation unit and its analysis.
+     */
     private CompUnitWithAnalysisDTO createAnalysisDTO(
             CustomCompilationUnitDTO compilationUnit,
             List<CustomCompilationUnitDTO> allEntities,
@@ -115,22 +162,36 @@ public class OrchestratorService {
         return compUnitWithAnalysis;
     }
 
+    /**
+     * Organizes the given list of CompUnitWithAnalysisDTO into a ProjectAnalysisDTO.
+     *
+     * @param compUnitWithAnalysisDTOS The list of CompUnitWithAnalysisDTO to be organized.
+     * @return A ProjectAnalysisDTO containing the organized compilation units.
+     */
     public ProjectAnalysisDTO organizeProjectAnalysis(List<CompUnitWithAnalysisDTO> compUnitWithAnalysisDTOS) {
         ProjectAnalysisDTO projectAnalysisDTO = new ProjectAnalysisDTO();
-        projectAnalysisDTO.setEntities(filterByLayer(compUnitWithAnalysisDTOS, "entity"));
-        projectAnalysisDTO.setDocuments(filterByLayer(compUnitWithAnalysisDTOS, "document"));
-        projectAnalysisDTO.setRepositories(filterByLayer(compUnitWithAnalysisDTOS, "repository"));
-        projectAnalysisDTO.setServices(filterByLayer(compUnitWithAnalysisDTOS, "service"));
-        projectAnalysisDTO.setControllers(filterByLayer(compUnitWithAnalysisDTOS, "controller"));
+        projectAnalysisDTO.setEntities(filterByAnnotation(compUnitWithAnalysisDTOS, "entity"));
+        projectAnalysisDTO.setDocuments(filterByAnnotation(compUnitWithAnalysisDTOS, "document"));
+        projectAnalysisDTO.setRepositories(filterByAnnotation(compUnitWithAnalysisDTOS, "repository"));
+        projectAnalysisDTO.setServices(filterByAnnotation(compUnitWithAnalysisDTOS, "service"));
+        projectAnalysisDTO.setControllers(filterByAnnotation(compUnitWithAnalysisDTOS, "controller"));
+        projectAnalysisDTO.setTestClasses(filterByAnnotation(compUnitWithAnalysisDTOS, "springbootTest"));
         return projectAnalysisDTO;
     }
 
-    private List<CompUnitWithAnalysisDTO> filterByLayer(List<CompUnitWithAnalysisDTO> units, String layer) {
+    /**
+     * Filters the given list of CompUnitWithAnalysisDTO by the specified annotation.
+     *
+     * @param units The list of CompUnitWithAnalysisDTO to be filtered.
+     * @param classType The name of the annotation to filter by (e.g., "Entity", "Service").
+     * @return A list of CompUnitWithAnalysisDTO filtered by the specified annotation.
+     */
+    private List<CompUnitWithAnalysisDTO> filterByAnnotation(List<CompUnitWithAnalysisDTO> units, String classType) {
         return units.stream()
                 .filter(dto -> dto.getCompilationUnit().getAnnotations().stream()
                         .anyMatch(annotation -> {
                             try {
-                                return LayerAnnotation.valueOf(layer.toUpperCase()).getAnnotation()
+                                return AnnotationType.valueOf(classType.toUpperCase()).getAnnotation()
                                         .equalsIgnoreCase(annotation.getName());
                             } catch (IllegalArgumentException e) {
                                 return false;

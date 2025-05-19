@@ -5,11 +5,9 @@ import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilatio
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.method.parts.MethodMetrics;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.method.parts.Parameters;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.method.parts.StatementsInfo;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
 public class MethodDTO {
     private String name;
     private BasicInfo basicInfo;

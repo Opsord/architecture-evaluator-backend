@@ -4,13 +4,11 @@ package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilati
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.*;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.method.MethodDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.statement.StatementDTO;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 import java.util.List;
 
-@Getter
-@Setter
+@Data
 public class CustomCompilationUnitDTO {
     private String packageName;
     private List<String> className;

@@ -1,11 +1,9 @@
 // VariableDTO.java
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
 public class VariableDTO {
     private String name;
     private String type;
