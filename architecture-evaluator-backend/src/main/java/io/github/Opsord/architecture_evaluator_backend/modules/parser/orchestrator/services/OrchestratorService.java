@@ -5,6 +5,7 @@ import io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrat
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto.ProjectAnalysisDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.services.CCUSummarizingService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.LayerAnnotation;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.ProjectDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.PomFileDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.parts.PomService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.parts.ProjectService;
@@ -31,8 +32,8 @@ public class OrchestratorService {
     public ProjectAnalysisDTO orchestrateProjectAnalysis(String projectPath, boolean includeNonInternalDependencies) throws IOException {
         logger.info("Starting orchestration for project at path: {}", projectPath);
 
-        // Scan and parse the compilation units in the project
-        List<CustomCompilationUnitDTO> compilationUnitDTOS = projectService.scanProject(projectPath);
+        // Scan the project and generate a ProjectDTO
+        ProjectDTO projectDTO = projectService.scanProjectToDTO(projectPath);
 
         // Scan the pom.xml file
         PomFileDTO pomFileDTO = pomService.scanPomFile(projectPath);
@@ -43,12 +44,12 @@ public class OrchestratorService {
         // Define the internal base package (e.g., from the groupId in pom.xml)
         String internalBasePackage = pomFileDTO.getGroupId();
 
-        // Analyze the compilation units and generate CompUnitWithAnalysisDTO
-        List<CompUnitWithAnalysisDTO> compUnitWithAnalysisDTOS = compilationUnitDTOS.stream()
+        // Analyze the compilation units in the ProjectDTO and generate CompUnitWithAnalysisDTO
+        List<CompUnitWithAnalysisDTO> compUnitWithAnalysisDTOS = projectDTO.getEntities().stream()
                 .map(compilationUnit -> {
                     AnalysedCompUnitDTO analysis = summarizingService.analyseCompUnit(
                             compilationUnit,
-                            compilationUnitDTOS,
+                            projectDTO.getEntities(),
                             internalBasePackage,
                             pomFileDTO,
                             includeNonInternalDependencies

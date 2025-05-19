@@ -15,5 +15,6 @@ public class ProjectAnalysisDTO {
     private List<CompUnitWithAnalysisDTO> repositories;
     private List<CompUnitWithAnalysisDTO> services;
     private List<CompUnitWithAnalysisDTO> controllers;
+    private List<CompUnitWithAnalysisDTO> testClasses;
     private PomFileDTO pomFile;
 }

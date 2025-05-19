@@ -150,26 +150,6 @@ public class CompilationUnitService {
                 .toList(); // Collect the result as a list
     }
 
-//    public List<String> getImportedClasses(CustomCompilationUnitDTO compUnit, List<CustomCompilationUnitDTO> allUnits) {
-//        List<String> classList = new ArrayList<>(compUnit.getImportedPackages().stream()
-//                .flatMap(imported -> {
-//                    if (imported.endsWith(".*")) {
-//                        /// If the import is a package (e.g., "java.util.*"), find all classes in that package
-//                        String packageName = imported.substring(0, imported.length() - 2);
-//                        return findClassesInPackage(packageName, allUnits).stream();
-//                    } else {
-//                        /// If the import is a single class (e.g., "java.util.List"), return it as a single element
-//                        return Stream.of(imported);
-//                    }
-//                })
-//                .toList());
-//        /// Remove duplicates
-//        classList = classList.stream().distinct().toList();
-//        /// Remove self-class
-//        classList.removeIf(className -> compUnit.getClassNames().contains(className));
-//        return classList;
-//    }
-
     public List<CustomCompilationUnitDTO> findCompilationUnitsFromPackage(String packageName, List<CustomCompilationUnitDTO> allUnits) {
         return allUnits.stream()
                 .filter(unit -> unit.getPackageName().equals(packageName))

@@ -15,5 +15,6 @@ public class ProjectDTO {
     private List<CustomCompilationUnitDTO> services;
     private List<CustomCompilationUnitDTO> controllers;
     private List<CustomCompilationUnitDTO> documents;
+    private List<CustomCompilationUnitDTO> testClasses;
     private PomFileDTO pomFile;
 }

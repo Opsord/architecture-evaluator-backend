@@ -2,6 +2,7 @@ package io.github.Opsord.architecture_evaluator_backend.modules.parser.project_s
 
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.CustomCompilationUnitDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.CompilationUnitService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.ProjectDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.ScanningService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -46,5 +47,37 @@ public class ProjectService {
             }
         }
         return compilationUnits;
+    }
+
+    public ProjectDTO scanProjectToDTO(String filePath) throws IOException {
+        // Scan the project to get a list of CustomCompilationUnitDTO
+        List<CustomCompilationUnitDTO> compilationUnits = scanProject(filePath);
+
+        // Create a new ProjectDTO
+        ProjectDTO projectDTO = new ProjectDTO();
+
+        // Filter and categorize the compilation units based on their annotations
+        projectDTO.setEntities(filterByAnnotation(compilationUnits, "Entity"));
+        projectDTO.setRepositories(filterByAnnotation(compilationUnits, "Repository"));
+        projectDTO.setServices(filterByAnnotation(compilationUnits, "Service"));
+        projectDTO.setControllers(filterByAnnotation(compilationUnits, "Controller"));
+        projectDTO.setDocuments(filterByAnnotation(compilationUnits, "Document"));
+        projectDTO.setTestClasses(filterByAnnotation(compilationUnits, "Test"));
+
+        return projectDTO;
+    }
+
+    /**
+     * Filters the list of CustomCompilationUnitDTO by the specified annotation.
+     *
+     * @param units List of CustomCompilationUnitDTO to filter.
+     * @param annotationName Name of the annotation to filter by (e.g., "Entity", "Service").
+     * @return List of CustomCompilationUnitDTO filtered by the specified annotation.
+     */
+    private List<CustomCompilationUnitDTO> filterByAnnotation(List<CustomCompilationUnitDTO> units, String annotationName) {
+        return units.stream()
+                .filter(unit -> unit.getAnnotations().stream()
+                        .anyMatch(annotation -> annotation.getName().equalsIgnoreCase(annotationName)))
+                .toList();
     }
 }
