@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
@@ -44,15 +43,17 @@ public class OrchestratorService {
 
         ProjectDTO projectDTO = scanProject(projectPath);
         PomFileDTO pomFileDTO = scanPomFile(projectPath);
-
-        String internalBasePackage = determineInternalBasePackage(pomFileDTO);
-
+        // Extract all compilation units from the project
+        List<CustomCompilationUnitDTO> compilationUnits = extractCompilationUnits(projectDTO);
+        // Generate the compilation units without tests
+        List<CustomCompilationUnitDTO> compilationUnitsWithoutTests = extractCompilationUnitsWithoutTests(projectDTO);
+        // Analyze the compilation units
         List<CompUnitWithAnalysisDTO> analyzedUnits = analyzeCompilationUnits(
-                projectDTO,
-                internalBasePackage,
+                compilationUnits,
+                compilationUnitsWithoutTests,
                 pomFileDTO,
-                includeNonInternalDependencies
-        );
+                includeNonInternalDependencies);
+        // Organize the analysis results into a ProjectAnalysisDTO
         ProjectAnalysisDTO projectAnalysisDTO = organizeProjectAnalysis(analyzedUnits);
         projectAnalysisDTO.setProjectPath(projectPath);
         projectAnalysisDTO.setPomFile(pomFileDTO);
@@ -97,21 +98,13 @@ public class OrchestratorService {
     }
 
     /**
-     * Analyzes the compilation units in the given ProjectDTO and returns a list of CompUnitWithAnalysisDTO.
+     * Extracts all compilation units from a ProjectDTO into a single list.
      *
-     * @param projectDTO The ProjectDTO containing the compilation units to be analyzed.
-     * @param internalBasePackage The internal base package as a String.
-     * @param pomFileDTO The PomFileDTO containing the parsed information from the pom.xml file.
-     * @param includeNonInternalDependencies Whether to include non-internal dependencies in the analysis.
-     * @return A list of CompUnitWithAnalysisDTO containing the analyzed compilation units.
+     * @param projectDTO The ProjectDTO containing categorized compilation units.
+     * @return A list of all CustomCompilationUnitDTOs in the project.
      */
-    private List<CompUnitWithAnalysisDTO> analyzeCompilationUnits(
-            ProjectDTO projectDTO,
-            String internalBasePackage,
-            PomFileDTO pomFileDTO,
-            boolean includeNonInternalDependencies
-    ) {
-        List<CustomCompilationUnitDTO> allUnits = Stream.of(
+    private List<CustomCompilationUnitDTO> extractCompilationUnits(ProjectDTO projectDTO) {
+        return Stream.of(
                 projectDTO.getEntities(),
                 projectDTO.getRepositories(),
                 projectDTO.getServices(),
@@ -119,10 +112,44 @@ public class OrchestratorService {
                 projectDTO.getDocuments(),
                 projectDTO.getTestClasses()
         ).flatMap(List::stream).toList();
-        return allUnits.stream()
+    }
+
+    /**
+     * Extracts all compilation units from a ProjectDTO into a single list.
+     *
+     * @param projectDTO The ProjectDTO containing categorized compilation units.
+     * @return A list of all CustomCompilationUnitDTOs in the project.
+     */
+    private List<CustomCompilationUnitDTO> extractCompilationUnitsWithoutTests(ProjectDTO projectDTO) {
+        return Stream.of(
+                projectDTO.getEntities(),
+                projectDTO.getRepositories(),
+                projectDTO.getServices(),
+                projectDTO.getControllers(),
+                projectDTO.getDocuments()
+        ).flatMap(List::stream).toList();
+    }
+
+    /**
+     * Analyzes a list of compilation units and returns a list of CompUnitWithAnalysisDTO.
+     *
+     * @param projectCompUnits The list of CustomCompilationUnitDTOs to be analyzed.
+     * @param pomFileDTO The PomFileDTO containing the parsed information from the pom.xml file.
+     * @param includeNonInternalDependencies Whether to include non-internal dependencies in the analysis.
+     * @return A list of CompUnitWithAnalysisDTO containing the analyzed compilation units.
+     */
+    private List<CompUnitWithAnalysisDTO> analyzeCompilationUnits(
+            List<CustomCompilationUnitDTO> projectCompUnits,
+            List<CustomCompilationUnitDTO> projectCompUnitsWithoutTests,
+            PomFileDTO pomFileDTO,
+            boolean includeNonInternalDependencies
+    ) {
+        String internalBasePackage = determineInternalBasePackage(pomFileDTO);
+
+        return projectCompUnits.stream()
                 .map(compilationUnit -> createAnalysisDTO(
                         compilationUnit,
-                        allUnits,
+                        projectCompUnitsWithoutTests,
                         internalBasePackage,
                         pomFileDTO,
                         includeNonInternalDependencies
@@ -134,7 +161,6 @@ public class OrchestratorService {
      * Creates a CompUnitWithAnalysisDTO containing the given compilation unit and its analysis.
      *
      * @param compilationUnit The CustomCompilationUnitDTO to be analyzed.
-     * @param allEntities The list of all entities in the project.
      * @param internalBasePackage The internal base package as a String.
      * @param pomFileDTO The PomFileDTO containing the parsed information from the pom.xml file.
      * @param includeNonInternalDependencies Whether to include non-internal dependencies in the analysis.
@@ -142,14 +168,14 @@ public class OrchestratorService {
      */
     private CompUnitWithAnalysisDTO createAnalysisDTO(
             CustomCompilationUnitDTO compilationUnit,
-            List<CustomCompilationUnitDTO> allEntities,
+            List<CustomCompilationUnitDTO> projectCompUnitsWithoutTests,
             String internalBasePackage,
             PomFileDTO pomFileDTO,
             boolean includeNonInternalDependencies
     ) {
         AnalysedCompUnitDTO analysis = summarizingService.analyseCompUnit(
                 compilationUnit,
-                allEntities,
+                projectCompUnitsWithoutTests,
                 internalBasePackage,
                 pomFileDTO,
                 includeNonInternalDependencies

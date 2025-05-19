@@ -8,7 +8,6 @@ import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.d
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.services.parts.CouplingMetricsService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.services.parts.ImportClassifierService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.services.parts.ProgramMetricsService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.DependencyDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.PomFileDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,7 +24,7 @@ public class CCUSummarizingService {
     private final ImportClassifierService importClassifierService;
 
     public AnalysedCompUnitDTO analyseCompUnit(CustomCompilationUnitDTO compilationUnitDTO,
-                                               List<CustomCompilationUnitDTO> allUnits,
+                                               List<CustomCompilationUnitDTO> projectCompUnitsWithoutTests,
                                                String internalBasePackage,
                                                PomFileDTO pomFileDTO,
                                                boolean includeNonInternalDependencies) {
@@ -50,7 +49,7 @@ public class CCUSummarizingService {
         // Set the coupling metrics
         CouplingMetricsDTO couplingMetrics = couplingMetricsService.calculateCouplingMetrics(
                 compilationUnitDTO,
-                allUnits,
+                projectCompUnitsWithoutTests,
                 classifiedDependencies,
                 includeNonInternalDependencies);
         detailedCompUnit.setCouplingMetrics(couplingMetrics);

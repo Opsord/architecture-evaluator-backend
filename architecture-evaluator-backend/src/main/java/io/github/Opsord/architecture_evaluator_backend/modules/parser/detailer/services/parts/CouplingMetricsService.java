@@ -39,14 +39,14 @@ public class CouplingMetricsService {
      * (i.e., the number of classes that this class depends on)
      *
      * @param compilationUnit The compilation unit to analyze.
-     * @param allUnits The list of all compilation units in the project.
+     * @param projectCompUnits The list of all compilation units in the project.
      * @return The number of classes that this class depends on.
      */
     public int calculateEfferentCoupling(CustomCompilationUnitDTO compilationUnit,
-                                         List<CustomCompilationUnitDTO> allUnits,
+                                         List<CustomCompilationUnitDTO> projectCompUnits,
                                          Map<ImportCategory, List<String>> classifiedDependencies,
                                          boolean includeNonInternal) {
-        List<String> importedClasses = compilationUnitService.getImportedClasses(compilationUnit, allUnits);
+        List<String> importedClasses = compilationUnitService.getImportedClasses(compilationUnit, projectCompUnits);
 
         // Filter dependencies according to the category INTERNAL
         List<String> internalDependencies = classifiedDependencies.getOrDefault(ImportCategory.INTERNAL, List.of());
