@@ -2,6 +2,7 @@ package io.github.Opsord.architecture_evaluator_backend.modules.parser.project_s
 
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.CustomCompilationUnitDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.CompilationUnitService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.AnnotationType;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.ProjectDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.ScanningService;
 import lombok.RequiredArgsConstructor;
@@ -50,37 +51,33 @@ public class ProjectService {
     }
 
     public ProjectDTO scanProjectToDTO(String filePath) throws IOException {
-        // Scan the project to get a list of CustomCompilationUnitDTO
+        // Scan the project to get the compilation units
         List<CustomCompilationUnitDTO> compilationUnits = scanProject(filePath);
 
-        // Create a new ProjectDTO
         ProjectDTO projectDTO = new ProjectDTO();
 
-        // Filter and categorize the compilation units based on their annotations
-        projectDTO.setEntities(filterByAnnotation(compilationUnits, "Entity"));
-        projectDTO.setRepositories(filterByAnnotation(compilationUnits, "Repository"));
-        projectDTO.setServices(filterByAnnotation(compilationUnits, "Service"));
-        projectDTO.setControllers(filterByAnnotation(compilationUnits, "Controller"));
-        projectDTO.setDocuments(filterByAnnotation(compilationUnits, "Document"));
-        projectDTO.setTestClasses(filterByAnnotation(compilationUnits, "SpringBootTest"));
+        // Filter the compilation units by their annotations and set them in the ProjectDTO
+        projectDTO.setEntities(filterCompUnitsByAnnotation(compilationUnits, AnnotationType.ENTITY));
+        projectDTO.setRepositories(filterCompUnitsByAnnotation(compilationUnits, AnnotationType.REPOSITORY));
+        projectDTO.setServices(filterCompUnitsByAnnotation(compilationUnits, AnnotationType.SERVICE));
+        projectDTO.setControllers(filterCompUnitsByAnnotation(compilationUnits, AnnotationType.CONTROLLER));
+        projectDTO.setDocuments(filterCompUnitsByAnnotation(compilationUnits, AnnotationType.DOCUMENT));
+        projectDTO.setTestClasses(filterCompUnitsByAnnotation(compilationUnits, AnnotationType.SPRINGBOOT_TEST));
 
         return projectDTO;
     }
 
     /**
-     * Filters the list of CustomCompilationUnitDTO by the specified annotation.
+     * Filters the compilation units based on the specified annotation type.
      *
-     * @param units List of CustomCompilationUnitDTO to filter.
-     * @param annotationName Name of the annotation to filter by (e.g., "Entity", "Service").
-     * @return List of CustomCompilationUnitDTO filtered by the specified annotation.
+     * @param units The list of compilation units to filter.
+     * @param annotationType The annotation type to filter by.
+     * @return A list of compilation units that contain the specified annotation.
      */
-    private List<CustomCompilationUnitDTO> filterByAnnotation(List<CustomCompilationUnitDTO> units, String annotationName) {
+    private List<CustomCompilationUnitDTO> filterCompUnitsByAnnotation(List<CustomCompilationUnitDTO> units, AnnotationType annotationType) {
         return units.stream()
-                .filter(unit -> {
-                    logger.info("Class: {}, Annotations: {}", unit.getClassName(), unit.getAnnotations());
-                    return unit.getAnnotations().stream()
-                            .anyMatch(annotation -> annotation.getName().equalsIgnoreCase(annotationName));
-                })
+                .filter(unit -> unit.getAnnotations().stream()
+                        .anyMatch(annotation -> annotation.getName().equalsIgnoreCase(annotationType.getAnnotation())))
                 .toList();
     }
 }

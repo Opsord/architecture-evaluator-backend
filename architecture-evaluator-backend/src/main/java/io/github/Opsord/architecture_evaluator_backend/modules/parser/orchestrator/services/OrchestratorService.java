@@ -53,7 +53,6 @@ public class OrchestratorService {
                 pomFileDTO,
                 includeNonInternalDependencies
         );
-
         ProjectAnalysisDTO projectAnalysisDTO = organizeProjectAnalysis(analyzedUnits);
         projectAnalysisDTO.setProjectPath(projectPath);
         projectAnalysisDTO.setPomFile(pomFileDTO);
@@ -120,7 +119,6 @@ public class OrchestratorService {
                 projectDTO.getDocuments(),
                 projectDTO.getTestClasses()
         ).flatMap(List::stream).toList();
-
         return allUnits.stream()
                 .map(compilationUnit -> createAnalysisDTO(
                         compilationUnit,
@@ -170,33 +168,19 @@ public class OrchestratorService {
      */
     public ProjectAnalysisDTO organizeProjectAnalysis(List<CompUnitWithAnalysisDTO> compUnitWithAnalysisDTOS) {
         ProjectAnalysisDTO projectAnalysisDTO = new ProjectAnalysisDTO();
-        projectAnalysisDTO.setEntities(filterByAnnotation(compUnitWithAnalysisDTOS, "entity"));
-        projectAnalysisDTO.setDocuments(filterByAnnotation(compUnitWithAnalysisDTOS, "document"));
-        projectAnalysisDTO.setRepositories(filterByAnnotation(compUnitWithAnalysisDTOS, "repository"));
-        projectAnalysisDTO.setServices(filterByAnnotation(compUnitWithAnalysisDTOS, "service"));
-        projectAnalysisDTO.setControllers(filterByAnnotation(compUnitWithAnalysisDTOS, "controller"));
-        projectAnalysisDTO.setTestClasses(filterByAnnotation(compUnitWithAnalysisDTOS, "springbootTest"));
+        projectAnalysisDTO.setEntities(filterAnalysedUnitByAnnotation(compUnitWithAnalysisDTOS, AnnotationType.ENTITY));
+        projectAnalysisDTO.setDocuments(filterAnalysedUnitByAnnotation(compUnitWithAnalysisDTOS, AnnotationType.DOCUMENT));
+        projectAnalysisDTO.setRepositories(filterAnalysedUnitByAnnotation(compUnitWithAnalysisDTOS, AnnotationType.REPOSITORY));
+        projectAnalysisDTO.setServices(filterAnalysedUnitByAnnotation(compUnitWithAnalysisDTOS, AnnotationType.SERVICE));
+        projectAnalysisDTO.setControllers(filterAnalysedUnitByAnnotation(compUnitWithAnalysisDTOS, AnnotationType.CONTROLLER));
+        projectAnalysisDTO.setTestClasses(filterAnalysedUnitByAnnotation(compUnitWithAnalysisDTOS, AnnotationType.SPRINGBOOT_TEST));
         return projectAnalysisDTO;
     }
 
-    /**
-     * Filters the given list of CompUnitWithAnalysisDTO by the specified annotation.
-     *
-     * @param units The list of CompUnitWithAnalysisDTO to be filtered.
-     * @param classType The name of the annotation to filter by (e.g., "Entity", "Service").
-     * @return A list of CompUnitWithAnalysisDTO filtered by the specified annotation.
-     */
-    private List<CompUnitWithAnalysisDTO> filterByAnnotation(List<CompUnitWithAnalysisDTO> units, String classType) {
+    private List<CompUnitWithAnalysisDTO> filterAnalysedUnitByAnnotation(List<CompUnitWithAnalysisDTO> units, AnnotationType annotationType) {
         return units.stream()
                 .filter(dto -> dto.getCompilationUnit().getAnnotations().stream()
-                        .anyMatch(annotation -> {
-                            try {
-                                return AnnotationType.valueOf(classType.toUpperCase()).getAnnotation()
-                                        .equalsIgnoreCase(annotation.getName());
-                            } catch (IllegalArgumentException e) {
-                                return false;
-                            }
-                        }))
-                .collect(Collectors.toList());
+                        .anyMatch(annotation -> annotation.getName().equalsIgnoreCase(annotationType.getAnnotation())))
+                .toList();
     }
 }
