@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -32,42 +33,86 @@ public class OrchestratorService {
     public ProjectAnalysisDTO orchestrateProjectAnalysis(String projectPath, boolean includeNonInternalDependencies) throws IOException {
         logger.info("Starting orchestration for project at path: {}", projectPath);
 
-        // Scan the project and generate a ProjectDTO
-        ProjectDTO projectDTO = projectService.scanProjectToDTO(projectPath);
+        ProjectDTO projectDTO = scanProject(projectPath);
+        PomFileDTO pomFileDTO = scanPomFile(projectPath);
 
-        // Scan the pom.xml file
-        PomFileDTO pomFileDTO = pomService.scanPomFile(projectPath);
-        if (pomFileDTO == null) {
-            throw new IllegalStateException("Failed to scan pom.xml file at path: " + projectPath);
-        }
+        String internalBasePackage = determineInternalBasePackage(pomFileDTO);
 
-        // Define the internal base package (e.g., from the groupId in pom.xml)
-        String internalBasePackage = pomFileDTO.getGroupId();
+        List<CompUnitWithAnalysisDTO> analyzedUnits = analyzeCompilationUnits(
+                projectDTO,
+                internalBasePackage,
+                pomFileDTO,
+                includeNonInternalDependencies
+        );
 
-        // Analyze the compilation units in the ProjectDTO and generate CompUnitWithAnalysisDTO
-        List<CompUnitWithAnalysisDTO> compUnitWithAnalysisDTOS = projectDTO.getEntities().stream()
-                .map(compilationUnit -> {
-                    AnalysedCompUnitDTO analysis = summarizingService.analyseCompUnit(
-                            compilationUnit,
-                            projectDTO.getEntities(),
-                            internalBasePackage,
-                            pomFileDTO,
-                            includeNonInternalDependencies
-                    );
-                    CompUnitWithAnalysisDTO compUnitWithAnalysis = new CompUnitWithAnalysisDTO();
-                    compUnitWithAnalysis.setCompilationUnit(compilationUnit);
-                    compUnitWithAnalysis.setAnalysis(analysis);
-                    return compUnitWithAnalysis;
-                })
-                .toList();
-
-        // Organize the analyzed units into a ProjectAnalysisDTO
-        ProjectAnalysisDTO projectAnalysisDTO = organizeProjectAnalysis(compUnitWithAnalysisDTOS);
+        ProjectAnalysisDTO projectAnalysisDTO = organizeProjectAnalysis(analyzedUnits);
         projectAnalysisDTO.setProjectPath(projectPath);
         projectAnalysisDTO.setPomFile(pomFileDTO);
 
         logger.info("Orchestration completed for project at path: {}", projectPath);
         return projectAnalysisDTO;
+    }
+
+    private ProjectDTO scanProject(String projectPath) throws IOException {
+        return projectService.scanProjectToDTO(projectPath);
+    }
+
+    private PomFileDTO scanPomFile(String projectPath) {
+        PomFileDTO pomFileDTO = pomService.scanPomFile(projectPath);
+        if (pomFileDTO == null) {
+            throw new IllegalStateException("Failed to scan pom.xml file at path: " + projectPath);
+        }
+        return pomFileDTO;
+    }
+
+    private String determineInternalBasePackage(PomFileDTO pomFileDTO) {
+        return pomFileDTO.getGroupId();
+    }
+
+    private List<CompUnitWithAnalysisDTO> analyzeCompilationUnits(
+            ProjectDTO projectDTO,
+            String internalBasePackage,
+            PomFileDTO pomFileDTO,
+            boolean includeNonInternalDependencies
+    ) {
+        List<CustomCompilationUnitDTO> allUnits = Stream.of(
+                projectDTO.getEntities(),
+                projectDTO.getRepositories(),
+                projectDTO.getServices(),
+                projectDTO.getControllers(),
+                projectDTO.getDocuments(),
+                projectDTO.getTestClasses()
+        ).flatMap(List::stream).toList();
+
+        return allUnits.stream()
+                .map(compilationUnit -> createAnalysisDTO(
+                        compilationUnit,
+                        allUnits,
+                        internalBasePackage,
+                        pomFileDTO,
+                        includeNonInternalDependencies
+                ))
+                .toList();
+    }
+
+    private CompUnitWithAnalysisDTO createAnalysisDTO(
+            CustomCompilationUnitDTO compilationUnit,
+            List<CustomCompilationUnitDTO> allEntities,
+            String internalBasePackage,
+            PomFileDTO pomFileDTO,
+            boolean includeNonInternalDependencies
+    ) {
+        AnalysedCompUnitDTO analysis = summarizingService.analyseCompUnit(
+                compilationUnit,
+                allEntities,
+                internalBasePackage,
+                pomFileDTO,
+                includeNonInternalDependencies
+        );
+        CompUnitWithAnalysisDTO compUnitWithAnalysis = new CompUnitWithAnalysisDTO();
+        compUnitWithAnalysis.setCompilationUnit(compilationUnit);
+        compUnitWithAnalysis.setAnalysis(analysis);
+        return compUnitWithAnalysis;
     }
 
     public ProjectAnalysisDTO organizeProjectAnalysis(List<CompUnitWithAnalysisDTO> compUnitWithAnalysisDTOS) {
@@ -80,13 +125,6 @@ public class OrchestratorService {
         return projectAnalysisDTO;
     }
 
-    /**
-     * Filters the list of CompilationUnitAnalysisDTO by the specified layer.
-     *
-     * @param units List of CompilationUnitAnalysisDTO to filter.
-     * @param layer Layer to filter by (e.g., "entity", "repository", "service", "controller").
-     * @return List of CompilationUnitAnalysisDTO filtered by the specified layer.
-     */
     private List<CompUnitWithAnalysisDTO> filterByLayer(List<CompUnitWithAnalysisDTO> units, String layer) {
         return units.stream()
                 .filter(dto -> dto.getCompilationUnit().getAnnotations().stream()
