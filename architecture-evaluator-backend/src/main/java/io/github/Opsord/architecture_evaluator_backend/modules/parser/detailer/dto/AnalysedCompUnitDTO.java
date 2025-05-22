@@ -1,16 +1,15 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto;
 
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.parts.CohesionMetricsDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.parts.CouplingMetricsDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.parts.ProgramMetricsDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.parts.ImportCategory;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 import java.util.List;
 import java.util.Map;
 
-@Getter
-@Setter
+@Data
 public class AnalysedCompUnitDTO {
     private int classCount;
     private int interfaceCount;
@@ -20,4 +19,5 @@ public class AnalysedCompUnitDTO {
 
     private ProgramMetricsDTO programMetrics;
     private CouplingMetricsDTO couplingMetrics;
+    private CohesionMetricsDTO cohesionMetrics;
 }

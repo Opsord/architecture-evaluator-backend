@@ -2,9 +2,11 @@ package io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.
 
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.CustomCompilationUnitDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.AnalysedCompUnitDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.parts.CohesionMetricsDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.parts.CouplingMetricsDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.parts.ImportCategory;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.parts.ProgramMetricsDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.services.parts.CohesionMetricsService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.services.parts.CouplingMetricsService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.services.parts.ImportClassifierService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.services.parts.ProgramMetricsService;
@@ -21,6 +23,7 @@ public class CCUSummarizingService {
 
     private final ProgramMetricsService programMetricsService;
     private final CouplingMetricsService couplingMetricsService;
+    private final CohesionMetricsService cohesionMetricsService;
     private final ImportClassifierService importClassifierService;
 
     public AnalysedCompUnitDTO analyseCompUnit(CustomCompilationUnitDTO compilationUnitDTO,
@@ -53,6 +56,10 @@ public class CCUSummarizingService {
                 classifiedDependencies,
                 includeNonInternalDependencies);
         detailedCompUnit.setCouplingMetrics(couplingMetrics);
+
+        // Set the cohesion metrics
+        CohesionMetricsDTO cohesionMetrics = cohesionMetricsService.calculateCohesionMetrics(compilationUnitDTO);
+        detailedCompUnit.setCohesionMetrics(cohesionMetrics);
 
         return detailedCompUnit;
     }
