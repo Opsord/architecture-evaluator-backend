@@ -22,6 +22,4 @@ public class MethodService {
         compilationUnit.accept(visitor, methods);
         return methods;
     }
-
-
 }

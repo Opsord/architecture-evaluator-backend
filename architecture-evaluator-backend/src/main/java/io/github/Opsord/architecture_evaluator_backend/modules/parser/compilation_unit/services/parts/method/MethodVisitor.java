@@ -3,6 +3,7 @@ package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilati
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.VariableDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.method.MethodDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.method.parts.BasicInfo;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.method.parts.MethodMetrics;
@@ -10,7 +11,9 @@ import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilatio
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.method.parts.StatementsInfo;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.statement.StatementDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.statement.StatementService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.variable.VariableVisitor;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -27,6 +30,7 @@ public class MethodVisitor extends VoidVisitorAdapter<List<MethodDTO>> {
         methodDTO.setStatementsInfo(populateStatementInfo(method));
         methodDTO.setParameters(populateParameters(method));
         methodDTO.setMethodMetrics(populateMethodMetrics(method));
+        methodDTO.setMethodVariables(extractMethodVariables(method)); // Agregar variables
 
         collector.add(methodDTO);
     }
@@ -72,5 +76,12 @@ public class MethodVisitor extends VoidVisitorAdapter<List<MethodDTO>> {
                 .orElse(0);
         methodMetrics.setLinesOfCode(linesOfCode);
         return methodMetrics;
+    }
+
+    private List<VariableDTO> extractMethodVariables(MethodDeclaration method) {
+        List<VariableDTO> variables = new ArrayList<>();
+        VariableVisitor visitor = new VariableVisitor();
+        method.accept(visitor, variables); // Reutiliza el VariableVisitor
+        return variables;
     }
 }
