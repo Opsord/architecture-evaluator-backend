@@ -28,7 +28,7 @@ public class CohesionMetricsService {
 
         // Calculate LCOM (Lack of Cohesion)
         metrics.setLackOfCohesion1(calculateLCOM1(compilationUnit));
-//        metrics.setLackOfCohesion2(calculateLCOM2(compilationUnit));
+        metrics.setLackOfCohesion2(calculateLCOM2(compilationUnit));
 
         // Calculate CAM (Cohesion Among Methods)
 //        metrics.setCohesionAmongMethods(calculateCAM(compilationUnit));
@@ -45,13 +45,15 @@ public class CohesionMetricsService {
         return compilationUnit.getMethods();
     }
 
-    private List<VariableDTO> getVariables(CustomCompilationUnitDTO compilationUnit) {
-        return compilationUnit.getVariables();
+    private List<VariableDTO> getInstanceVariables(CustomCompilationUnitDTO compilationUnit) {
+        return compilationUnit.getVariables().stream()
+                .filter(variable -> "instance".equals(variable.getScope())) // Filtrar por scope "instance"
+                .toList();
     }
 
-    private double calculateLCOM1(CustomCompilationUnitDTO compilationUnit) {
+    private int calculateLCOM1(CustomCompilationUnitDTO compilationUnit) {
         List<MethodDTO> methods = getMethods(compilationUnit);
-        List<VariableDTO> variables = getVariables(compilationUnit);
+        List<VariableDTO> variables = getInstanceVariables(compilationUnit); // Filtrar variables de tipo instance
 
         boolean[][] relationMatrix = buildRelationMatrix(methods, variables);
 
@@ -69,10 +71,32 @@ public class CohesionMetricsService {
             }
         }
 
-        // Calcular LCOM1
-        return disconnectedPairs > connectedPairs
-                ? (double) (disconnectedPairs - connectedPairs) / methodCount
-                : 0.0;
+        return Math.max(disconnectedPairs - connectedPairs, 0);
+    }
+
+    private int calculateLCOM2(CustomCompilationUnitDTO compilationUnit) {
+        List<MethodDTO> methods = getMethods(compilationUnit);
+        List<VariableDTO> variables = getInstanceVariables(compilationUnit); // Filtrar variables de tipo instance
+
+        int[][] accessMatrix = buildAccessMatrix(methods, variables);
+
+        int sumMA = 0;
+        for (int[] matrix : accessMatrix) {
+            for (int i : matrix) {
+                if (i > 0) {
+                    sumMA++;
+                }
+            }
+        }
+
+        int M = methods.size();
+        int A = variables.size();
+
+        if (M == 0 || A == 0) {
+            return 0;
+        }
+
+        return (int) Math.round(1.0 - ((double) sumMA / (M * A)));
     }
 
     private boolean[][] buildRelationMatrix(List<MethodDTO> methods, List<VariableDTO> variables) {
@@ -87,7 +111,33 @@ public class CohesionMetricsService {
                 }
             }
         }
+//        System.out.println("Relation Matrix:");
+//        for (boolean[] row : relationMatrix) {
+//            for (boolean value : row) {
+//                System.out.print(value ? "1 " : "0 ");
+//            }
+//            System.out.println();
+//        }
         return relationMatrix;
+    }
+
+    private int[][] buildAccessMatrix(List<MethodDTO> methods, List<VariableDTO> variables) {
+        int[][] accessMatrix = new int[methods.size()][variables.size()];
+
+        for (int i = 0; i < methods.size(); i++) {
+            MethodDTO method = methods.get(i);
+            List<String> methodVariables = method.getMethodVariables().stream()
+                    .map(VariableDTO::getName)
+                    .toList();
+
+            for (int j = 0; j < variables.size(); j++) {
+                if (methodVariables.contains(variables.get(j).getName())) {
+                    accessMatrix[i][j] = 1; // Mark access
+                }
+            }
+        }
+
+        return accessMatrix;
     }
 
     private boolean shareInstanceVariable(MethodDTO method1, MethodDTO method2, List<VariableDTO> variables) {

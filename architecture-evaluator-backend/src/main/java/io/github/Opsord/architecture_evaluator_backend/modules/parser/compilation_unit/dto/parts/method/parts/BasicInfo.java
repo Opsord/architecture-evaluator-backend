@@ -6,5 +6,4 @@ import lombok.Data;
 public class BasicInfo {
     private String accessModifier;
     private String returnType;
-
 }
