@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -29,10 +28,10 @@ public class CohesionMetricsService {
 
         // Calculate LCOM (Lack of Cohesion)
         metrics.setLackOfCohesion1(calculateLCOM1(compilationUnit));
-        metrics.setLackOfCohesion2(calculateLCOM4(compilationUnit));
+//        metrics.setLackOfCohesion2(calculateLCOM2(compilationUnit));
 
         // Calculate CAM (Cohesion Among Methods)
-        metrics.setCohesionAmongMethods(calculateCAM(compilationUnit));
+//        metrics.setCohesionAmongMethods(calculateCAM(compilationUnit));
 
         return metrics;
     }
@@ -42,68 +41,69 @@ public class CohesionMetricsService {
         return new HashSet<>(compilationUnit.getImportedPackages()).size();
     }
 
+    private List<MethodDTO> getMethods(CustomCompilationUnitDTO compilationUnit) {
+        return compilationUnit.getMethods();
+    }
+
+    private List<VariableDTO> getVariables(CustomCompilationUnitDTO compilationUnit) {
+        return compilationUnit.getVariables();
+    }
+
     private double calculateLCOM1(CustomCompilationUnitDTO compilationUnit) {
-        List<MethodDTO> methods = compilationUnit.getMethods();
-        List<VariableDTO> variables = compilationUnit.getVariables();
+        List<MethodDTO> methods = getMethods(compilationUnit);
+        List<VariableDTO> variables = getVariables(compilationUnit);
 
-        int methodPairsWithoutSharedAttributes = 0;
-        int totalMethodPairs = 0;
+        boolean[][] relationMatrix = buildRelationMatrix(methods, variables);
 
-        for (int i = 0; i < methods.size(); i++) {
-            for (int j = i + 1; j < methods.size(); j++) {
-                totalMethodPairs++;
-                if (!methodsShareAttributes(methods.get(i), methods.get(j), variables)) {
-                    methodPairsWithoutSharedAttributes++;
+        int connectedPairs = 0;
+        int disconnectedPairs = 0;
+
+        int methodCount = relationMatrix.length;
+        for (int i = 0; i < methodCount; i++) {
+            for (int j = i + 1; j < methodCount; j++) {
+                if (relationMatrix[i][j]) {
+                    connectedPairs++;
+                } else {
+                    disconnectedPairs++;
                 }
             }
         }
 
-        if (totalMethodPairs == 0) {
-            return 0.0;
-        }
-
-        return (double) methodPairsWithoutSharedAttributes / totalMethodPairs;
+        // Calcular LCOM1
+        return disconnectedPairs > connectedPairs
+                ? (double) (disconnectedPairs - connectedPairs) / methodCount
+                : 0.0;
     }
 
-    private double calculateLCOM4(CustomCompilationUnitDTO compilationUnit) {
-        // Placeholder for LCOM4 calculation (requires graph-based analysis of method connectivity)
-        return 0.0;
-    }
+    private boolean[][] buildRelationMatrix(List<MethodDTO> methods, List<VariableDTO> variables) {
+        int methodCount = methods.size();
+        boolean[][] relationMatrix = new boolean[methodCount][methodCount];
 
-    private double calculateCAM(CustomCompilationUnitDTO compilationUnit) {
-        List<MethodDTO> methods = compilationUnit.getMethods();
-        List<VariableDTO> variables = compilationUnit.getVariables();
-
-        int relatedMethodPairs = 0;
-        int totalMethodPairs = 0;
-
-        for (int i = 0; i < methods.size(); i++) {
-            for (int j = i + 1; j < methods.size(); j++) {
-                totalMethodPairs++;
-                if (methodsShareAttributes(methods.get(i), methods.get(j), variables)) {
-                    relatedMethodPairs++;
+        for (int i = 0; i < methodCount; i++) {
+            for (int j = i + 1; j < methodCount; j++) {
+                if (shareInstanceVariable(methods.get(i), methods.get(j), variables)) {
+                    relationMatrix[i][j] = true;
+                    relationMatrix[j][i] = true;
                 }
             }
         }
+        return relationMatrix;
+    }
 
-        if (totalMethodPairs == 0) {
-            return 0.0;
+    private boolean shareInstanceVariable(MethodDTO method1, MethodDTO method2, List<VariableDTO> variables) {
+        List<String> method1Variables = method1.getMethodVariables().stream()
+                .map(VariableDTO::getName)
+                .toList();
+
+        List<String> method2Variables = method2.getMethodVariables().stream()
+                .map(VariableDTO::getName)
+                .toList();
+
+        for (String var : method1Variables) {
+            if (method2Variables.contains(var)) {
+                return true;
+            }
         }
-
-        return (double) relatedMethodPairs / totalMethodPairs;
-    }
-
-    private boolean methodsShareAttributes(MethodDTO method1, MethodDTO method2, List<VariableDTO> variables) {
-        Set<String> method1Attributes = extractAttributesUsedByMethod(method1, variables);
-        Set<String> method2Attributes = extractAttributesUsedByMethod(method2, variables);
-
-        // Check if there is any overlap between the attributes used by the two methods
-        method1Attributes.retainAll(method2Attributes);
-        return !method1Attributes.isEmpty();
-    }
-
-    private Set<String> extractAttributesUsedByMethod(MethodDTO method, List<VariableDTO> variables) {
-        // Placeholder: Extract attributes used by the method (requires detailed analysis of method body)
-        return new HashSet<>();
+        return false;
     }
 }
