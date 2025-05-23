@@ -3,10 +3,14 @@ package io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.CustomCompilationUnitDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.VariableDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.method.MethodDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.method.parts.StatementsInfo;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.statement.StatementDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.statement.StatementType;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.parts.CohesionMetricsDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -26,7 +30,9 @@ public class CohesionMetricsService {
         // Calculate LCOM (Lack of Cohesion)
         metrics.setLackOfCohesion1(calculateLCOM1(compilationUnit));
         metrics.setLackOfCohesion2(calculateLCOM2(compilationUnit));
+        metrics.setLackOfCohesion3(calculateLCOM3(compilationUnit));
         metrics.setLackOfCohesion4(calculateLCOM4(compilationUnit));
+        metrics.setLackOfCohesion5(calculateLCOM5(compilationUnit));
 
         return metrics;
     }
@@ -55,6 +61,32 @@ public class CohesionMetricsService {
         return compilationUnit.getVariables().stream()
                 .filter(variable -> "instance".equals(variable.getScope())) // Filter by scope "instance"
                 .toList();
+    }
+
+    private List<String> getCalledMethodNames(MethodDTO method) {
+        List<String> calledMethods = new ArrayList<>();
+        StatementsInfo statementsInfo = method.getStatementsInfo();
+        if (statementsInfo != null && statementsInfo.getStatements() != null) {
+            for (StatementDTO statement : statementsInfo.getStatements()) {
+                // Solo procesar ExpressionStmt (ejemplo: "m3();")
+                if (statement.getType() == StatementType.EXPRESSION) {
+                    String methodName = extractMethodName(statement.getStructure());
+                    if (methodName != null) {
+                        calledMethods.add(methodName);
+                    }
+                }
+            }
+        }
+        return calledMethods;
+    }
+
+    private String extractMethodName(String structure) {
+        // Example: "m3();" or "m3();"
+        // Use regex to extract the method name from the structure
+        if (structure.matches(".*\\w+\\(\\)\\s*;")) { // Match with "methods();"
+            return structure.replaceAll("\\s*\\(\\)\\s*;", "");
+        }
+        return null;
     }
 
     // -------------------------------------------------------------------------
@@ -100,25 +132,22 @@ public class CohesionMetricsService {
      * @param compilationUnit The compilation unit.
      * @return LCOM2 value.
      */
-    private int calculateLCOM2(CustomCompilationUnitDTO compilationUnit) {
+    private double calculateLCOM2(CustomCompilationUnitDTO compilationUnit) {
         List<MethodDTO> methods = getMethods(compilationUnit);
         List<VariableDTO> variables = getInstanceVariables(compilationUnit);
 
         int M = methods.size();
         int A = variables.size();
 
-        if (M == 0 || A <= 1) { // Special cases
-            return 0;
-        }
+        if (M == 0 || A == 0) return 0.0;
 
-        int[] MAj = new int[A]; // MAj[j] = Number of methods accessing variable j
+        int[] MAj = new int[A]; // Número de métodos que acceden a cada atributo
         for (MethodDTO method : methods) {
             List<String> methodVars = method.getMethodVariables().stream()
                     .filter(v -> "instance".equals(v.getScope()))
                     .map(VariableDTO::getName)
                     .toList();
-
-            for (int j = 0; j < variables.size(); j++) {
+            for (int j = 0; j < A; j++) {
                 if (methodVars.contains(variables.get(j).getName())) {
                     MAj[j]++;
                 }
@@ -126,12 +155,26 @@ public class CohesionMetricsService {
         }
 
         int sumMAj = Arrays.stream(MAj).sum();
-        double numerator = sumMAj - M;
-        double denominator = M * (A - 1);
-        double lcom2 = 1.0 - (numerator / denominator);
+        double lcom2 = 1.0 - (sumMAj / (double) (M * A));
+        return Math.max(lcom2, 0.0); // Asegurar valor no negativo
+    }
 
-        lcom2 = Math.max(0, Math.min(lcom2, 1)); // Ensure range [0, 1]
-        return (int) Math.round(lcom2 * 100); // Example: 0.75 → 75%
+    // -------------------------------------------------------------------------
+    // LCOM3 Calculation
+    // -------------------------------------------------------------------------
+
+    /**
+     * Calculate LCOM3 (Lack of Cohesion Metric 3).
+     *
+     * @param compilationUnit The compilation unit.
+     * @return LCOM3 value.
+     */
+    private int calculateLCOM3(CustomCompilationUnitDTO compilationUnit) {
+        List<MethodDTO> methods = getMethods(compilationUnit);
+        List<VariableDTO> variables = getInstanceVariables(compilationUnit);
+        boolean[][] adj = buildRelationMatrix(methods, variables);
+        int components = countConnectedComponents(adj);
+        return components - 1; // LCOM3 = Componentes - 1
     }
 
     // -------------------------------------------------------------------------
@@ -146,9 +189,38 @@ public class CohesionMetricsService {
      */
     private int calculateLCOM4(CustomCompilationUnitDTO compilationUnit) {
         List<MethodDTO> methods = getMethods(compilationUnit);
+        boolean[][] adj = buildRelationMatrixForLCOM4(methods, compilationUnit);
+        int components = countConnectedComponents(adj);
+        return components - 1; // LCOM4 = Componentes - 1
+    }
+
+    private boolean[][] buildRelationMatrixForLCOM4(List<MethodDTO> methods, CustomCompilationUnitDTO compilationUnit) {
+        int n = methods.size();
+        boolean[][] adj = new boolean[n][n];
         List<VariableDTO> variables = getInstanceVariables(compilationUnit);
-        boolean[][] adj = buildRelationMatrix(methods, variables);
-        return countConnectedComponents(adj);
+
+        // Conexiones por variables compartidas
+        for (int i = 0; i < n; i++) {
+            for (int j = i + 1; j < n; j++) {
+                if (shareInstanceVariable(methods.get(i), methods.get(j), variables)) {
+                    adj[i][j] = adj[j][i] = true;
+                }
+            }
+        }
+
+        // Conexiones por invocaciones de métodos
+        for (int i = 0; i < n; i++) {
+            List<String> calledMethods = getCalledMethodNames(methods.get(i));
+            for (String callee : calledMethods) {
+                for (int j = 0; j < n; j++) {
+                    if (methods.get(j).getName().equals(callee)) {
+                        adj[i][j] = adj[j][i] = true; // Grafo no dirigido
+                    }
+                }
+            }
+        }
+
+        return adj;
     }
 
     /**
@@ -187,6 +259,43 @@ public class CohesionMetricsService {
     }
 
     // -------------------------------------------------------------------------
+    // LCOM5 Calculation
+    // -------------------------------------------------------------------------
+
+    /**
+     * Calculate LCOM5 (Lack of Cohesion Metric 5).
+     *
+     * @param compilationUnit The compilation unit.
+     * @return LCOM5 value.
+     */
+    private double calculateLCOM5(CustomCompilationUnitDTO compilationUnit) {
+        List<MethodDTO> methods = getMethods(compilationUnit);
+        List<VariableDTO> variables = getInstanceVariables(compilationUnit);
+
+        int M = methods.size();
+        int A = variables.size();
+
+        if (M == 0 || A == 0) return 0.0;
+
+        int[] MAj = new int[A];
+        for (MethodDTO method : methods) {
+            List<String> methodVars = method.getMethodVariables().stream()
+                    .filter(v -> "instance".equals(v.getScope()))
+                    .map(VariableDTO::getName)
+                    .toList();
+            for (int j = 0; j < A; j++) {
+                if (methodVars.contains(variables.get(j).getName())) {
+                    MAj[j]++;
+                }
+            }
+        }
+
+        int sumMAj = Arrays.stream(MAj).sum();
+        double lcom5 = (1.0 - (sumMAj / (double) (M * A))) * M;
+        return Math.max(lcom5, 0.0);
+    }
+
+    // -------------------------------------------------------------------------
     // Relation Matrix Construction
     // -------------------------------------------------------------------------
 
@@ -221,16 +330,22 @@ public class CohesionMetricsService {
      * @return True if they share an instance variable, false otherwise.
      */
     private boolean shareInstanceVariable(MethodDTO method1, MethodDTO method2, List<VariableDTO> variables) {
-        List<String> method1Variables = method1.getMethodVariables().stream()
+        List<String> instanceVarNames = variables.stream()
                 .map(VariableDTO::getName)
                 .toList();
 
-        List<String> method2Variables = method2.getMethodVariables().stream()
+        List<String> method1Vars = method1.getMethodVariables().stream()
                 .map(VariableDTO::getName)
+                .filter(instanceVarNames::contains) // Filtro clave
                 .toList();
 
-        for (String var : method1Variables) {
-            if (method2Variables.contains(var)) {
+        List<String> method2Vars = method2.getMethodVariables().stream()
+                .map(VariableDTO::getName)
+                .filter(instanceVarNames::contains) // Filtro clave
+                .toList();
+
+        for (String var : method1Vars) {
+            if (method2Vars.contains(var)) {
                 return true;
             }
         }

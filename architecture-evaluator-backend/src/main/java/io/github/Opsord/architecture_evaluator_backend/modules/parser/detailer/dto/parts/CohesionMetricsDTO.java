@@ -4,9 +4,9 @@ import lombok.Data;
 
 @Data
 public class CohesionMetricsDTO {
-    private Integer couplingBetweenObjects; // CBO: number of classes that this class depends on
     private Integer lackOfCohesion1;
-    private Integer lackOfCohesion2;
+    private Double lackOfCohesion2;
+    private Integer lackOfCohesion3;
     private Integer lackOfCohesion4;
-    private Double cohesionAmongMethods;
+    private Double lackOfCohesion5;
 }
