@@ -2,8 +2,6 @@ package io.github.Opsord.architecture_evaluator_backend.modules.parser.project_s
 
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.CustomCompilationUnitDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.CompilationUnitService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.AnnotationType;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.ProjectDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.ScanningService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -48,36 +46,5 @@ public class ProjectService {
             }
         }
         return compilationUnits;
-    }
-
-    public ProjectDTO scanProjectToDTO(String filePath) throws IOException {
-        // Scan the project to get the compilation units
-        List<CustomCompilationUnitDTO> compilationUnits = scanProject(filePath);
-
-        ProjectDTO projectDTO = new ProjectDTO();
-
-        // Filter the compilation units by their annotations and set them in the ProjectDTO
-        projectDTO.setEntities(filterCompUnitsByAnnotation(compilationUnits, AnnotationType.ENTITY));
-        projectDTO.setRepositories(filterCompUnitsByAnnotation(compilationUnits, AnnotationType.REPOSITORY));
-        projectDTO.setServices(filterCompUnitsByAnnotation(compilationUnits, AnnotationType.SERVICE));
-        projectDTO.setControllers(filterCompUnitsByAnnotation(compilationUnits, AnnotationType.CONTROLLER));
-        projectDTO.setDocuments(filterCompUnitsByAnnotation(compilationUnits, AnnotationType.DOCUMENT));
-        projectDTO.setTestClasses(filterCompUnitsByAnnotation(compilationUnits, AnnotationType.SPRINGBOOT_TEST));
-
-        return projectDTO;
-    }
-
-    /**
-     * Filters the compilation units based on the specified annotation type.
-     *
-     * @param units The list of compilation units to filter.
-     * @param annotationType The annotation type to filter by.
-     * @return A list of compilation units that contain the specified annotation.
-     */
-    private List<CustomCompilationUnitDTO> filterCompUnitsByAnnotation(List<CustomCompilationUnitDTO> units, AnnotationType annotationType) {
-        return units.stream()
-                .filter(unit -> unit.getAnnotations().stream()
-                        .anyMatch(annotation -> annotation.getName().equalsIgnoreCase(annotationType.getAnnotation())))
-                .toList();
     }
 }

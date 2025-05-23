@@ -5,7 +5,6 @@ import io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrat
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto.ProjectAnalysisDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.services.CCUSummarizingService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.AnnotationType;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.ProjectDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.PomFileDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.parts.PomService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.parts.ProjectService;
@@ -17,7 +16,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -41,36 +39,26 @@ public class OrchestratorService {
     public ProjectAnalysisDTO orchestrateProjectAnalysis(String projectPath, boolean includeNonInternalDependencies) throws IOException {
         logger.info("Starting orchestration for project at path: {}", projectPath);
 
-        ProjectDTO projectDTO = scanProject(projectPath);
+        // Escanear directamente las entidades (compilation units)
+        List<CustomCompilationUnitDTO> compilationUnits = projectService.scanProject(projectPath);
+        // Generar la lista sin tests (filtrando por anotaciones si es necesario)
+        List<CustomCompilationUnitDTO> compilationUnitsWithoutTests = compilationUnits.stream()
+                .filter(unit -> unit.getAnnotations().stream().noneMatch(a -> a.getName().equalsIgnoreCase(AnnotationType.SPRINGBOOT_TEST.getAnnotation())))
+                .toList();
         PomFileDTO pomFileDTO = scanPomFile(projectPath);
-        // Extract all compilation units from the project
-        List<CustomCompilationUnitDTO> compilationUnits = extractCompilationUnits(projectDTO);
-        // Generate the compilation units without tests
-        List<CustomCompilationUnitDTO> compilationUnitsWithoutTests = extractCompilationUnitsWithoutTests(projectDTO);
-        // Analyze the compilation units
+        // Analizar las compilation units
         List<CompUnitWithAnalysisDTO> analyzedUnits = analyzeCompilationUnits(
                 compilationUnits,
                 compilationUnitsWithoutTests,
                 pomFileDTO,
                 includeNonInternalDependencies);
-        // Organize the analysis results into a ProjectAnalysisDTO
+        // Organizar el resultado en ProjectAnalysisDTO
         ProjectAnalysisDTO projectAnalysisDTO = organizeProjectAnalysis(analyzedUnits);
         projectAnalysisDTO.setProjectPath(projectPath);
         projectAnalysisDTO.setPomFile(pomFileDTO);
 
         logger.info("Orchestration completed for project at path: {}", projectPath);
         return projectAnalysisDTO;
-    }
-
-    /**
-     * Scans the project at the given path and returns a ProjectDTO containing the scanned compilation units.
-     *
-     * @param projectPath The path to the project to be scanned.
-     * @return A ProjectDTO containing the scanned compilation units.
-     * @throws IOException If an error occurs during scanning.
-     */
-    private ProjectDTO scanProject(String projectPath) throws IOException {
-        return projectService.scanProjectToDTO(projectPath);
     }
 
     /**
@@ -95,39 +83,6 @@ public class OrchestratorService {
      */
     private String determineInternalBasePackage(PomFileDTO pomFileDTO) {
         return pomFileDTO.getGroupId();
-    }
-
-    /**
-     * Extracts all compilation units from a ProjectDTO into a single list.
-     *
-     * @param projectDTO The ProjectDTO containing categorized compilation units.
-     * @return A list of all CustomCompilationUnitDTOs in the project.
-     */
-    private List<CustomCompilationUnitDTO> extractCompilationUnits(ProjectDTO projectDTO) {
-        return Stream.of(
-                projectDTO.getEntities(),
-                projectDTO.getRepositories(),
-                projectDTO.getServices(),
-                projectDTO.getControllers(),
-                projectDTO.getDocuments(),
-                projectDTO.getTestClasses()
-        ).flatMap(List::stream).toList();
-    }
-
-    /**
-     * Extracts all compilation units from a ProjectDTO into a single list.
-     *
-     * @param projectDTO The ProjectDTO containing categorized compilation units.
-     * @return A list of all CustomCompilationUnitDTOs in the project.
-     */
-    private List<CustomCompilationUnitDTO> extractCompilationUnitsWithoutTests(ProjectDTO projectDTO) {
-        return Stream.of(
-                projectDTO.getEntities(),
-                projectDTO.getRepositories(),
-                projectDTO.getServices(),
-                projectDTO.getControllers(),
-                projectDTO.getDocuments()
-        ).flatMap(List::stream).toList();
     }
 
     /**
