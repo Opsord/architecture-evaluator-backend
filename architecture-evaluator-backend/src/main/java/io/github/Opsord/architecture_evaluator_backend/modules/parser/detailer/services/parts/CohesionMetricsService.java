@@ -7,7 +7,7 @@ import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.d
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -15,7 +15,7 @@ import java.util.List;
 public class CohesionMetricsService {
 
     /**
-     * Calculate the cohesion metrics for a given compilation unit.
+     * Main method to calculate cohesion metrics for a given compilation unit.
      *
      * @param compilationUnit The compilation unit to analyze.
      * @return The cohesion metrics for the given compilation unit.
@@ -23,37 +23,53 @@ public class CohesionMetricsService {
     public CohesionMetricsDTO calculateCohesionMetrics(CustomCompilationUnitDTO compilationUnit) {
         CohesionMetricsDTO metrics = new CohesionMetricsDTO();
 
-        // Calculate CBO (Coupling Between Objects)
-        metrics.setCouplingBetweenObjects(calculateCBO(compilationUnit));
-
         // Calculate LCOM (Lack of Cohesion)
         metrics.setLackOfCohesion1(calculateLCOM1(compilationUnit));
         metrics.setLackOfCohesion2(calculateLCOM2(compilationUnit));
-
-        // Calculate CAM (Cohesion Among Methods)
-//        metrics.setCohesionAmongMethods(calculateCAM(compilationUnit));
+        metrics.setLackOfCohesion4(calculateLCOM4(compilationUnit));
 
         return metrics;
     }
 
-    private int calculateCBO(CustomCompilationUnitDTO compilationUnit) {
-        // Count the number of unique external classes referenced by this class
-        return new HashSet<>(compilationUnit.getImportedPackages()).size();
-    }
+    // -------------------------------------------------------------------------
+    // Helper Methods to Extract Data
+    // -------------------------------------------------------------------------
 
+    /**
+     * Get all methods from the compilation unit.
+     *
+     * @param compilationUnit The compilation unit.
+     * @return List of methods.
+     */
     private List<MethodDTO> getMethods(CustomCompilationUnitDTO compilationUnit) {
         return compilationUnit.getMethods();
     }
 
+    /**
+     * Get all instance variables from the compilation unit.
+     *
+     * @param compilationUnit The compilation unit.
+     * @return List of instance variables.
+     */
     private List<VariableDTO> getInstanceVariables(CustomCompilationUnitDTO compilationUnit) {
         return compilationUnit.getVariables().stream()
-                .filter(variable -> "instance".equals(variable.getScope())) // Filtrar por scope "instance"
+                .filter(variable -> "instance".equals(variable.getScope())) // Filter by scope "instance"
                 .toList();
     }
 
+    // -------------------------------------------------------------------------
+    // LCOM1 Calculation
+    // -------------------------------------------------------------------------
+
+    /**
+     * Calculate LCOM1 (Lack of Cohesion Metric 1).
+     *
+     * @param compilationUnit The compilation unit.
+     * @return LCOM1 value.
+     */
     private int calculateLCOM1(CustomCompilationUnitDTO compilationUnit) {
         List<MethodDTO> methods = getMethods(compilationUnit);
-        List<VariableDTO> variables = getInstanceVariables(compilationUnit); // Filtrar variables de tipo instance
+        List<VariableDTO> variables = getInstanceVariables(compilationUnit);
 
         boolean[][] relationMatrix = buildRelationMatrix(methods, variables);
 
@@ -74,31 +90,113 @@ public class CohesionMetricsService {
         return Math.max(disconnectedPairs - connectedPairs, 0);
     }
 
+    // -------------------------------------------------------------------------
+    // LCOM2 Calculation
+    // -------------------------------------------------------------------------
+
+    /**
+     * Calculate LCOM2 (Lack of Cohesion Metric 2).
+     *
+     * @param compilationUnit The compilation unit.
+     * @return LCOM2 value.
+     */
     private int calculateLCOM2(CustomCompilationUnitDTO compilationUnit) {
         List<MethodDTO> methods = getMethods(compilationUnit);
-        List<VariableDTO> variables = getInstanceVariables(compilationUnit); // Filtrar variables de tipo instance
-
-        int[][] accessMatrix = buildAccessMatrix(methods, variables);
-
-        int sumMA = 0;
-        for (int[] matrix : accessMatrix) {
-            for (int i : matrix) {
-                if (i > 0) {
-                    sumMA++;
-                }
-            }
-        }
+        List<VariableDTO> variables = getInstanceVariables(compilationUnit);
 
         int M = methods.size();
         int A = variables.size();
 
-        if (M == 0 || A == 0) {
+        if (M == 0 || A <= 1) { // Special cases
             return 0;
         }
 
-        return (int) Math.round(1.0 - ((double) sumMA / (M * A)));
+        int[] MAj = new int[A]; // MAj[j] = Number of methods accessing variable j
+        for (MethodDTO method : methods) {
+            List<String> methodVars = method.getMethodVariables().stream()
+                    .filter(v -> "instance".equals(v.getScope()))
+                    .map(VariableDTO::getName)
+                    .toList();
+
+            for (int j = 0; j < variables.size(); j++) {
+                if (methodVars.contains(variables.get(j).getName())) {
+                    MAj[j]++;
+                }
+            }
+        }
+
+        int sumMAj = Arrays.stream(MAj).sum();
+        double numerator = sumMAj - M;
+        double denominator = M * (A - 1);
+        double lcom2 = 1.0 - (numerator / denominator);
+
+        lcom2 = Math.max(0, Math.min(lcom2, 1)); // Ensure range [0, 1]
+        return (int) Math.round(lcom2 * 100); // Example: 0.75 → 75%
     }
 
+    // -------------------------------------------------------------------------
+    // LCOM4 Calculation
+    // -------------------------------------------------------------------------
+
+    /**
+     * Calculate LCOM4 (Lack of Cohesion Metric 4).
+     *
+     * @param compilationUnit The compilation unit.
+     * @return LCOM4 value.
+     */
+    private int calculateLCOM4(CustomCompilationUnitDTO compilationUnit) {
+        List<MethodDTO> methods = getMethods(compilationUnit);
+        List<VariableDTO> variables = getInstanceVariables(compilationUnit);
+        boolean[][] adj = buildRelationMatrix(methods, variables);
+        return countConnectedComponents(adj);
+    }
+
+    /**
+     * Count the number of connected components in the relation matrix.
+     *
+     * @param adj The adjacency matrix.
+     * @return Number of connected components.
+     */
+    private int countConnectedComponents(boolean[][] adj) {
+        int n = adj.length;
+        boolean[] visited = new boolean[n];
+        int components = 0;
+        for (int i = 0; i < n; i++) {
+            if (!visited[i]) {
+                dfs(i, adj, visited);
+                components++;
+            }
+        }
+        return components;
+    }
+
+    /**
+     * Perform a depth-first search (DFS) on the relation matrix.
+     *
+     * @param u       Current node.
+     * @param adj     Adjacency matrix.
+     * @param visited Visited nodes array.
+     */
+    private void dfs(int u, boolean[][] adj, boolean[] visited) {
+        visited[u] = true;
+        for (int v = 0; v < adj.length; v++) {
+            if (adj[u][v] && !visited[v]) {
+                dfs(v, adj, visited);
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Relation Matrix Construction
+    // -------------------------------------------------------------------------
+
+    /**
+     * Build the relation matrix for methods and instance variables.
+     *
+     * @param methods   List of methods.
+     * @param variables List of instance variables.
+     * @return Relation matrix.
+     */
     private boolean[][] buildRelationMatrix(List<MethodDTO> methods, List<VariableDTO> variables) {
         int methodCount = methods.size();
         boolean[][] relationMatrix = new boolean[methodCount][methodCount];
@@ -111,35 +209,17 @@ public class CohesionMetricsService {
                 }
             }
         }
-//        System.out.println("Relation Matrix:");
-//        for (boolean[] row : relationMatrix) {
-//            for (boolean value : row) {
-//                System.out.print(value ? "1 " : "0 ");
-//            }
-//            System.out.println();
-//        }
         return relationMatrix;
     }
 
-    private int[][] buildAccessMatrix(List<MethodDTO> methods, List<VariableDTO> variables) {
-        int[][] accessMatrix = new int[methods.size()][variables.size()];
-
-        for (int i = 0; i < methods.size(); i++) {
-            MethodDTO method = methods.get(i);
-            List<String> methodVariables = method.getMethodVariables().stream()
-                    .map(VariableDTO::getName)
-                    .toList();
-
-            for (int j = 0; j < variables.size(); j++) {
-                if (methodVariables.contains(variables.get(j).getName())) {
-                    accessMatrix[i][j] = 1; // Mark access
-                }
-            }
-        }
-
-        return accessMatrix;
-    }
-
+    /**
+     * Check if two methods share at least one instance variable.
+     *
+     * @param method1   First method.
+     * @param method2   Second method.
+     * @param variables List of instance variables.
+     * @return True if they share an instance variable, false otherwise.
+     */
     private boolean shareInstanceVariable(MethodDTO method1, MethodDTO method2, List<VariableDTO> variables) {
         List<String> method1Variables = method1.getMethodVariables().stream()
                 .map(VariableDTO::getName)
