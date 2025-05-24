@@ -21,26 +21,54 @@ public class ProjectService {
     private final CompilationUnitService compilationUnitService;
     private final ScanningService scanningService;
 
+    /**
+     * Scans the project directory for Java files and parses them into compilation units.
+     *
+     * @param filePath The path to the project directory.
+     * @return A list of `CustomCompilationUnitDTO` objects representing the parsed Java files.
+     * @throws IOException If an error occurs during scanning.
+     */
     public List<CustomCompilationUnitDTO> scanProject(String filePath) throws IOException {
-        File projectRoot = scanningService.findProjectRoot(new File(filePath));
+        File projectRoot = findProjectRoot(filePath);
         if (projectRoot == null) {
-            logger.warn("No valid project root found for path: {}", filePath);
             return List.of();
         }
 
         File srcFolder = new File(projectRoot, "src");
-        if (!srcFolder.exists() || !srcFolder.isDirectory()) {
-            logger.warn("No 'src' folder found in project root: {}", projectRoot.getAbsolutePath());
+        if (!isValidSrcFolder(srcFolder)) {
             return List.of();
         }
 
         List<File> javaFiles = scanningService.scanSrcFolder(srcFolder);
+        return parseJavaFiles(javaFiles);
+    }
+
+    // -------------------------------------------------------------------------
+    // Helper Methods
+    // -------------------------------------------------------------------------
+
+    private File findProjectRoot(String filePath) {
+        File projectRoot = scanningService.findProjectRoot(new File(filePath));
+        if (projectRoot == null) {
+            logger.warn("No valid project root found for path: {}", filePath);
+        }
+        return projectRoot;
+    }
+
+    private boolean isValidSrcFolder(File srcFolder) {
+        if (!srcFolder.exists() || !srcFolder.isDirectory()) {
+            logger.warn("No 'src' folder found in project root: {}", srcFolder.getAbsolutePath());
+            return false;
+        }
+        return true;
+    }
+
+    private List<CustomCompilationUnitDTO> parseJavaFiles(List<File> javaFiles) {
         List<CustomCompilationUnitDTO> compilationUnits = new ArrayList<>();
         for (File javaFile : javaFiles) {
             try {
-                logger.info("Parsing file: {}", javaFile.getAbsolutePath());
-                CustomCompilationUnitDTO dto = compilationUnitService.parseJavaFile(javaFile);
-                compilationUnits.add(dto);
+                CustomCompilationUnitDTO unit = compilationUnitService.parseJavaFile(javaFile);
+                compilationUnits.add(unit);
             } catch (Exception e) {
                 logger.error("Failed to parse file: {}", javaFile.getAbsolutePath(), e);
             }

@@ -65,9 +65,10 @@ public class PomService {
             Element dependency = (Element) dependencyNodes.item(i);
             String groupId = getTagValue(dependency, "groupId");
             String artifactId = getTagValue(dependency, "artifactId");
+            String version = getTagValue(dependency, "version");
 
             if (groupId != null && artifactId != null) {
-                dependencyList.add(new DependencyDTO(groupId, artifactId));
+                dependencyList.add(new DependencyDTO(groupId, artifactId, version));
             }
         }
 

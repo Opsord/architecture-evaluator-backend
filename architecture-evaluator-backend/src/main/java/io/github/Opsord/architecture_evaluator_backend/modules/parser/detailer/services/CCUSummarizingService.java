@@ -26,6 +26,16 @@ public class CCUSummarizingService {
     private final CohesionMetricsService cohesionMetricsService;
     private final ImportClassifierService importClassifierService;
 
+    /**
+     * Analyzes a compilation unit and generates a detailed analysis.
+     *
+     * @param compilationUnitDTO The compilation unit to analyze.
+     * @param projectCompUnitsWithoutTests The list of project compilation units excluding test classes.
+     * @param internalBasePackage The internal base package for dependency classification.
+     * @param pomFileDTO The POM file containing project dependencies.
+     * @param includeNonInternalDependencies Whether to include non-internal dependencies in the analysis.
+     * @return An `AnalysedCompUnitDTO` containing the detailed analysis.
+     */
     public AnalysedCompUnitDTO analyseCompUnit(CustomCompilationUnitDTO compilationUnitDTO,
                                                List<CustomCompilationUnitDTO> projectCompUnitsWithoutTests,
                                                String internalBasePackage,
@@ -33,34 +43,43 @@ public class CCUSummarizingService {
                                                boolean includeNonInternalDependencies) {
         AnalysedCompUnitDTO detailedCompUnit = new AnalysedCompUnitDTO();
 
-        // Set the classified dependencies
-        Map<ImportCategory, List<String>> classifiedDependencies = importClassifierService.classifyDependencies(
-                pomFileDTO,
-                compilationUnitDTO,
-                internalBasePackage);
+        // Classify dependencies
+        Map<ImportCategory, List<String>> classifiedDependencies = classifyDependencies(
+                compilationUnitDTO, pomFileDTO, internalBasePackage);
         detailedCompUnit.setClassifiedDependencies(classifiedDependencies);
 
-        // Basic metrics
-        detailedCompUnit.setClassCount(compilationUnitDTO.getClassName().size());
-        detailedCompUnit.setInterfaceCount(compilationUnitDTO.getInterfaceNames().size());
-        detailedCompUnit.setStatementCount(compilationUnitDTO.getStatements().size());
+        // Set basic metrics
+        setBasicMetrics(detailedCompUnit, compilationUnitDTO);
 
-        // Set the program metrics
+        // Generate and set program metrics
         ProgramMetricsDTO programMetrics = programMetricsService.generateProgramMetrics(compilationUnitDTO);
         detailedCompUnit.setProgramMetrics(programMetrics);
 
-        // Set the coupling metrics
+        // Generate and set coupling metrics
         CouplingMetricsDTO couplingMetrics = couplingMetricsService.calculateCouplingMetrics(
-                compilationUnitDTO,
-                projectCompUnitsWithoutTests,
-                classifiedDependencies,
-                includeNonInternalDependencies);
+                compilationUnitDTO, projectCompUnitsWithoutTests, classifiedDependencies, includeNonInternalDependencies);
         detailedCompUnit.setCouplingMetrics(couplingMetrics);
 
-        // Set the cohesion metrics
+        // Generate and set cohesion metrics
         CohesionMetricsDTO cohesionMetrics = cohesionMetricsService.calculateCohesionMetrics(compilationUnitDTO);
         detailedCompUnit.setCohesionMetrics(cohesionMetrics);
 
         return detailedCompUnit;
+    }
+
+    // -------------------------------------------------------------------------
+    // Helper Methods
+    // -------------------------------------------------------------------------
+
+    private Map<ImportCategory, List<String>> classifyDependencies(CustomCompilationUnitDTO compilationUnitDTO,
+                                                                   PomFileDTO pomFileDTO,
+                                                                   String internalBasePackage) {
+        return importClassifierService.classifyDependencies(pomFileDTO, compilationUnitDTO, internalBasePackage);
+    }
+
+    private void setBasicMetrics(AnalysedCompUnitDTO detailedCompUnit, CustomCompilationUnitDTO compilationUnitDTO) {
+        detailedCompUnit.setClassCount(compilationUnitDTO.getClassName().size());
+        detailedCompUnit.setInterfaceCount(compilationUnitDTO.getInterfaceNames().size());
+        detailedCompUnit.setStatementCount(compilationUnitDTO.getStatements().size());
     }
 }
