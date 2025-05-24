@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -155,6 +156,16 @@ public class OrchestratorService {
         projectAnalysisDTO.setServices(filterAnalysedUnitByAnnotation(compUnitWithAnalysisDTOS, AnnotationType.SERVICE));
         projectAnalysisDTO.setControllers(filterAnalysedUnitByAnnotation(compUnitWithAnalysisDTOS, AnnotationType.CONTROLLER));
         projectAnalysisDTO.setTestClasses(filterAnalysedUnitByAnnotation(compUnitWithAnalysisDTOS, AnnotationType.SPRINGBOOT_TEST));
+
+        // Filtrar las unidades que no tienen ninguna anotación de AnnotationType
+        List<CompUnitWithAnalysisDTO> otherClasses = compUnitWithAnalysisDTOS.stream()
+                .filter(dto -> dto.getCompilationUnit().getAnnotations().stream()
+                        .noneMatch(annotation ->
+                                Stream.of(AnnotationType.values())
+                                        .anyMatch(type -> type.getAnnotation().equalsIgnoreCase(annotation.getName()))))
+                .toList();
+        projectAnalysisDTO.setOtherClasses(otherClasses);
+
         return projectAnalysisDTO;
     }
 
