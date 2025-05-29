@@ -2,14 +2,8 @@ package io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.
 
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.CustomCompilationUnitDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.AnalysedCompUnitDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.parts.CohesionMetricsDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.parts.CouplingMetricsDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.parts.ImportCategory;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.parts.ProgramMetricsDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.services.parts.CohesionMetricsService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.services.parts.CouplingMetricsService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.services.parts.ImportClassifierService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.services.parts.ProgramMetricsService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.parts.*;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.services.parts.*;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.PomFileDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,6 +16,7 @@ import java.util.Map;
 public class CCUSummarizingService {
 
     private final ProgramMetricsService programMetricsService;
+    private final ComplexityMetricsService complexityMetricsService;
     private final CouplingMetricsService couplingMetricsService;
     private final CohesionMetricsService cohesionMetricsService;
     private final ImportClassifierService importClassifierService;
@@ -54,6 +49,11 @@ public class CCUSummarizingService {
         // Generate and set program metrics
         ProgramMetricsDTO programMetrics = programMetricsService.generateProgramMetrics(compilationUnitDTO);
         detailedCompUnit.setProgramMetrics(programMetrics);
+
+        // Generate and set complexity metrics
+        ComplexityMetricsDTO complexityMetrics = complexityMetricsService.calculateComplexityMetrics(
+                compilationUnitDTO);
+        detailedCompUnit.setComplexityMetrics(complexityMetrics);
 
         // Generate and set coupling metrics
         CouplingMetricsDTO couplingMetrics = couplingMetricsService.calculateCouplingMetrics(
