@@ -6,14 +6,16 @@ import io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrat
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.services.CCUSummarizingService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.AnnotationType;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.PomFileDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.parts.PomService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.parts.ProjectService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.PomScannerService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.ScannerService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.SrcScannerService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.CustomCompilationUnitDTO;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Stream;
@@ -24,8 +26,9 @@ public class OrchestratorService {
 
     private static final Logger logger = LoggerFactory.getLogger(OrchestratorService.class);
 
-    private final PomService pomService;
-    private final ProjectService projectService;
+    private final ScannerService scannerService;
+    private final PomScannerService pomScannerService;
+    private final SrcScannerService srcScannerService;
     private final CCUSummarizingService summarizingService;
 
     /**
@@ -40,40 +43,30 @@ public class OrchestratorService {
     public ProjectAnalysisDTO orchestrateProjectAnalysis(String projectPath, boolean includeNonInternalDependencies) throws IOException {
         logger.info("Starting orchestration for project at path: {}", projectPath);
 
-        // Escanear directamente las entidades (compilation units)
-        List<CustomCompilationUnitDTO> compilationUnits = projectService.scanProject(projectPath);
-        // Generar la lista sin tests (filtrando por anotaciones si es necesario)
+        /// Find the project root
+        File projectRoot = scannerService.findProjectRoot(new File(projectPath));
+        /// Scan the src folder for Java files
+        List<File> srcFiles = srcScannerService.scanSrcFolder(projectRoot);
+        /// Parse the files into CustomCompilationUnitDTOs
+        List<CustomCompilationUnitDTO> compilationUnits = srcScannerService.parseJavaFiles(srcFiles);
+        /// Filter out test classes from the compilation units
         List<CustomCompilationUnitDTO> compilationUnitsWithoutTests = compilationUnits.stream()
                 .filter(unit -> unit.getAnnotations().stream().noneMatch(a -> a.getName().equalsIgnoreCase(AnnotationType.SPRINGBOOT_TEST.getAnnotation())))
                 .toList();
-        PomFileDTO pomFileDTO = scanPomFile(projectPath);
-        // Analizar las compilation units
+        PomFileDTO pomFileDTO = pomScannerService.scanPomFile(projectRoot.getAbsolutePath());
+        /// Analyze the compilation units and create CompUnitWithAnalysisDTOs
         List<CompUnitWithAnalysisDTO> analyzedUnits = analyzeCompilationUnits(
                 compilationUnits,
                 compilationUnitsWithoutTests,
                 pomFileDTO,
                 includeNonInternalDependencies);
-        // Organizar el resultado en ProjectAnalysisDTO
+        /// Organize the analyzed units into a ProjectAnalysisDTO
         ProjectAnalysisDTO projectAnalysisDTO = organizeProjectAnalysis(analyzedUnits);
-        projectAnalysisDTO.setProjectPath(projectPath);
+        projectAnalysisDTO.setProjectPath(projectRoot.getAbsolutePath());
         projectAnalysisDTO.setPomFile(pomFileDTO);
 
-        logger.info("Orchestration completed for project at path: {}", projectPath);
+        logger.info("Orchestration completed for project at path: {}", projectRoot.getAbsolutePath());
         return projectAnalysisDTO;
-    }
-
-    /**
-     * Scans the pom.xml file at the given path and returns a PomFileDTO containing the parsed information.
-     *
-     * @param projectPath The path to the project to be scanned.
-     * @return A PomFileDTO containing the parsed information from the pom.xml file.
-     */
-    private PomFileDTO scanPomFile(String projectPath) {
-        PomFileDTO pomFileDTO = pomService.scanPomFile(projectPath);
-        if (pomFileDTO == null) {
-            throw new IllegalStateException("Failed to scan pom.xml file at path: " + projectPath);
-        }
-        return pomFileDTO;
     }
 
     /**

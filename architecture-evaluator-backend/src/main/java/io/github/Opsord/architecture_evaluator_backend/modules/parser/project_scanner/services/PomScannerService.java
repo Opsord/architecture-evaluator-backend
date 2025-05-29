@@ -1,9 +1,8 @@
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.parts;
+package io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services;
 
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.DependencyDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.ParentSectionDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.PomFileDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.ScanningService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,13 +19,13 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class PomService {
+public class PomScannerService {
 
-    private static final Logger logger = LoggerFactory.getLogger(PomService.class);
-    private final ScanningService scanningService;
+    private static final Logger logger = LoggerFactory.getLogger(PomScannerService.class);
+    private final ScannerService scannerService;
 
     public PomFileDTO scanPomFile(String projectPath) {
-        File pomFile = scanningService.findPomFile(projectPath);
+        File pomFile = scannerService.findPomFile(projectPath);
         if (pomFile == null) {
             logger.warn("No pom.xml found at path: {}", projectPath);
             return null;

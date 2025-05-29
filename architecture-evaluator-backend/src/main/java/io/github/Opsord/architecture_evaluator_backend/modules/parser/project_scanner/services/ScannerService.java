@@ -9,11 +9,16 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Service
-public class ScanningService {
+public class ScannerService {
 
-    private static final Logger logger = LoggerFactory.getLogger(ScanningService.class);
+    private static final Logger logger = LoggerFactory.getLogger(ScannerService.class);
+
+    private static final Set<String> DEFAULT_IGNORED_FOLDERS = Set.of(
+            "target", "build", ".git", "node_modules",
+            ".idea", ".vscode", "out", "dist");
 
     /**
      * Finds the root directory of a project by looking for a `pom.xml` file and a `src` folder.
@@ -21,41 +26,38 @@ public class ScanningService {
      * @param file The starting file or directory.
      * @return The project root directory, or null if not found.
      */
+
     public File findProjectRoot(File file) {
-        File current = file;
-        while (current != null) {
-            if (isProjectRoot(current)) {
-                logger.info("Project root found: {}", current.getAbsolutePath());
-                return current;
+        if (file == null || !file.isDirectory()) {
+            logger.warn("Invalid starting directory: {}", file != null ? file.getAbsolutePath() : "null");
+            return null;
+        }
+
+        if (DEFAULT_IGNORED_FOLDERS.contains(file.getName())) {
+            logger.info("Skipping ignored folder: {}", file.getAbsolutePath());
+            return null;
+        }
+
+        logger.info("Scanning directory: {}", file.getAbsolutePath());
+        if (isProjectRoot(file)) {
+            logger.info("Project root found: {}", file.getAbsolutePath());
+            return file; // Stop scanning and return the root
+        }
+
+        File[] subDirectories = file.listFiles(File::isDirectory);
+        if (subDirectories != null) {
+            for (File subDir : subDirectories) {
+                if (!DEFAULT_IGNORED_FOLDERS.contains(subDir.getName())) {
+                    File projectRoot = findProjectRoot(subDir);
+                    if (projectRoot != null) {
+                        return projectRoot; // Stop scanning once a valid root is found
+                    }
+                }
             }
-            current = current.getParentFile();
         }
-        assert file != null;
-        logger.warn("No project root found starting from: {}", file.getAbsolutePath());
+
+        logger.warn("No project root found in directory: {}", file.getAbsolutePath());
         return null;
-    }
-
-    /**
-     * Scans the `src` folder for all `.java` files.
-     *
-     * @param srcFolder The `src` folder to scan.
-     * @return A list of `.java` files found in the folder.
-     * @throws IOException If an error occurs while scanning.
-     */
-    public List<File> scanSrcFolder(File srcFolder) throws IOException {
-        if (!srcFolder.exists() || !srcFolder.isDirectory()) {
-            logger.warn("Invalid `src` folder: {}", srcFolder.getAbsolutePath());
-            return List.of();
-        }
-
-        List<File> javaFiles = new ArrayList<>();
-        try (var paths = Files.walk(srcFolder.toPath())) {
-            paths.filter(Files::isRegularFile)
-                    .filter(path -> path.toString().endsWith(".java"))
-                    .forEach(path -> javaFiles.add(path.toFile()));
-        }
-        logger.info("Found {} Java files in `src` folder: {}", javaFiles.size(), srcFolder.getAbsolutePath());
-        return javaFiles;
     }
 
     /**
