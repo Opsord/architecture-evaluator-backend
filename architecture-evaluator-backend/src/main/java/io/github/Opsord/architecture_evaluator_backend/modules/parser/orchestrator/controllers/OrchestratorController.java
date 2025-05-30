@@ -62,4 +62,32 @@ public class OrchestratorController {
             }
         }
     }
+
+    @PostMapping("/analyze-github")
+    public ResponseEntity<ProjectAnalysisDTO> analyzeGitHubRepo(@RequestParam String repoUrl,
+                                                                @RequestParam(defaultValue = "false") boolean includeNonInternalDependencies) {
+        File tempDir = null;
+        try {
+            logger.info("Received request to analyze GitHub repository: {}", repoUrl);
+
+            // Download the repository as a ZIP file
+            File zipFile = fileManagerService.downloadGitHubRepository(repoUrl);
+            tempDir = zipFile.getParentFile();
+
+            // Extract the ZIP file
+            File extractedDir = fileManagerService.extractArchive(zipFile);
+
+            // Analyze the extracted project
+            ProjectAnalysisDTO result = orchestratorService.orchestrateProjectAnalysis(extractedDir.getPath(), includeNonInternalDependencies);
+
+            return ResponseEntity.ok(result);
+        } catch (IOException ioException) {
+            logger.error("Error analyzing GitHub repository", ioException);
+            return ResponseEntity.internalServerError().build();
+        } finally {
+            if (tempDir != null) {
+                fileManagerService.deleteRecursively(tempDir);
+            }
+        }
+    }
 }

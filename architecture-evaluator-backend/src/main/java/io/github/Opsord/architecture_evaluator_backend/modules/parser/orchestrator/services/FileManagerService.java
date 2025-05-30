@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
+import java.net.URL;
 import java.nio.file.Files;
 import java.util.Objects;
 
@@ -15,6 +16,26 @@ import java.util.Objects;
 public class FileManagerService {
 
     private static final Logger logger = LoggerFactory.getLogger(FileManagerService.class);
+
+    public File downloadGitHubRepository(String repoUrl) throws IOException {
+        // Build the URL for the ZIP file of the main branch
+        if (!repoUrl.endsWith("/")) {
+            repoUrl += "/";
+        }
+        String zipUrl = repoUrl + "archive/refs/heads/main.zip";
+
+        // Create a temporary directory to store the downloaded ZIP file
+        File tempDir = Files.createTempDirectory("githubRepo").toFile();
+        File zipFile = new File(tempDir, "repo.zip");
+
+        // Download the ZIP file
+        try (InputStream in = new URL(zipUrl).openStream();
+             OutputStream out = new FileOutputStream(zipFile)) {
+            in.transferTo(out);
+        }
+
+        return zipFile;
+    }
 
     public File saveUploadedFile(MultipartFile file) throws IOException {
         File tempDir = Files.createTempDirectory("uploadedProject").toFile();
