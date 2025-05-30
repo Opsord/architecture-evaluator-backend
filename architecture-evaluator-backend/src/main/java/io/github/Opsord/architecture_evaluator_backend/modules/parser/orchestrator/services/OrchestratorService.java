@@ -43,24 +43,34 @@ public class OrchestratorService {
     public ProjectAnalysisDTO orchestrateProjectAnalysis(String projectPath, boolean includeNonInternalDependencies) throws IOException {
         logger.info("Starting orchestration for project at path: {}", projectPath);
 
-        /// Find the project root
+        // Find the project root
         File projectRoot = scannerService.findProjectRoot(new File(projectPath));
-        /// Scan the src folder for Java files
-        List<File> srcFiles = srcScannerService.scanSrcFolder(projectRoot);
-        /// Parse the files into CustomCompilationUnitDTOs
+        if (projectRoot == null) {
+            logger.warn("Project root not found for path: {}", projectPath);
+            throw new IOException("Project root not found");
+        }
+
+        // Scan the src folder for Java files
+        List<File> srcFiles = srcScannerService.scanSrcFolder(new File(projectRoot, "src"));
         List<CustomCompilationUnitDTO> compilationUnits = srcScannerService.parseJavaFiles(srcFiles);
-        /// Filter out test classes from the compilation units
+
+        // Filter out test classes
         List<CustomCompilationUnitDTO> compilationUnitsWithoutTests = compilationUnits.stream()
                 .filter(unit -> unit.getAnnotations().stream().noneMatch(a -> a.getName().equalsIgnoreCase(AnnotationType.SPRINGBOOT_TEST.getAnnotation())))
                 .toList();
-        PomFileDTO pomFileDTO = pomScannerService.scanPomFile(projectRoot.getAbsolutePath());
-        /// Analyze the compilation units and create CompUnitWithAnalysisDTOs
+
+        // Parse the pom.xml file
+        PomFileDTO pomFileDTO = pomScannerService.scanPomFile(projectRoot);
+
+        // Analyze the compilation units
         List<CompUnitWithAnalysisDTO> analyzedUnits = analyzeCompilationUnits(
                 compilationUnits,
                 compilationUnitsWithoutTests,
                 pomFileDTO,
-                includeNonInternalDependencies);
-        /// Organize the analyzed units into a ProjectAnalysisDTO
+                includeNonInternalDependencies
+        );
+
+        // Organize the analyzed units into a ProjectAnalysisDTO
         ProjectAnalysisDTO projectAnalysisDTO = organizeProjectAnalysis(analyzedUnits);
         projectAnalysisDTO.setProjectPath(projectRoot.getAbsolutePath());
         projectAnalysisDTO.setPomFile(pomFileDTO);

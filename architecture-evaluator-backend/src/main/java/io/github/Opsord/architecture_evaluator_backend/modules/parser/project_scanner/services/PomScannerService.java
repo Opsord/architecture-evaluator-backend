@@ -24,10 +24,15 @@ public class PomScannerService {
     private static final Logger logger = LoggerFactory.getLogger(PomScannerService.class);
     private final ScannerService scannerService;
 
-    public PomFileDTO scanPomFile(String projectPath) {
-        File pomFile = scannerService.findPomFile(projectPath);
+    public PomFileDTO scanPomFile(File projectDirectory) {
+        if (projectDirectory == null || !projectDirectory.isDirectory()) {
+            logger.warn("Invalid project directory: {}", projectDirectory != null ? projectDirectory.getAbsolutePath() : "null");
+            return null;
+        }
+
+        File pomFile = scannerService.findPomFile(projectDirectory);
         if (pomFile == null) {
-            logger.warn("No pom.xml found at path: {}", projectPath);
+            logger.warn("No pom.xml found in directory: {}", projectDirectory.getAbsolutePath());
             return null;
         }
 
@@ -51,7 +56,7 @@ public class PomScannerService {
 
             return pomFileDTO;
         } catch (Exception e) {
-            logger.error("Failed to parse pom.xml file at path: {}", projectPath, e);
+            logger.error("Failed to parse pom.xml file in directory: {}", projectDirectory.getAbsolutePath(), e);
             return null;
         }
     }
