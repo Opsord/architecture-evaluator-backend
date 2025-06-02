@@ -1,13 +1,13 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto;
 
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.CustomCompilationUnitDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.AnalysedCompUnitDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.analysis.AnalysedCompUnitDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.summary.CompUnitSummaryDTO;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
 public class CompUnitWithAnalysisDTO {
-    private CustomCompilationUnitDTO compilationUnit;
+    private CompUnitSummaryDTO compUnitSummaryDTO;
     private AnalysedCompUnitDTO analysis;
 }

@@ -1,9 +1,11 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.services;
 
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.AnalysedCompUnitDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.analysis.AnalysedCompUnitDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto.CompUnitWithAnalysisDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto.ProjectAnalysisDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.services.CCUSummarizingService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.summary.CompUnitSummaryDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.analysis.CompUnitAnalysisService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.summary.CompUnitSummaryService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.AnnotationType;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.PomFileDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.PomScannerService;
@@ -29,7 +31,8 @@ public class OrchestratorService {
     private final ScannerService scannerService;
     private final PomScannerService pomScannerService;
     private final SrcScannerService srcScannerService;
-    private final CCUSummarizingService summarizingService;
+    private final CompUnitAnalysisService analysisService;
+    private final CompUnitSummaryService summaryService;
 
     /**
      * Orchestrates the project analysis by scanning the project and its pom.xml file, analyzing the compilation units,
@@ -117,13 +120,13 @@ public class OrchestratorService {
     }
 
     /**
-     * Creates a CompUnitWithAnalysisDTO containing the given compilation unit and its analysis.
+     * Creates a CompUnitWithAnalysisDTO containing the summary and analysis of the given compilation unit.
      *
      * @param compilationUnit The CustomCompilationUnitDTO to be analyzed.
      * @param internalBasePackage The internal base package as a String.
      * @param pomFileDTO The PomFileDTO containing the parsed information from the pom.xml file.
      * @param includeNonInternalDependencies Whether to include non-internal dependencies in the analysis.
-     * @return A CompUnitWithAnalysisDTO containing the compilation unit and its analysis.
+     * @return A CompUnitWithAnalysisDTO containing the summary and analysis.
      */
     private CompUnitWithAnalysisDTO createAnalysisDTO(
             CustomCompilationUnitDTO compilationUnit,
@@ -132,15 +135,21 @@ public class OrchestratorService {
             PomFileDTO pomFileDTO,
             boolean includeNonInternalDependencies
     ) {
-        AnalysedCompUnitDTO analysis = summarizingService.analyseCompUnit(
+        // Generate the summary
+        CompUnitSummaryDTO summary = summaryService.createSummary(compilationUnit);
+
+        // Generate the analysis
+        AnalysedCompUnitDTO analysis = analysisService.analyseCompUnit(
                 compilationUnit,
                 projectCompUnitsWithoutTests,
                 internalBasePackage,
                 pomFileDTO,
                 includeNonInternalDependencies
         );
+
+        // Create and return the DTO with both summary and analysis
         CompUnitWithAnalysisDTO compUnitWithAnalysis = new CompUnitWithAnalysisDTO();
-        compUnitWithAnalysis.setCompilationUnit(compilationUnit);
+        compUnitWithAnalysis.setCompUnitSummaryDTO(summary);
         compUnitWithAnalysis.setAnalysis(analysis);
         return compUnitWithAnalysis;
     }
@@ -160,9 +169,9 @@ public class OrchestratorService {
         projectAnalysisDTO.setControllers(filterAnalysedUnitByAnnotation(compUnitWithAnalysisDTOS, AnnotationType.CONTROLLER));
         projectAnalysisDTO.setTestClasses(filterAnalysedUnitByAnnotation(compUnitWithAnalysisDTOS, AnnotationType.SPRINGBOOT_TEST));
 
-        // Filtrar las unidades que no tienen ninguna anotación de AnnotationType
+        // Filter out units that don't have any of the AnnotationType annotations
         List<CompUnitWithAnalysisDTO> otherClasses = compUnitWithAnalysisDTOS.stream()
-                .filter(dto -> dto.getCompilationUnit().getAnnotations().stream()
+                .filter(dto -> dto.getCompUnitSummaryDTO().getAnnotationDTOS().stream()
                         .noneMatch(annotation ->
                                 Stream.of(AnnotationType.values())
                                         .anyMatch(type -> type.getAnnotation().equalsIgnoreCase(annotation.getName()))))
@@ -172,10 +181,15 @@ public class OrchestratorService {
         return projectAnalysisDTO;
     }
 
-    private List<CompUnitWithAnalysisDTO> filterAnalysedUnitByAnnotation(List<CompUnitWithAnalysisDTO> units, AnnotationType annotationType) {
+    private List<CompUnitWithAnalysisDTO> filterAnalysedUnitByAnnotation(
+            List<CompUnitWithAnalysisDTO> units,
+            AnnotationType annotationType) {
         return units.stream()
-                .filter(dto -> dto.getCompilationUnit().getAnnotations().stream()
-                        .anyMatch(annotation -> annotation.getName().equalsIgnoreCase(annotationType.getAnnotation())))
+                .filter(dto -> {
+                    // Check if the analysis contains the annotation category
+                    return dto.getCompUnitSummaryDTO().getAnnotationDTOS().stream()
+                            .anyMatch(category -> category.getName().equalsIgnoreCase(annotationType.getAnnotation()));
+                })
                 .toList();
     }
 }

@@ -1,6 +1,6 @@
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto;
+package io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.analysis;
 
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.parts.*;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.analysis.parts.*;
 import lombok.Data;
 
 import java.util.List;

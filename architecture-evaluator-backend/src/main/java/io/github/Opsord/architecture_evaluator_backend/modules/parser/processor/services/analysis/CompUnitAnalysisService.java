@@ -1,9 +1,9 @@
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.services;
+package io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.analysis;
 
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.CustomCompilationUnitDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.AnalysedCompUnitDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.parts.*;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.services.parts.*;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.analysis.AnalysedCompUnitDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.analysis.parts.*;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.analysis.parts.*;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.PomFileDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,7 +13,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
-public class CCUSummarizingService {
+public class CompUnitAnalysisService {
 
     private final ProgramMetricsService programMetricsService;
     private final ComplexityMetricsService complexityMetricsService;

@@ -1,9 +1,9 @@
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.services.parts;
+package io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.analysis.parts;
 
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.CustomCompilationUnitDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.CompilationUnitService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.parts.CouplingMetricsDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.detailer.dto.parts.ImportCategory;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.analysis.parts.CouplingMetricsDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.analysis.parts.ImportCategory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
