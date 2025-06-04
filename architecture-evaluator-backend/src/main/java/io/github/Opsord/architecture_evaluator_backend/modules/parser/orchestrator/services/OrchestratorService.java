@@ -135,8 +135,6 @@ public class OrchestratorService {
             PomFileDTO pomFileDTO,
             boolean includeNonInternalDependencies
     ) {
-        // Generate the summary
-        CompUnitSummaryDTO summary = summaryService.createSummary(compilationUnit);
 
         // Generate the analysis
         AnalysedCompUnitDTO analysis = analysisService.analyseCompUnit(
@@ -146,6 +144,9 @@ public class OrchestratorService {
                 pomFileDTO,
                 includeNonInternalDependencies
         );
+
+        // Generate the summary
+        CompUnitSummaryDTO summary = summaryService.createSummary(compilationUnit);
 
         // Create and return the DTO with both summary and analysis
         CompUnitWithAnalysisDTO compUnitWithAnalysis = new CompUnitWithAnalysisDTO();

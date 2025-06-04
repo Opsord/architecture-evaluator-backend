@@ -64,6 +64,12 @@ public class CompUnitSummaryService {
                 method.getMethodMetrics().getLinesOfCode() : 0;
         methodSummary.setLinesOfCode(linesOfCode);
 
+        // Set McCabe complexity
+        Integer mcCabeComplexity = method.getMethodMetrics() != null && method.getMethodMetrics().getMcCabeComplexity() != null
+                ? method.getMethodMetrics().getMcCabeComplexity()
+                : 0;
+        methodSummary.setMcCabeComplexity(mcCabeComplexity);
+
         // Extract used variables
         List<String> usedVariables = method.getMethodVariables().stream()
                 .map(VariableDTO::getName)

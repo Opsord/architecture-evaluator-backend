@@ -10,4 +10,5 @@ public class MethodSummaryDTO {
     private List<String> usedVariables;
     private String returnType;
     private Integer linesOfCode;
+    private Integer mcCabeComplexity;
 }

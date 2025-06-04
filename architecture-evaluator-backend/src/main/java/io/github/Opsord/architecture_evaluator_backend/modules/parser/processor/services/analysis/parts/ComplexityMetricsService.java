@@ -11,7 +11,7 @@ public class ComplexityMetricsService {
     public ComplexityMetricsDTO calculateComplexityMetrics(CustomCompilationUnitDTO customCompilationUnit) {
         ComplexityMetricsDTO complexityMetrics = new ComplexityMetricsDTO();
 
-        int approxMcCabeCC = 0;
+        int compUnitApproxMcCabeCC = 0;
         int numberOfMethods = customCompilationUnit.getMethods().size();
         int sumOfExecutableStatements = customCompilationUnit.getStatements().size();
         int maxInputParameters = 0;
@@ -25,12 +25,15 @@ public class ComplexityMetricsService {
             maxInputParameters = Math.max(maxInputParameters, inputParameters);
             maxOutputParameters = Math.max(maxOutputParameters, outputParameters);
 
-            approxMcCabeCC += calculateApproxMcCabeCC(method);
+            int methodMcCabeCC = calculateApproxMcCabeCC(method);
+            System.out.println("Method: " + method.getName() + ", McCabe CC: " + methodMcCabeCC);
+            method.getMethodMetrics().setMcCabeComplexity(methodMcCabeCC);
+            compUnitApproxMcCabeCC += methodMcCabeCC;
         }
 
         double improvedCC = calculateImprovedCC(numberOfMethods, sumOfExecutableStatements, maxInputParameters, maxOutputParameters, totalLinesOfCode);
 
-        complexityMetrics.setApproxMcCabeCC(approxMcCabeCC);
+        complexityMetrics.setApproxMcCabeCC(compUnitApproxMcCabeCC);
         complexityMetrics.setImprovedCC(improvedCC);
 
         return complexityMetrics;

@@ -14,12 +14,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CohesionMetricsService {
 
-    public CohesionMetricsDTO calculateCohesionMetrics(CustomCompilationUnitDTO cu) {
+    public CohesionMetricsDTO calculateCohesionMetrics(CustomCompilationUnitDTO compilationUnitDTO) {
         CohesionMetricsDTO metrics = new CohesionMetricsDTO();
 
         // Cache core data
-        List<MethodDTO> methods = cu.getMethods();
-        List<VariableDTO> vars    = cu.getVariables().stream()
+        List<MethodDTO> methods = compilationUnitDTO.getMethods();
+        List<VariableDTO> vars    = compilationUnitDTO.getVariables().stream()
                 .filter(v -> "instance".equals(v.getScope()))
                 .collect(Collectors.toList());
 

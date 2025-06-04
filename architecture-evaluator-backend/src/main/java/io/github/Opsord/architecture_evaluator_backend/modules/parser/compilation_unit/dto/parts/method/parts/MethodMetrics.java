@@ -4,5 +4,6 @@ import lombok.Data;
 
 @Data
 public class MethodMetrics {
-    private int linesOfCode;
+    private Integer linesOfCode;
+    private Integer mcCabeComplexity;
 }
