@@ -1,5 +1,6 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.services;
 
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.CompilationUnitService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.analysis.AnalysedCompUnitDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto.CompUnitWithAnalysisDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto.ProjectAnalysisDTO;
@@ -31,6 +32,7 @@ public class OrchestratorService {
     private final ScannerService scannerService;
     private final PomScannerService pomScannerService;
     private final SrcScannerService srcScannerService;
+    private final CompilationUnitService compilationUnitService;
     private final CompUnitAnalysisService analysisService;
     private final CompUnitSummaryService summaryService;
 
@@ -61,6 +63,16 @@ public class OrchestratorService {
         List<CustomCompilationUnitDTO> compilationUnitsWithoutTests = compilationUnits.stream()
                 .filter(unit -> unit.getAnnotations().stream().noneMatch(a -> a.getName().equalsIgnoreCase(AnnotationType.SPRINGBOOT_TEST.getAnnotation())))
                 .toList();
+
+        // Set the dependent classes for each compilation unit
+        compilationUnitsWithoutTests.forEach(unit ->
+                unit.setDependentClasses(
+                        compilationUnitService.getDependentClasses(
+                                unit.getClassName().isEmpty() ? "" : unit.getClassName().get(0),
+                                compilationUnitsWithoutTests
+                        )
+                )
+        );
 
         // Parse the pom.xml file
         PomFileDTO pomFileDTO = pomScannerService.scanPomFile(projectRoot);

@@ -39,6 +39,9 @@ public class CompUnitSummaryService {
 
         summary.setMethods(methodSummaries);
 
+        // Set the dependent classes
+        summary.setDependentClasses(compilationUnit.getDependentClasses());
+
         return summary;
     }
 

@@ -12,4 +12,5 @@ public class CompUnitSummaryDTO {
     private List<MethodSummaryDTO> methods;
     private Integer linesOfCode;
     private List<AnnotationDTO> annotationDTOS;
+    private List<String> dependentClasses;
 }

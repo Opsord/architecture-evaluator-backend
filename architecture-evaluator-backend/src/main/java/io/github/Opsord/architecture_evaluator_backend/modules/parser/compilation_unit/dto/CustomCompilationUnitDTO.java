@@ -12,6 +12,7 @@ import java.util.List;
 public class CustomCompilationUnitDTO {
     private String packageName;
     private List<String> className;
+    private List<String> dependentClasses;
     private List<String> interfaceNames;
     private List<StatementDTO> statements;
     private List<MethodDTO> methods;
