@@ -1,7 +1,8 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.analysis;
 
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.CustomCompilationUnit;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.analysis.AnalysedCompUnitDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_instance.FileInstance;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.analysis.AnalysedClassInstance;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.analysis.parts.*;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.analysis.parts.*;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.PomFileDTO;
@@ -13,7 +14,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
-public class CompUnitAnalysisService {
+public class FileAnalysisService {
 
     private final ProgramMetricsService programMetricsService;
     private final ComplexityMetricsService complexityMetricsService;
@@ -24,44 +25,44 @@ public class CompUnitAnalysisService {
     /**
      * Analyzes a compilation unit and generates a detailed analysis.
      *
-     * @param compilationUnitDTO The compilation unit to analyze.
+     * @param fileInstance The compilation unit to analyze.
      * @param projectCompUnitsWithoutTests The list of project compilation units excluding test classes.
      * @param internalBasePackage The internal base package for dependency classification.
      * @param pomFileDTO The POM file containing project dependencies.
      * @param includeNonInternalDependencies Whether to include non-internal dependencies in the analysis.
      * @return An `AnalysedCompUnitDTO` containing the detailed analysis.
      */
-    public AnalysedCompUnitDTO analyseCompUnit(CustomCompilationUnit compilationUnitDTO,
-                                               List<CustomCompilationUnit> projectCompUnitsWithoutTests,
-                                               String internalBasePackage,
-                                               PomFileDTO pomFileDTO,
-                                               boolean includeNonInternalDependencies) {
-        AnalysedCompUnitDTO detailedCompUnit = new AnalysedCompUnitDTO();
+    public AnalysedClassInstance analyseCompUnit(FileInstance fileInstance,
+                                                 List<FileInstance> projectCompUnitsWithoutTests,
+                                                 String internalBasePackage,
+                                                 PomFileDTO pomFileDTO,
+                                                 boolean includeNonInternalDependencies) {
+        AnalysedClassInstance detailedCompUnit = new AnalysedClassInstance();
 
         // Classify dependencies
         Map<ImportCategory, List<String>> classifiedDependencies = classifyDependencies(
-                compilationUnitDTO, pomFileDTO, internalBasePackage);
+                fileInstance, pomFileDTO, internalBasePackage);
         detailedCompUnit.setClassifiedDependencies(classifiedDependencies);
 
         // Set basic metrics
-        setBasicMetrics(detailedCompUnit, compilationUnitDTO);
+        setBasicMetrics(detailedCompUnit, fileInstance);
 
         // Generate and set program metrics
-        ProgramMetricsDTO programMetrics = programMetricsService.generateProgramMetrics(compilationUnitDTO);
+        ProgramMetricsDTO programMetrics = programMetricsService.generateProgramMetrics(fileInstance);
         detailedCompUnit.setProgramMetrics(programMetrics);
 
         // Generate and set complexity metrics
         ComplexityMetricsDTO complexityMetrics = complexityMetricsService.calculateComplexityMetrics(
-                compilationUnitDTO);
+                fileInstance);
         detailedCompUnit.setComplexityMetrics(complexityMetrics);
 
         // Generate and set coupling metrics
         CouplingMetricsDTO couplingMetrics = couplingMetricsService.calculateCouplingMetrics(
-                compilationUnitDTO, projectCompUnitsWithoutTests, classifiedDependencies, includeNonInternalDependencies);
+                fileInstance, projectCompUnitsWithoutTests, classifiedDependencies, includeNonInternalDependencies);
         detailedCompUnit.setCouplingMetrics(couplingMetrics);
 
         // Generate and set cohesion metrics
-        CohesionMetricsDTO cohesionMetrics = cohesionMetricsService.calculateCohesionMetrics(compilationUnitDTO);
+        CohesionMetricsDTO cohesionMetrics = cohesionMetricsService.calculateCohesionMetrics(fileInstance);
         detailedCompUnit.setCohesionMetrics(cohesionMetrics);
 
         return detailedCompUnit;
@@ -77,7 +78,7 @@ public class CompUnitAnalysisService {
         return importClassifierService.classifyDependencies(pomFileDTO, compilationUnitDTO, internalBasePackage);
     }
 
-    private void setBasicMetrics(AnalysedCompUnitDTO detailedCompUnit, CustomCompilationUnit compilationUnitDTO) {
+    private void setBasicMetrics(AnalysedClassInstance detailedCompUnit, CustomCompilationUnit compilationUnitDTO) {
         detailedCompUnit.setClassCount(compilationUnitDTO.getClasses().size());
         detailedCompUnit.setInterfaceCount(compilationUnitDTO.getInterfaceNames().size());
         detailedCompUnit.setStatementCount(compilationUnitDTO.getStatements().size());

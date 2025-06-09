@@ -7,13 +7,11 @@ import java.util.List;
 import java.util.Map;
 
 @Data
-public class AnalysedCompUnitDTO {
+public class AnalysedClassInstance {
     private int classCount;
     private int interfaceCount;
     private int statementCount;
-
     private Map<ImportCategory, List<String>> classifiedDependencies;
-
     private ProgramMetricsDTO programMetrics;
     private ComplexityMetricsDTO complexityMetrics;
     private CouplingMetricsDTO couplingMetrics;

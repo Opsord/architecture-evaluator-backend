@@ -2,6 +2,7 @@ package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilati
 
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.*;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.method.MethodInstance;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.method.parts.statement.StatementInstance;
 import lombok.Data;
 
 import java.util.List;
@@ -23,7 +24,8 @@ public class ClassInstance {
     // --- Members ---
     private List<ConstructorInstance> constructors;
     private List<MethodInstance> methods;
-    private List<VariableInstance> fields;
+    private List<StatementInstance> statements;
+    private List<VariableInstance> classVariables;
     private List<ClassInstance> innerClasses;  // nested types
 
     // --- Dependencies within the class ---
@@ -35,7 +37,5 @@ public class ClassInstance {
 
     // --- Metrics ---
     private int linesOfCode;
-    private int methodCount;
     private int fieldCount;
-    private int innerClassCount;
 }

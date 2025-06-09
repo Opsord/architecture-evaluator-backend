@@ -124,15 +124,24 @@ public class FileInstanceService {
                 .toList();
     }
 
-    public List<String> getDependentClasses(String targetClassOrPackage, List<FileInstance> allFiles) {
-        return allFiles.stream()
-                .filter(file -> file.getImportedPackages().stream()
-                        .anyMatch(imported ->
-                                imported.equals(targetClassOrPackage) ||
-                                        (imported.endsWith(".*") && targetClassOrPackage.startsWith(imported.substring(0, imported.length() - 2))) ||
-                                        imported.endsWith("." + targetClassOrPackage)
-                        ))
-                .flatMap(file -> file.getClasses().stream().map(ClassInstance::getName))
+    public List<String> getDependentClassesFromClass(ClassInstance classInstance, List<FileInstance> allFiles) {
+        if (classInstance.getUsedClasses() == null) {
+            return List.of();
+        }
+        return classInstance.getUsedClasses().stream()
+                .distinct()
+                .filter(usedClass -> allFiles.stream()
+                        .anyMatch(file -> file.getClasses().stream()
+                                .anyMatch(cls -> cls.getName().equals(usedClass))))
+                .toList();
+    }
+
+    public List<String> getDependentClassesFromFile(FileInstance fileInstance, List<FileInstance> allFiles) {
+        if (fileInstance.getClasses() == null) {
+            return List.of();
+        }
+        return fileInstance.getClasses().stream()
+                .flatMap(cls -> getDependentClassesFromClass(cls, allFiles).stream())
                 .distinct()
                 .toList();
     }

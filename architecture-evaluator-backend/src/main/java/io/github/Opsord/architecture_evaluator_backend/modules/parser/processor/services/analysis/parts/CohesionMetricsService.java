@@ -1,8 +1,9 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.analysis.parts;
 
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.CustomCompilationUnit;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.VariableInstance;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.method.MethodInstance;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_instance.FileInstance;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.analysis.parts.CohesionMetricsDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,12 +15,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CohesionMetricsService {
 
-    public CohesionMetricsDTO calculateCohesionMetrics(CustomCompilationUnit compilationUnitDTO) {
+    public CohesionMetricsDTO calculateCohesionMetrics(ClassInstance classInstance) {
         CohesionMetricsDTO metrics = new CohesionMetricsDTO();
 
         // Cache core data
-        List<MethodInstance> methods = compilationUnitDTO.getMethods();
-        List<VariableInstance> vars = compilationUnitDTO.getVariables().stream()
+        List<MethodInstance> methods = classInstance.getMethods();
+        List<VariableInstance> vars = classInstance.getClassVariables().stream()
                 .filter(v -> "instance".equals(v.getScope()))
                 .collect(Collectors.toList());
 

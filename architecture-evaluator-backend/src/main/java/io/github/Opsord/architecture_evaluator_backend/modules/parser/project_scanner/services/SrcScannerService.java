@@ -1,7 +1,8 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services;
 
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.CustomCompilationUnit;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_instance.package_part.FileInstanceService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_instance.FileInstance;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_instance.FileInstanceService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +48,7 @@ public class SrcScannerService {
         List<CustomCompilationUnit> compilationUnits = new ArrayList<>();
         for (File javaFile : javaFiles) {
             try {
-                CustomCompilationUnit unit = fileInstanceService.parseJavaFile(javaFile);
+                FileInstance unit = fileInstanceService.parseJavaFile(javaFile);
                 compilationUnits.add(unit);
             } catch (Exception e) {
                 logger.error("Failed to parse file: {}", javaFile.getAbsolutePath(), e);

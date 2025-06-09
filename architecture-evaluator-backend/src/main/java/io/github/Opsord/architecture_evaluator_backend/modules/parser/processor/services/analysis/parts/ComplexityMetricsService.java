@@ -1,6 +1,6 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.analysis.parts;
 
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.CustomCompilationUnit;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.method.MethodInstance;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.analysis.parts.ComplexityMetricsDTO;
 import org.springframework.stereotype.Service;
@@ -8,25 +8,27 @@ import org.springframework.stereotype.Service;
 @Service
 public class ComplexityMetricsService {
 
-    public ComplexityMetricsDTO calculateComplexityMetrics(CustomCompilationUnit customCompilationUnit) {
+    public ComplexityMetricsDTO calculateComplexityMetrics(ClassInstance classInstance) {
         ComplexityMetricsDTO complexityMetrics = new ComplexityMetricsDTO();
 
         int compUnitApproxMcCabeCC = 0;
-        int numberOfMethods = customCompilationUnit.getMethods().size();
-        int sumOfExecutableStatements = customCompilationUnit.getStatements().size();
+        int numberOfMethods = classInstance.getMethods().size();
+        int sumOfExecutableStatements = classInstance.getStatements().size();
         int maxInputParameters = 0;
         int maxOutputParameters = 0;
-        int totalLinesOfCode = customCompilationUnit.getLinesOfCode();
+        int totalLinesOfCode = classInstance.getLinesOfCode();
 
-        for (MethodInstance method : customCompilationUnit.getMethods()) {
-            int inputParameters = method.getParameters().getInputs() != null ? method.getParameters().getInputs().size() : 0;
-            int outputParameters = method.getParameters().getOutputs() != null ? method.getParameters().getOutputs().size() : 0;
+        for (MethodInstance method : classInstance.getMethods()) {
+            int inputParameters = method.getInputParameters() != null ? method.getInputParameters().size() : 0;
+            int outputParameters = method.getOutputParameters() != null ? method.getOutputParameters().size() : 0;
 
             maxInputParameters = Math.max(maxInputParameters, inputParameters);
             maxOutputParameters = Math.max(maxOutputParameters, outputParameters);
 
             int methodMcCabeCC = calculateApproxMcCabeCC(method);
-            method.getMethodMetrics().setMcCabeComplexity(methodMcCabeCC);
+            if (method.getMethodMetrics() != null) {
+                method.getMethodMetrics().setMcCabeComplexity(methodMcCabeCC);
+            }
             compUnitApproxMcCabeCC += methodMcCabeCC;
         }
 

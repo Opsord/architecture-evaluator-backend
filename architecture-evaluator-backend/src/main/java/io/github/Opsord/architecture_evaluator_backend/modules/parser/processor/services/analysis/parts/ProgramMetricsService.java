@@ -1,7 +1,7 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.analysis.parts;
 
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.CustomCompilationUnit;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.method.MethodInstance;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_instance.FileInstance;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.statement.StatementService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.analysis.parts.ProgramMetricsDTO;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +13,7 @@ public class ProgramMetricsService {
 
     private final StatementService statementService;
 
-    public ProgramMetricsDTO generateProgramMetrics(CustomCompilationUnit customCompilationUnit) {
+    public ProgramMetricsDTO generateProgramMetrics(FileInstance customCompilationUnit) {
         ProgramMetricsDTO programMetrics = new ProgramMetricsDTO();
 
         int numberOfMethods = customCompilationUnit.getMethods().size();

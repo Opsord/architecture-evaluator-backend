@@ -1,7 +1,9 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.analysis.parts;
 
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.CustomCompilationUnit;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_instance.package_part.FileInstanceService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_instance.FileInstance;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.ClassService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_instance.FileInstanceService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.analysis.parts.CouplingMetricsDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.analysis.parts.ImportCategory;
 import lombok.RequiredArgsConstructor;
@@ -15,21 +17,22 @@ import java.util.Map;
 public class CouplingMetricsService {
 
     private final FileInstanceService fileInstanceService;
+    private final ClassService classService;
 
     /**
      * Calculate the coupling metrics for a given compilation unit.
      *
-     * @param compilationUnit The compilation unit to analyze.
-     * @param allUnits The list of all compilation units in the project.
+     * @param classInstance The compilation unit to analyze.
+     * @param projectClassInstances The list of all compilation units in the project.
      * @return The coupling metrics for the given compilation unit.
      */
-    public CouplingMetricsDTO calculateCouplingMetrics(CustomCompilationUnit compilationUnit,
-                                                       List<CustomCompilationUnit> allUnits,
+    public CouplingMetricsDTO calculateCouplingMetrics(ClassInstance classInstance,
+                                                       List<ClassInstance> projectClassInstances,
                                                        Map<ImportCategory, List<String>> classifiedDependencies,
                                                        boolean includeNonInternalDependencies) {
         CouplingMetricsDTO metrics = new CouplingMetricsDTO();
-        metrics.setEfferentCoupling(calculateEfferentCoupling(compilationUnit, allUnits, classifiedDependencies, includeNonInternalDependencies));
-        metrics.setAfferentCoupling(calculateAfferentCoupling(compilationUnit, allUnits, classifiedDependencies, includeNonInternalDependencies));
+        metrics.setEfferentCoupling(calculateEfferentCoupling(classInstance, projectClassInstances, classifiedDependencies, includeNonInternalDependencies));
+        metrics.setAfferentCoupling(calculateAfferentCoupling(classInstance, projectClassInstances, classifiedDependencies, includeNonInternalDependencies));
         metrics.setInstability(calculateInstability(metrics.getAfferentCoupling(), metrics.getEfferentCoupling()));
         return metrics;
     }
@@ -38,15 +41,15 @@ public class CouplingMetricsService {
      * Calculate the efferent coupling for a given compilation unit.
      * (i.e., the number of classes that this class depends on)
      *
-     * @param compilationUnit The compilation unit to analyze.
-     * @param projectCompUnits The list of all compilation units in the project.
+     * @param classInstance The compilation unit to analyze.
+     * @param projectFileInstances The list of all compilation units in the project.
      * @return The number of classes that this class depends on.
      */
-    public int calculateEfferentCoupling(CustomCompilationUnit compilationUnit,
-                                         List<CustomCompilationUnit> projectCompUnits,
+    public int calculateEfferentCoupling(ClassInstance classInstance,
+                                         List<FileInstance> projectFileInstances,
                                          Map<ImportCategory, List<String>> classifiedDependencies,
                                          boolean includeNonInternal) {
-        List<String> importedClasses = fileInstanceService.getImportedClasses(compilationUnit, projectCompUnits);
+        List<String> importedClasses = fileInstanceService.getImportedClasses(classInstance, projectFileInstances);
 
         // Filter dependencies according to the category INTERNAL
         List<String> internalDependencies = classifiedDependencies.getOrDefault(ImportCategory.INTERNAL, List.of());
@@ -61,23 +64,21 @@ public class CouplingMetricsService {
     /**
      * Calculate the afferent coupling for a given compilation unit.
      * (i.e., the number of classes that depend on this class)
-     *
-     * @param compilationUnit The compilation unit to analyze.
-     * @param allUnits The list of all compilation units in the project.
-     * @return The number of classes that depend on this class.
      */
-    public int calculateAfferentCoupling(CustomCompilationUnit compilationUnit,
-                                         List<CustomCompilationUnit> allUnits,
+    public int calculateAfferentCoupling(ClassInstance classInstance,
+                                         List<FileInstance> projectFileInstances,
                                          Map<ImportCategory, List<String>> classifiedDependencies,
                                          boolean includeNonInternal) {
-        if (compilationUnit.getClasses().isEmpty()) {
+        if (classInstance.getName() == null || classInstance.getName().isEmpty()) {
             return 0; // No class name available
         }
-//        System.out.println("Class name: " + compilationUnit.getClassName().get(0));
-        List<String> dependentClasses = fileInstanceService.getDependentClasses(compilationUnit.getClasses().get(0), allUnits);
-//        System.out.println("Dependent classes: " + dependentClasses);
+        List<String> dependentClasses = fileInstanceService.getDependentClassesFromFile(classInstance.getName(), projectFileInstances);
         List<String> internalDependencies = classifiedDependencies.getOrDefault(ImportCategory.INTERNAL, List.of());
-//        System.out.printf("Internal dependencies: %s%n", internalDependencies);
+        if (!includeNonInternal) {
+            dependentClasses = dependentClasses.stream()
+                    .filter(internalDependencies::contains)
+                    .toList();
+        }
         return dependentClasses.size();
     }
 
