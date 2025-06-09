@@ -1,6 +1,6 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.analysis.parts;
 
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.CustomCompilationUnit;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_instance.FileInstance;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.DependencyDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.analysis.parts.ImportCategory;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.ParentSectionDTO;
@@ -15,15 +15,17 @@ import java.util.Map;
 @Service
 public class ImportClassifierService {
 
-    public Map<ImportCategory, List<String>> classifyDependencies(PomFileDTO pomFileDTO, CustomCompilationUnit compilationUnitDTO, String internalBasePackage) {
+    public Map<ImportCategory, List<String>> classifyDependencies(PomFileDTO pomFileDTO, FileInstance fileInstance, String internalBasePackage) {
         Map<ImportCategory, List<String>> classifiedDependencies = new HashMap<>();
 
-        List<String> importedPackages = compilationUnitDTO.getImportedPackages();
+        List<String> importedPackages = fileInstance.getImportedPackages();
         ParentSectionDTO parentSection = pomFileDTO.getParentSection();
 
-        for (String importName : importedPackages) {
-            ImportCategory category = classify(importName, pomFileDTO.getDependencies(), parentSection, internalBasePackage);
-            classifiedDependencies.computeIfAbsent(category, k -> new ArrayList<>()).add(importName);
+        if (importedPackages != null) {
+            for (String importName : importedPackages) {
+                ImportCategory category = classify(importName, pomFileDTO.getDependencies(), parentSection, internalBasePackage);
+                classifiedDependencies.computeIfAbsent(category, k -> new ArrayList<>()).add(importName);
+            }
         }
 
         return classifiedDependencies;
@@ -59,8 +61,7 @@ public class ImportClassifierService {
         for (DependencyDTO dep : dependencies) {
             String basePackage = dep.getBasePackage().replace(".", "/");
             String artifactId = dep.getArtifactId();
-            // Check if the import name starts with the base package or contains the artifactId
-            if (importName.startsWith(basePackage) || artifactId != null && importName.contains(artifactId)) {
+            if (importName.startsWith(basePackage) || (artifactId != null && importName.contains(artifactId))) {
                 return true;
             }
         }

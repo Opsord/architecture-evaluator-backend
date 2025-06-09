@@ -13,7 +13,7 @@ public class AnalysedClassInstance {
     private int statementCount;
     private Map<ImportCategory, List<String>> classifiedDependencies;
     private ProgramMetricsDTO programMetrics;
-    private ComplexityMetricsDTO complexityMetrics;
+    private ComplexityMetricsDTO complexityMetrics; // Generated from ClassInstance
     private CouplingMetricsDTO couplingMetrics;
-    private CohesionMetricsDTO cohesionMetrics;
+    private CohesionMetricsDTO cohesionMetrics; // Generated from ClassInstance
 }

@@ -1,7 +1,7 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.analysis.parts;
 
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.method.MethodInstance;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_instance.FileInstance;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.statement.StatementService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.analysis.parts.ProgramMetricsDTO;
 import lombok.RequiredArgsConstructor;
@@ -13,23 +13,24 @@ public class ProgramMetricsService {
 
     private final StatementService statementService;
 
-    public ProgramMetricsDTO generateProgramMetrics(FileInstance customCompilationUnit) {
+    /**
+     * Generates program-level metrics for a given class.
+     *
+     * @param classInstance The class to analyze.
+     * @return The program metrics for the given class.
+     */
+    public ProgramMetricsDTO generateProgramMetrics(ClassInstance classInstance) {
         ProgramMetricsDTO programMetrics = new ProgramMetricsDTO();
 
-        int numberOfMethods = customCompilationUnit.getMethods().size();
-        int sumOfExecutableStatements;
+        int numberOfMethods = classInstance.getMethods().size();
+        int sumOfExecutableStatements = statementService.countExecutableStatements(classInstance.getStatements());
         int maxInputParameters = 0;
         int maxOutputParameters = 0;
-        int totalLinesOfCode = customCompilationUnit.getLinesOfCode();
+        int totalLinesOfCode = classInstance.getLinesOfCode();
 
-        // Get the sum of the executable statements in the program
-        sumOfExecutableStatements = statementService.countExecutableStatements(customCompilationUnit.getStatements());
-
-        // Get the maximum number of input parameters and output parameters
-        // Also, calculate the sum of approxMcCabeCC
-        for (MethodInstance method : customCompilationUnit.getMethods()) {
-            int inputParameters = method.getParameters().getInputs() != null ? method.getParameters().getInputs().size() : 0;
-            int outputParameters = method.getParameters().getOutputs() != null ? method.getParameters().getOutputs().size() : 0;
+        for (MethodInstance method : classInstance.getMethods()) {
+            int inputParameters = method.getInputParameters() != null ? method.getInputParameters().size() : 0;
+            int outputParameters = method.getOutputParameters() != null ? method.getOutputParameters().size() : 0;
             if (inputParameters > maxInputParameters) {
                 maxInputParameters = inputParameters;
             }
@@ -38,7 +39,6 @@ public class ProgramMetricsService {
             }
         }
 
-        // Set metrics in DTO
         programMetrics.setNumberOfMethods(numberOfMethods);
         programMetrics.setSumOfExecutableStatements(sumOfExecutableStatements);
         programMetrics.setMaxInputParameters(maxInputParameters);

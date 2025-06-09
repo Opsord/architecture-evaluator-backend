@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -45,7 +46,7 @@ public class ClassService {
                 .toList();
     }
 
-    public ClassInstance setDependencies(ClassInstance classInstance, List<ClassInstance> allClasses) {
+    public void setDependencies(ClassInstance classInstance, List<ClassInstance> allClasses) {
         List<String> existingClassNames = getExistingClassNames(allClasses);
 
         List<String> filteredUsedClasses = classInstance.getUsedClasses().stream()
@@ -53,6 +54,19 @@ public class ClassService {
                 .toList();
 
         classInstance.setUsedClasses(filteredUsedClasses);
-        return classInstance;
+    }
+
+    public List<String> getImportedClasses(ClassInstance classInstance, List<ClassInstance> allClasses) {
+        List<String> existingClassNames = getExistingClassNames(allClasses);
+        return classInstance.getUsedClasses().stream()
+                .filter(existingClassNames::contains)
+                .toList();
+    }
+
+    public List<String> getDependentClasses(String className, List<ClassInstance> allClasses) {
+        return allClasses.stream()
+                .filter(c -> c.getUsedClasses() != null && c.getUsedClasses().contains(className))
+                .map(ClassInstance::getName)
+                .collect(Collectors.toList());
     }
 }
