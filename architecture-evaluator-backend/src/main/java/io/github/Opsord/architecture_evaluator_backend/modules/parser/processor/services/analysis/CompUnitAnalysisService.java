@@ -1,6 +1,6 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.analysis;
 
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.CustomCompilationUnitDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.CustomCompilationUnit;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.analysis.AnalysedCompUnitDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.analysis.parts.*;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.analysis.parts.*;
@@ -31,8 +31,8 @@ public class CompUnitAnalysisService {
      * @param includeNonInternalDependencies Whether to include non-internal dependencies in the analysis.
      * @return An `AnalysedCompUnitDTO` containing the detailed analysis.
      */
-    public AnalysedCompUnitDTO analyseCompUnit(CustomCompilationUnitDTO compilationUnitDTO,
-                                               List<CustomCompilationUnitDTO> projectCompUnitsWithoutTests,
+    public AnalysedCompUnitDTO analyseCompUnit(CustomCompilationUnit compilationUnitDTO,
+                                               List<CustomCompilationUnit> projectCompUnitsWithoutTests,
                                                String internalBasePackage,
                                                PomFileDTO pomFileDTO,
                                                boolean includeNonInternalDependencies) {
@@ -71,14 +71,14 @@ public class CompUnitAnalysisService {
     // Helper Methods
     // -------------------------------------------------------------------------
 
-    private Map<ImportCategory, List<String>> classifyDependencies(CustomCompilationUnitDTO compilationUnitDTO,
+    private Map<ImportCategory, List<String>> classifyDependencies(CustomCompilationUnit compilationUnitDTO,
                                                                    PomFileDTO pomFileDTO,
                                                                    String internalBasePackage) {
         return importClassifierService.classifyDependencies(pomFileDTO, compilationUnitDTO, internalBasePackage);
     }
 
-    private void setBasicMetrics(AnalysedCompUnitDTO detailedCompUnit, CustomCompilationUnitDTO compilationUnitDTO) {
-        detailedCompUnit.setClassCount(compilationUnitDTO.getClassName().size());
+    private void setBasicMetrics(AnalysedCompUnitDTO detailedCompUnit, CustomCompilationUnit compilationUnitDTO) {
+        detailedCompUnit.setClassCount(compilationUnitDTO.getClasses().size());
         detailedCompUnit.setInterfaceCount(compilationUnitDTO.getInterfaceNames().size());
         detailedCompUnit.setStatementCount(compilationUnitDTO.getStatements().size());
     }

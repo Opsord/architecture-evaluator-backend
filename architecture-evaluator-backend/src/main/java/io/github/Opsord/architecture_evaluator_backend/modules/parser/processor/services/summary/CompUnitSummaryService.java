@@ -1,10 +1,10 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.summary;
 
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.CustomCompilationUnitDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.VariableDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.method.MethodDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.summary.CompUnitSummaryDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.summary.parts.MethodSummaryDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.CustomCompilationUnit;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.VariableInstance;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.method.MethodInstance;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.summary.FileInstanceSummary;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.summary.parts.MethodInstanceSummary;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,12 +19,15 @@ public class CompUnitSummaryService {
      * @param compilationUnit The compilation unit to summarize
      * @return A CompUnitSummaryDTO containing the summary information
      */
-    public CompUnitSummaryDTO createSummary(CustomCompilationUnitDTO compilationUnit) {
-        CompUnitSummaryDTO summary = new CompUnitSummaryDTO();
+    public FileInstanceSummary createSummary(CustomCompilationUnit compilationUnit) {
+        FileInstanceSummary summary = new FileInstanceSummary();
 
         // Set the class name (using the first one if there is multiple)
-        summary.setClassName(compilationUnit.getClassName().isEmpty() ?
-                "Unknown" : compilationUnit.getClassName().get(0));
+        summary.setClassName(compilationUnit.getClasses().isEmpty() ?
+                "Unknown" : compilationUnit.getClasses().get(0));
+
+        // Set the interface names
+        summary.setInterfaceNames(compilationUnit.getInterfaceNames());
 
         // Set lines of code
         summary.setLinesOfCode(compilationUnit.getLinesOfCode());
@@ -33,7 +36,7 @@ public class CompUnitSummaryService {
         summary.setAnnotationDTOS(compilationUnit.getAnnotations());
 
         // Create method summaries
-        List<MethodSummaryDTO> methodSummaries = compilationUnit.getMethods().stream()
+        List<MethodInstanceSummary> methodSummaries = compilationUnit.getMethods().stream()
                 .map(this::createMethodSummary)
                 .collect(Collectors.toList());
 
@@ -51,8 +54,8 @@ public class CompUnitSummaryService {
      * @param method The method to summarize
      * @return A MethodSummaryDTO containing the summary information
      */
-    private MethodSummaryDTO createMethodSummary(MethodDTO method) {
-        MethodSummaryDTO methodSummary = new MethodSummaryDTO();
+    private MethodInstanceSummary createMethodSummary(MethodInstance method) {
+        MethodInstanceSummary methodSummary = new MethodInstanceSummary();
 
         // Set method name
         methodSummary.setMethodName(method.getName());
@@ -75,7 +78,7 @@ public class CompUnitSummaryService {
 
         // Extract used variables
         List<String> usedVariables = method.getMethodVariables().stream()
-                .map(VariableDTO::getName)
+                .map(VariableInstance::getName)
                 .distinct()
                 .collect(Collectors.toList());
         methodSummary.setUsedVariables(usedVariables);

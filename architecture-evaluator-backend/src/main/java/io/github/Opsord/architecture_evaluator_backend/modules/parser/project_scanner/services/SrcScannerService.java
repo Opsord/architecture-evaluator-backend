@@ -1,7 +1,7 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services;
 
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.CustomCompilationUnitDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.CompilationUnitService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.CustomCompilationUnit;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_instance.package_part.FileInstanceService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +18,7 @@ import java.util.List;
 public class SrcScannerService {
 
     private static final Logger logger = LoggerFactory.getLogger(SrcScannerService.class);
-    private final CompilationUnitService compilationUnitService;
+    private final FileInstanceService fileInstanceService;
 
     /**
      * Scans the `src` folder for all `.java` files.
@@ -43,11 +43,11 @@ public class SrcScannerService {
         return javaFiles;
     }
 
-    public List<CustomCompilationUnitDTO> parseJavaFiles(List<File> javaFiles) {
-        List<CustomCompilationUnitDTO> compilationUnits = new ArrayList<>();
+    public List<CustomCompilationUnit> parseJavaFiles(List<File> javaFiles) {
+        List<CustomCompilationUnit> compilationUnits = new ArrayList<>();
         for (File javaFile : javaFiles) {
             try {
-                CustomCompilationUnitDTO unit = compilationUnitService.parseJavaFile(javaFile);
+                CustomCompilationUnit unit = fileInstanceService.parseJavaFile(javaFile);
                 compilationUnits.add(unit);
             } catch (Exception e) {
                 logger.error("Failed to parse file: {}", javaFile.getAbsolutePath(), e);

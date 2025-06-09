@@ -1,6 +1,6 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.analysis.parts;
 
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.CustomCompilationUnitDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.CustomCompilationUnit;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.DependencyDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.analysis.parts.ImportCategory;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.ParentSectionDTO;
@@ -15,7 +15,7 @@ import java.util.Map;
 @Service
 public class ImportClassifierService {
 
-    public Map<ImportCategory, List<String>> classifyDependencies(PomFileDTO pomFileDTO, CustomCompilationUnitDTO compilationUnitDTO, String internalBasePackage) {
+    public Map<ImportCategory, List<String>> classifyDependencies(PomFileDTO pomFileDTO, CustomCompilationUnit compilationUnitDTO, String internalBasePackage) {
         Map<ImportCategory, List<String>> classifiedDependencies = new HashMap<>();
 
         List<String> importedPackages = compilationUnitDTO.getImportedPackages();

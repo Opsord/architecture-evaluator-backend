@@ -1,10 +1,10 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.services;
 
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.CompilationUnitService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_instance.package_part.FileInstanceService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.analysis.AnalysedCompUnitDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto.CompUnitWithAnalysisDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto.ProjectAnalysisDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.summary.CompUnitSummaryDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.summary.FileInstanceSummary;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.analysis.CompUnitAnalysisService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.summary.CompUnitSummaryService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.AnnotationType;
@@ -12,7 +12,7 @@ import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_sc
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.PomScannerService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.ScannerService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.SrcScannerService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.CustomCompilationUnitDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.CustomCompilationUnit;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +32,7 @@ public class OrchestratorService {
     private final ScannerService scannerService;
     private final PomScannerService pomScannerService;
     private final SrcScannerService srcScannerService;
-    private final CompilationUnitService compilationUnitService;
+    private final FileInstanceService fileInstanceService;
     private final CompUnitAnalysisService analysisService;
     private final CompUnitSummaryService summaryService;
 
@@ -57,18 +57,18 @@ public class OrchestratorService {
 
         // Scan the src folder for Java files
         List<File> srcFiles = srcScannerService.scanSrcFolder(new File(projectRoot, "src"));
-        List<CustomCompilationUnitDTO> compilationUnits = srcScannerService.parseJavaFiles(srcFiles);
+        List<CustomCompilationUnit> compilationUnits = srcScannerService.parseJavaFiles(srcFiles);
 
         // Filter out test classes
-        List<CustomCompilationUnitDTO> compilationUnitsWithoutTests = compilationUnits.stream()
+        List<CustomCompilationUnit> compilationUnitsWithoutTests = compilationUnits.stream()
                 .filter(unit -> unit.getAnnotations().stream().noneMatch(a -> a.getName().equalsIgnoreCase(AnnotationType.SPRINGBOOT_TEST.getAnnotation())))
                 .toList();
 
         // Set the dependent classes for each compilation unit
         compilationUnitsWithoutTests.forEach(unit ->
                 unit.setDependentClasses(
-                        compilationUnitService.getDependentClasses(
-                                unit.getClassName().isEmpty() ? "" : unit.getClassName().get(0),
+                        fileInstanceService.getDependentClasses(
+                                unit.getClasses().isEmpty() ? "" : unit.getClasses().get(0),
                                 compilationUnitsWithoutTests
                         )
                 )
@@ -113,8 +113,8 @@ public class OrchestratorService {
      * @return A list of CompUnitWithAnalysisDTO containing the analyzed compilation units.
      */
     private List<CompUnitWithAnalysisDTO> analyzeCompilationUnits(
-            List<CustomCompilationUnitDTO> projectCompUnits,
-            List<CustomCompilationUnitDTO> projectCompUnitsWithoutTests,
+            List<CustomCompilationUnit> projectCompUnits,
+            List<CustomCompilationUnit> projectCompUnitsWithoutTests,
             PomFileDTO pomFileDTO,
             boolean includeNonInternalDependencies
     ) {
@@ -141,8 +141,8 @@ public class OrchestratorService {
      * @return A CompUnitWithAnalysisDTO containing the summary and analysis.
      */
     private CompUnitWithAnalysisDTO createAnalysisDTO(
-            CustomCompilationUnitDTO compilationUnit,
-            List<CustomCompilationUnitDTO> projectCompUnitsWithoutTests,
+            CustomCompilationUnit compilationUnit,
+            List<CustomCompilationUnit> projectCompUnitsWithoutTests,
             String internalBasePackage,
             PomFileDTO pomFileDTO,
             boolean includeNonInternalDependencies
@@ -158,11 +158,11 @@ public class OrchestratorService {
         );
 
         // Generate the summary
-        CompUnitSummaryDTO summary = summaryService.createSummary(compilationUnit);
+        FileInstanceSummary summary = summaryService.createSummary(compilationUnit);
 
         // Create and return the DTO with both summary and analysis
         CompUnitWithAnalysisDTO compUnitWithAnalysis = new CompUnitWithAnalysisDTO();
-        compUnitWithAnalysis.setCompUnitSummaryDTO(summary);
+        compUnitWithAnalysis.setFileInstanceSummary(summary);
         compUnitWithAnalysis.setAnalysis(analysis);
         return compUnitWithAnalysis;
     }
@@ -184,7 +184,7 @@ public class OrchestratorService {
 
         // Filter out units that don't have any of the AnnotationType annotations
         List<CompUnitWithAnalysisDTO> otherClasses = compUnitWithAnalysisDTOS.stream()
-                .filter(dto -> dto.getCompUnitSummaryDTO().getAnnotationDTOS().stream()
+                .filter(dto -> dto.getFileInstanceSummary().getAnnotationDTOS().stream()
                         .noneMatch(annotation ->
                                 Stream.of(AnnotationType.values())
                                         .anyMatch(type -> type.getAnnotation().equalsIgnoreCase(annotation.getName()))))
@@ -200,7 +200,7 @@ public class OrchestratorService {
         return units.stream()
                 .filter(dto -> {
                     // Check if the analysis contains the annotation category
-                    return dto.getCompUnitSummaryDTO().getAnnotationDTOS().stream()
+                    return dto.getFileInstanceSummary().getAnnotationDTOS().stream()
                             .anyMatch(category -> category.getName().equalsIgnoreCase(annotationType.getAnnotation()));
                 })
                 .toList();

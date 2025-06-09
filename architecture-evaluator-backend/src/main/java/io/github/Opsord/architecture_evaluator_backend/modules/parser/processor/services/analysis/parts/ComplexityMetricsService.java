@@ -1,14 +1,14 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.analysis.parts;
 
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.CustomCompilationUnitDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.parts.method.MethodDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.CustomCompilationUnit;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.method.MethodInstance;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.analysis.parts.ComplexityMetricsDTO;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ComplexityMetricsService {
 
-    public ComplexityMetricsDTO calculateComplexityMetrics(CustomCompilationUnitDTO customCompilationUnit) {
+    public ComplexityMetricsDTO calculateComplexityMetrics(CustomCompilationUnit customCompilationUnit) {
         ComplexityMetricsDTO complexityMetrics = new ComplexityMetricsDTO();
 
         int compUnitApproxMcCabeCC = 0;
@@ -18,7 +18,7 @@ public class ComplexityMetricsService {
         int maxOutputParameters = 0;
         int totalLinesOfCode = customCompilationUnit.getLinesOfCode();
 
-        for (MethodDTO method : customCompilationUnit.getMethods()) {
+        for (MethodInstance method : customCompilationUnit.getMethods()) {
             int inputParameters = method.getParameters().getInputs() != null ? method.getParameters().getInputs().size() : 0;
             int outputParameters = method.getParameters().getOutputs() != null ? method.getParameters().getOutputs().size() : 0;
 
@@ -26,7 +26,6 @@ public class ComplexityMetricsService {
             maxOutputParameters = Math.max(maxOutputParameters, outputParameters);
 
             int methodMcCabeCC = calculateApproxMcCabeCC(method);
-            System.out.println("Method: " + method.getName() + ", McCabe CC: " + methodMcCabeCC);
             method.getMethodMetrics().setMcCabeComplexity(methodMcCabeCC);
             compUnitApproxMcCabeCC += methodMcCabeCC;
         }
@@ -54,9 +53,9 @@ public class ComplexityMetricsService {
      * P = número de componentes conectados (connected components) en el grafo de control de flujo
      * En la mayoría de los casos, P = 1, ya que el método es un único bloque de código.
      */
-    private int calculateApproxMcCabeCC(MethodDTO methodDTO) {
-        int nodes = methodDTO.getStatementsInfo().getStatements().size() + methodDTO.getStatementsInfo().getNumberOfControlStatements();
-        int edges = methodDTO.getStatementsInfo().getStatements().size() + 2 * methodDTO.getStatementsInfo().getNumberOfControlStatements();
+    private int calculateApproxMcCabeCC(MethodInstance methodInstance) {
+        int nodes = methodInstance.getStatementsInfo().getStatements().size() + methodInstance.getStatementsInfo().getNumberOfControlStatements();
+        int edges = methodInstance.getStatementsInfo().getStatements().size() + 2 * methodInstance.getStatementsInfo().getNumberOfControlStatements();
         int connectedComponents = 1; // Assuming a single connected component for simplicity
         return edges - nodes + (2 * connectedComponents);
     }

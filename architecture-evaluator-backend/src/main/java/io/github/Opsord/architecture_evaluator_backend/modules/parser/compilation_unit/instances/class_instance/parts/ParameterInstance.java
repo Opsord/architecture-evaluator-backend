@@ -1,0 +1,12 @@
+package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts;
+
+import lombok.Data;
+
+import java.util.List;
+
+@Data
+public class ParameterInstance {
+    private String name;                // e.g., "repository"
+    private String type;                // e.g., "UserRepository"
+    private List<String> annotations;   // e.g., @Qualifier("myRepo")
+}
