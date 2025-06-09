@@ -9,6 +9,7 @@ import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 
@@ -23,16 +24,16 @@ public class CouplingMetricsService {
      * Calculate the coupling metrics for a given compilation unit.
      *
      * @param classInstance The compilation unit to analyze.
-     * @param projectClassInstances The list of all compilation units in the project.
+     * @param projectFileInstances The list of all compilation units in the project.
      * @return The coupling metrics for the given compilation unit.
      */
     public CouplingMetricsDTO calculateCouplingMetrics(ClassInstance classInstance,
-                                                       List<ClassInstance> projectClassInstances,
+                                                       List<FileInstance> projectFileInstances,
                                                        Map<ImportCategory, List<String>> classifiedDependencies,
                                                        boolean includeNonInternalDependencies) {
         CouplingMetricsDTO metrics = new CouplingMetricsDTO();
-        metrics.setEfferentCoupling(calculateEfferentCoupling(classInstance, projectClassInstances, classifiedDependencies, includeNonInternalDependencies));
-        metrics.setAfferentCoupling(calculateAfferentCoupling(classInstance, projectClassInstances, classifiedDependencies, includeNonInternalDependencies));
+        metrics.setEfferentCoupling(calculateEfferentCoupling(classInstance, projectFileInstances, classifiedDependencies, includeNonInternalDependencies));
+        metrics.setAfferentCoupling(calculateAfferentCoupling(classInstance, projectFileInstances, classifiedDependencies, includeNonInternalDependencies));
         metrics.setInstability(calculateInstability(metrics.getAfferentCoupling(), metrics.getEfferentCoupling()));
         return metrics;
     }

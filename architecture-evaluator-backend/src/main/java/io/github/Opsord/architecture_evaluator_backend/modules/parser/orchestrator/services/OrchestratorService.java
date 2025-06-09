@@ -163,7 +163,7 @@ public class OrchestratorService {
         // Create and return the DTO with both summary and analysis
         AnalysedFileInstance compUnitWithAnalysis = new AnalysedFileInstance();
         compUnitWithAnalysis.setFileInstance(summary);
-        compUnitWithAnalysis.setAnalysis(analysis);
+        compUnitWithAnalysis.setAnalysedClassInstances(analysis);
         return compUnitWithAnalysis;
     }
 

@@ -1,6 +1,6 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services;
 
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.CustomCompilationUnit;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.LayerType;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_instance.FileInstance;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_instance.FileInstanceService;
 import lombok.RequiredArgsConstructor;
@@ -23,10 +23,6 @@ public class SrcScannerService {
 
     /**
      * Scans the `src` folder for all `.java` files.
-     *
-     * @param srcFolder The `src` folder to scan.
-     * @return A list of `.java` files found in the folder.
-     * @throws IOException If an error occurs while scanning.
      */
     public List<File> scanSrcFolder(File srcFolder) throws IOException {
         if (!srcFolder.exists() || !srcFolder.isDirectory()) {
@@ -44,16 +40,34 @@ public class SrcScannerService {
         return javaFiles;
     }
 
-    public List<CustomCompilationUnit> parseJavaFiles(List<File> javaFiles) {
-        List<CustomCompilationUnit> compilationUnits = new ArrayList<>();
+    /**
+     * Parses Java files into FileInstance objects.
+     */
+    public List<FileInstance> parseJavaFiles(List<File> javaFiles) {
+        List<FileInstance> fileInstances = new ArrayList<>();
         for (File javaFile : javaFiles) {
             try {
                 FileInstance unit = fileInstanceService.parseJavaFile(javaFile);
-                compilationUnits.add(unit);
+                fileInstances.add(unit);
             } catch (Exception e) {
                 logger.error("Failed to parse file: {}", javaFile.getAbsolutePath(), e);
             }
         }
-        return compilationUnits;
+        return fileInstances;
+    }
+
+    /**
+     * Filters FileInstances by LayerType.
+     */
+    public List<FileInstance> filterByLayerType(List<FileInstance> fileInstances, LayerType layerType) {
+        List<FileInstance> filtered = new ArrayList<>();
+        for (FileInstance unit : fileInstances) {
+            if (unit.getClasses() != null && !unit.getClasses().isEmpty()) {
+                if (unit.getClasses().get(0).getLayerType() == layerType) {
+                    filtered.add(unit);
+                }
+            }
+        }
+        return filtered;
     }
 }
