@@ -1,8 +1,8 @@
 // JavaParserController.java
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.controllers;
 
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.CustomCompilationUnit;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_instance.package_part.FileInstanceService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_instance.FileInstance;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_instance.FileInstanceService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,10 +20,10 @@ public class CompilationUnitController {
     private final FileInstanceService fileInstanceService;
 
     @PostMapping("/parse")
-    public CustomCompilationUnit parseJavaFile(@RequestParam String filePath) throws FileNotFoundException {
+    public FileInstance parseJavaFile(@RequestParam String filePath) throws FileNotFoundException {
         logger.info("Received request to parse file: {}", filePath);
         File file = new File(filePath);
-        CustomCompilationUnit customCompilationUnit = fileInstanceService.parseJavaFile(file);
+        FileInstance customCompilationUnit = fileInstanceService.parseJavaFile(file);
         logger.info("Returning parsed AST for file: {}", filePath);
         return customCompilationUnit;
     }

@@ -8,7 +8,6 @@ import java.util.List;
 public class ClassInstanceSummary {
     private String name;
     private List<String> userClasses;
-    private
     private List<String> dependentClasses;
     private String javaFileType;
     private String layerType;

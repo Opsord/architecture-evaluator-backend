@@ -52,7 +52,7 @@ public class ClassVisitor extends VoidVisitorAdapter<List<ClassInstance>> {
         }
 
         // Annotations
-        instance.setAnnotations(annotationService.getAnnotations(declaration));
+        instance.setAnnotations(annotationService.getAnnotationsFromClass(declaration));
         // Superclasses
         instance.setSuperClasses(
                 declaration.getExtendedTypes().stream()

@@ -1,7 +1,7 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.analysis;
 
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.CustomCompilationUnit;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_instance.FileInstance;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.analysis.AnalysedClassInstance;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.analysis.parts.*;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.analysis.parts.*;
@@ -23,14 +23,7 @@ public class FileAnalysisService {
     private final ImportClassifierService importClassifierService;
 
     /**
-     * Analyzes a compilation unit and generates a detailed analysis.
-     *
-     * @param fileInstance The compilation unit to analyze.
-     * @param projectCompUnitsWithoutTests The list of project compilation units excluding test classes.
-     * @param internalBasePackage The internal base package for dependency classification.
-     * @param pomFileDTO The POM file containing project dependencies.
-     * @param includeNonInternalDependencies Whether to include non-internal dependencies in the analysis.
-     * @return An `AnalysedCompUnitDTO` containing the detailed analysis.
+     * Analyzes a file instance and generates a detailed analysis.
      */
     public AnalysedClassInstance analyseCompUnit(FileInstance fileInstance,
                                                  List<FileInstance> projectCompUnitsWithoutTests,
@@ -40,30 +33,40 @@ public class FileAnalysisService {
         AnalysedClassInstance detailedCompUnit = new AnalysedClassInstance();
 
         // Classify dependencies
-        Map<ImportCategory, List<String>> classifiedDependencies = classifyDependencies(
-                fileInstance, pomFileDTO, internalBasePackage);
+        Map<ImportCategory, List<String>> classifiedDependencies = importClassifierService.classifyDependencies(
+                pomFileDTO, fileInstance, internalBasePackage);
         detailedCompUnit.setClassifiedDependencies(classifiedDependencies);
 
         // Set basic metrics
         setBasicMetrics(detailedCompUnit, fileInstance);
 
-        // Generate and set program metrics
-        ProgramMetricsDTO programMetrics = programMetricsService.generateProgramMetrics(fileInstance);
-        detailedCompUnit.setProgramMetrics(programMetrics);
+        // For metrics, analyze the first class in the file (or adapt as needed)
+        ClassInstance mainClass = fileInstance.getClasses() != null && !fileInstance.getClasses().isEmpty()
+                ? fileInstance.getClasses().get(0)
+                : null;
 
-        // Generate and set complexity metrics
-        ComplexityMetricsDTO complexityMetrics = complexityMetricsService.calculateComplexityMetrics(
-                fileInstance);
-        detailedCompUnit.setComplexityMetrics(complexityMetrics);
+        if (mainClass != null) {
+            // Generate and set program metrics
+            ProgramMetricsDTO programMetrics = programMetricsService.generateProgramMetrics(mainClass);
+            detailedCompUnit.setProgramMetrics(programMetrics);
 
-        // Generate and set coupling metrics
-        CouplingMetricsDTO couplingMetrics = couplingMetricsService.calculateCouplingMetrics(
-                fileInstance, projectCompUnitsWithoutTests, classifiedDependencies, includeNonInternalDependencies);
-        detailedCompUnit.setCouplingMetrics(couplingMetrics);
+            // Generate and set complexity metrics
+            ComplexityMetricsDTO complexityMetrics = complexityMetricsService.calculateComplexityMetrics(mainClass);
+            detailedCompUnit.setComplexityMetrics(complexityMetrics);
 
-        // Generate and set cohesion metrics
-        CohesionMetricsDTO cohesionMetrics = cohesionMetricsService.calculateCohesionMetrics(fileInstance);
-        detailedCompUnit.setCohesionMetrics(cohesionMetrics);
+            // Generate and set coupling metrics
+            // Adapt projectCompUnitsWithoutTests to a list of ClassInstance
+            List<ClassInstance> allClasses = projectCompUnitsWithoutTests.stream()
+                    .flatMap(f -> f.getClasses().stream())
+                    .toList();
+            CouplingMetricsDTO couplingMetrics = couplingMetricsService.calculateCouplingMetrics(
+                    mainClass, allClasses, classifiedDependencies, includeNonInternalDependencies);
+            detailedCompUnit.setCouplingMetrics(couplingMetrics);
+
+            // Generate and set cohesion metrics
+            CohesionMetricsDTO cohesionMetrics = cohesionMetricsService.calculateCohesionMetrics(mainClass);
+            detailedCompUnit.setCohesionMetrics(cohesionMetrics);
+        }
 
         return detailedCompUnit;
     }
@@ -72,15 +75,23 @@ public class FileAnalysisService {
     // Helper Methods
     // -------------------------------------------------------------------------
 
-    private Map<ImportCategory, List<String>> classifyDependencies(CustomCompilationUnit compilationUnitDTO,
-                                                                   PomFileDTO pomFileDTO,
-                                                                   String internalBasePackage) {
-        return importClassifierService.classifyDependencies(pomFileDTO, compilationUnitDTO, internalBasePackage);
-    }
-
-    private void setBasicMetrics(AnalysedClassInstance detailedCompUnit, CustomCompilationUnit compilationUnitDTO) {
-        detailedCompUnit.setClassCount(compilationUnitDTO.getClasses().size());
-        detailedCompUnit.setInterfaceCount(compilationUnitDTO.getInterfaceNames().size());
-        detailedCompUnit.setStatementCount(compilationUnitDTO.getStatements().size());
+    private void setBasicMetrics(AnalysedClassInstance detailedCompUnit, FileInstance fileInstance) {
+        int classCount = 0;
+        int interfaceCount = 0;
+        int statementCount = 0;
+        if (fileInstance.getClasses() != null) {
+            classCount = (int) fileInstance.getClasses().stream()
+                    .filter(c -> c.getJavaFileType() != null && c.getJavaFileType().name().equals("CLASS"))
+                    .count();
+            interfaceCount = (int) fileInstance.getClasses().stream()
+                    .filter(c -> c.getJavaFileType() != null && c.getJavaFileType().name().equals("INTERFACE"))
+                    .count();
+            statementCount = fileInstance.getClasses().stream()
+                    .mapToInt(c -> c.getStatements() != null ? c.getStatements().size() : 0)
+                    .sum();
+        }
+        detailedCompUnit.setClassCount(classCount);
+        detailedCompUnit.setInterfaceCount(interfaceCount);
+        detailedCompUnit.setStatementCount(statementCount);
     }
 }
