@@ -20,13 +20,6 @@ public class InterfaceVisitor extends VoidVisitorAdapter<List<String>> {
         super.visit(declaration, collector);
         if (declaration.isInterface()) {
             collector.add(declaration.getNameAsString());
-            // Verify if the interface is a repository
-            boolean isRepository = declaration.getExtendedTypes().stream()
-                    .map(ClassOrInterfaceType::getNameAsString)
-                    .anyMatch(REPOSITORY_INTERFACES::contains);
-            if (isRepository) {
-                collector.add(declaration.getNameAsString());
-            }
         } else {
             declaration.getImplementedTypes().stream()
                     .map(ClassOrInterfaceType::getNameAsString)

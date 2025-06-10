@@ -5,6 +5,7 @@ import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.JavaFileType;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.LayerAnnotation;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.annotation.AnnotationService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.constructor.ConstructorService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.interface_instance.InterfaceService;
@@ -32,7 +33,6 @@ public class ClassVisitor extends VoidVisitorAdapter<List<ClassInstance>> {
     @Override
     public void visit(ClassOrInterfaceDeclaration declaration, List<ClassInstance> collector) {
         super.visit(declaration, collector);
-
         ClassInstance instance = new ClassInstance();
         instance.setName(declaration.getNameAsString());
 
@@ -53,6 +53,27 @@ public class ClassVisitor extends VoidVisitorAdapter<List<ClassInstance>> {
 
         // Annotations
         instance.setAnnotations(annotationService.getAnnotationsFromClass(declaration));
+        List<String> annotations = instance.getAnnotations();
+        if (annotations != null) {
+            if (annotations.stream().anyMatch(a -> a.equalsIgnoreCase("Entity"))) {
+                instance.setLayerAnnotation(LayerAnnotation.ENTITY);
+            } else if (annotations.stream().anyMatch(a -> a.equalsIgnoreCase("Document"))) {
+                instance.setLayerAnnotation(LayerAnnotation.DOCUMENT);
+            } else if (annotations.stream().anyMatch(a -> a.equalsIgnoreCase("Service"))) {
+                instance.setLayerAnnotation(LayerAnnotation.SERVICE);
+            } else if (annotations.stream().anyMatch(a -> a.equalsIgnoreCase("Repository"))) {
+                instance.setLayerAnnotation(LayerAnnotation.REPOSITORY);
+            } else if (annotations.stream().anyMatch(a -> a.equalsIgnoreCase("Controller"))) {
+                instance.setLayerAnnotation(LayerAnnotation.CONTROLLER);
+            } else if (annotations.stream().anyMatch(a -> a.equalsIgnoreCase("SpringBootTest"))) {
+                instance.setLayerAnnotation(LayerAnnotation.TESTING);
+            } else {
+                instance.setLayerAnnotation(LayerAnnotation.OTHER);
+            }
+        } else {
+            instance.setLayerAnnotation(LayerAnnotation.UNKNOWN);
+        }
+
         // Superclasses
         instance.setSuperClasses(
                 declaration.getExtendedTypes().stream()
@@ -82,6 +103,12 @@ public class ClassVisitor extends VoidVisitorAdapter<List<ClassInstance>> {
 
         // Used classes
         instance.setUsedClasses(collectUsedClasses(declaration));
+
+        // Calculate lines of code for the class
+        int linesOfCode = declaration.getRange()
+                .map(range -> range.end.line - range.begin.line + 1)
+                .orElse(0);
+        instance.setLinesOfCode(linesOfCode);
 
         collector.add(instance);
     }

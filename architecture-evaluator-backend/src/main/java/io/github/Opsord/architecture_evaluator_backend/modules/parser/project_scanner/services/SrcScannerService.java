@@ -1,6 +1,6 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services;
 
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.LayerType;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.LayerAnnotation;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_instance.FileInstance;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_instance.FileInstanceService;
 import lombok.RequiredArgsConstructor;
@@ -59,11 +59,11 @@ public class SrcScannerService {
     /**
      * Filters FileInstances by LayerType.
      */
-    public List<FileInstance> filterByLayerType(List<FileInstance> fileInstances, LayerType layerType) {
+    public List<FileInstance> filterByLayerType(List<FileInstance> fileInstances, LayerAnnotation layerAnnotation) {
         List<FileInstance> filtered = new ArrayList<>();
         for (FileInstance unit : fileInstances) {
             if (unit.getClasses() != null && !unit.getClasses().isEmpty()) {
-                if (unit.getClasses().get(0).getLayerType() == layerType) {
+                if (unit.getClasses().get(0).getLayerAnnotation() == layerAnnotation) {
                     filtered.add(unit);
                 }
             }

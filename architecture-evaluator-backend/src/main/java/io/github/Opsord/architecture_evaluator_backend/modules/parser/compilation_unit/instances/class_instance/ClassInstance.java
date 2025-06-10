@@ -12,7 +12,7 @@ public class ClassInstance {
     // --- Identity ---
     private String name;                  // class name
     private JavaFileType javaFileType;    // CLASS, INTERFACE, ENUM...
-    private LayerType layerType;          // CONTROLLER, SERVICE...
+    private LayerAnnotation layerAnnotation;          // CONTROLLER, SERVICE...
 
     // --- Inheritance & Interfaces ---
     private List<String> superClasses;    // extends
@@ -37,5 +37,4 @@ public class ClassInstance {
 
     // --- Metrics ---
     private int linesOfCode;
-    private int fieldCount;
 }

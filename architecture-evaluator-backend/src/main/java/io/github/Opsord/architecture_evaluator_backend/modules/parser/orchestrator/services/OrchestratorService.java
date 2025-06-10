@@ -53,21 +53,16 @@ public class OrchestratorService {
 
         List<File> srcFiles = srcScannerService.scanSrcFolder(new File(projectRoot, "src"));
         List<FileInstance> fileInstances = srcScannerService.parseJavaFiles(srcFiles, projectRoot);
+        if (fileInstances.isEmpty()) {
+            logger.warn("No Java files found in the project at path: {}", projectPath);
+            throw new IOException("No Java files found in the project");
+        }
+
         // Filter out test classes
         List<FileInstance> fileInstancesWithoutTests = fileInstances.stream()
                 .filter(unit -> unit.getFileAnnotations().stream()
                         .noneMatch(a -> a.equalsIgnoreCase(AnnotationType.SPRINGBOOT_TEST.getAnnotation())))
                 .toList();
-
-        // Set the dependent classes for each file instance
-        fileInstancesWithoutTests.forEach(unit ->
-                unit.setClasses(
-                        fileInstanceService.getDependentClassInstancesFromFile(
-                                unit,
-                                fileInstancesWithoutTests
-                        )
-                )
-        );
 
         PomFileDTO pomFileDTO = pomScannerService.scanPomFile(projectRoot);
 

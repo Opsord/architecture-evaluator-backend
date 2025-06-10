@@ -26,7 +26,7 @@ public class ClassService {
     private final AnnotationService annotationService;
     private final InterfaceService interfaceService;
 
-    public List<ClassInstance> getClasses(CompilationUnit compilationUnit) {
+    public List<ClassInstance> getClassesFromCompUnit(CompilationUnit compilationUnit) {
         List<ClassInstance> classInstances = new ArrayList<>();
         ClassVisitor visitor = new ClassVisitor(
                 methodService,

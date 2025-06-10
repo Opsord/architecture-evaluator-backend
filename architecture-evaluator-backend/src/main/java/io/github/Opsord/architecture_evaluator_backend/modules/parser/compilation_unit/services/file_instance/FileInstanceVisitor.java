@@ -17,26 +17,26 @@ public class FileInstanceVisitor extends VoidVisitorAdapter<FileInstance> {
     private final ClassService classService;
 
     @Override
-    public void visit(CompilationUnit cu, FileInstance fileInstance) {
-        super.visit(cu, fileInstance);
+    public void visit(CompilationUnit compilationUnit, FileInstance fileInstance) {
+        super.visit(compilationUnit, fileInstance);
 
         // --- File Information ---
         fileInstance.setPackageName(
-                cu.getPackageDeclaration().map(NodeWithName::getNameAsString).orElse("default")
+                compilationUnit.getPackageDeclaration().map(NodeWithName::getNameAsString).orElse("default")
         );
 
         // --- File-level Annotations & Imports ---
-        fileInstance.setImportedPackages(packageService.getImportedPackages(cu));
+        fileInstance.setImportedPackages(packageService.getImportedPackages(compilationUnit));
         fileInstance.setFileAnnotations(
-                annotationService.getAnnotationsFromFile(cu)
+                annotationService.getAnnotationsFromFile(compilationUnit)
         );
 
         // --- Contained Types ---
-        fileInstance.setClasses(classService.getClasses(cu));
+        fileInstance.setClasses(classService.getClassesFromCompUnit(compilationUnit));
 
         // --- Metrics ---
         fileInstance.setLinesOfCode(
-                cu.getRange().map(r -> r.end.line - r.begin.line + 1).orElse(0)
+                compilationUnit.getRange().map(r -> r.end.line - r.begin.line + 1).orElse(0)
         );
         fileInstance.setImportCount(
                 fileInstance.getImportedPackages() != null ? fileInstance.getImportedPackages().size() : 0
