@@ -7,7 +7,7 @@ import java.util.List;
 
 @Data
 public class ProjectAnalysisInstance {
-    private String projectPath;
+    private String projectName;
     private List<AnalysedFileInstance> entities;
     private List<AnalysedFileInstance> documents;
     private List<AnalysedFileInstance> repositories;

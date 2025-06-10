@@ -52,8 +52,7 @@ public class OrchestratorService {
         }
 
         List<File> srcFiles = srcScannerService.scanSrcFolder(new File(projectRoot, "src"));
-        List<FileInstance> fileInstances = srcScannerService.parseJavaFiles(srcFiles);
-
+        List<FileInstance> fileInstances = srcScannerService.parseJavaFiles(srcFiles, projectRoot);
         // Filter out test classes
         List<FileInstance> fileInstancesWithoutTests = fileInstances.stream()
                 .filter(unit -> unit.getFileAnnotations().stream()
@@ -80,7 +79,7 @@ public class OrchestratorService {
         );
 
         ProjectAnalysisInstance projectAnalysisInstance = organizeProjectAnalysis(analyzedUnits);
-        projectAnalysisInstance.setProjectPath(projectRoot.getAbsolutePath());
+        projectAnalysisInstance.setProjectName(projectRoot.getName());
         projectAnalysisInstance.setPomFile(pomFileDTO);
 
         logger.info("Orchestration completed for project at path: {}", projectRoot.getAbsolutePath());

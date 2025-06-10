@@ -43,11 +43,11 @@ public class SrcScannerService {
     /**
      * Parses Java files into FileInstance objects.
      */
-    public List<FileInstance> parseJavaFiles(List<File> javaFiles) {
+    public List<FileInstance> parseJavaFiles(List<File> javaFiles, File projectRoot) {
         List<FileInstance> fileInstances = new ArrayList<>();
         for (File javaFile : javaFiles) {
             try {
-                FileInstance unit = fileInstanceService.parseJavaFile(javaFile);
+                FileInstance unit = fileInstanceService.parseJavaFile(javaFile, projectRoot);
                 fileInstances.add(unit);
             } catch (Exception e) {
                 logger.error("Failed to parse file: {}", javaFile.getAbsolutePath(), e);

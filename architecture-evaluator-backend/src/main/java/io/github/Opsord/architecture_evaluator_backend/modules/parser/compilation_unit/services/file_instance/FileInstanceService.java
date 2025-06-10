@@ -36,7 +36,7 @@ public class FileInstanceService {
      * @return The parsed FileInstance.
      * @throws FileNotFoundException If the file does not exist or cannot be parsed.
      */
-    public FileInstance parseJavaFile(File file) throws FileNotFoundException {
+    public FileInstance parseJavaFile(File file, File projectRoot) throws FileNotFoundException {
         logger.info("Starting to parse file: {}", file.getAbsolutePath());
         JavaParser javaParser = new JavaParser();
         CompilationUnit compilationUnit = javaParser.parse(file).getResult()
@@ -45,9 +45,13 @@ public class FileInstanceService {
 
         FileInstance fileInstance = new FileInstance();
         fileInstance.setFileName(file.getName());
-        fileInstance.setFilePath(file.getAbsolutePath());
 
-        // Use the visitor to fill the FileInstance
+        // Compute a relative path
+        String relativePath = projectRoot.toPath().toAbsolutePath()
+                .relativize(file.toPath().toAbsolutePath())
+                .toString();
+        fileInstance.setFilePath(relativePath);
+
         FileInstanceVisitor visitor = new FileInstanceVisitor(packageService, annotationService, classService);
         compilationUnit.accept(visitor, fileInstance);
 
