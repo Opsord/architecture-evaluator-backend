@@ -1,13 +1,13 @@
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.analysis;
+package io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto;
 
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.analysis.parts.*;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.parts.*;
 import lombok.Data;
 
 import java.util.List;
 import java.util.Map;
 
 @Data
-public class AnalysedClassInstance {
+public class ClassAnalysis {
     private int classCount;
     private int interfaceCount;
     private int statementCount;

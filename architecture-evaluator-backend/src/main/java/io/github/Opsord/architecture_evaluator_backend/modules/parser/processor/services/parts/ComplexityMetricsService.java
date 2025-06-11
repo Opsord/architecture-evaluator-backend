@@ -1,8 +1,8 @@
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.analysis.parts;
+package io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.parts;
 
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.method.MethodInstance;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.analysis.parts.ComplexityMetricsDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.parts.ComplexityMetricsDTO;
 import org.springframework.stereotype.Service;
 
 @Service

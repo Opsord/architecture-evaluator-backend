@@ -1,9 +1,9 @@
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.analysis.parts;
+package io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.parts;
 
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.VariableInstance;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.method.MethodInstance;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.analysis.parts.CohesionMetricsDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.parts.CohesionMetricsDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -108,9 +108,9 @@ public class CohesionMetricsService {
         return graph;
     }
 
-    private Set<String> extractCalledNames(MethodInstance m) {
-        if (m.getStatementsInfo() == null) return Collections.emptySet();
-        return m.getStatementsInfo().getStatements().stream()
+    private Set<String> extractCalledNames(MethodInstance methodInstance) {
+        if (methodInstance.getStatementsInfo() == null) return Collections.emptySet();
+        return methodInstance.getStatementsInfo().getStatements().stream()
                 .filter(s -> s.getType().name().equals("EXPRESSION"))
                 .map(s -> s.getStructure().replaceAll("\\s*\\(\\)\\s*;", ""))
                 .collect(Collectors.toSet());

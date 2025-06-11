@@ -4,8 +4,8 @@ import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilatio
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_instance.FileInstanceService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto.AnalysedFileInstance;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto.ProjectAnalysisInstance;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.analysis.AnalysedClassInstance;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.analysis.FileAnalysisService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.ClassAnalysis;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.FileAnalysisService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.AnnotationType;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.PomFileDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.PomScannerService;
@@ -136,7 +136,7 @@ public class OrchestratorService {
             PomFileDTO pomFileDTO,
             boolean includeNonInternalDependencies
     ) {
-        AnalysedClassInstance analysis = analysisService.analyseCompUnit(
+        ClassAnalysis analysis = analysisService.analyseFileInstance(
                 compilationUnit,
                 projectCompUnitsWithoutTests,
                 internalBasePackage,
@@ -146,7 +146,7 @@ public class OrchestratorService {
 
         AnalysedFileInstance compUnitWithAnalysis = new AnalysedFileInstance();
         compUnitWithAnalysis.setFileInstance(compilationUnit);
-        compUnitWithAnalysis.setAnalysedClassInstances(List.of(analysis));
+        compUnitWithAnalysis.setClassAnalyses(List.of(analysis));
         return compUnitWithAnalysis;
     }
 
