@@ -22,17 +22,13 @@ public class FileAnalysisService {
 
     public List<ProcessedClassInstance> analyseFileInstance(
             FileInstance fileInstance,
-            List<FileInstance> projectCompUnitsWithoutTests,
             String internalBasePackage,
-            PomFileDTO pomFileDTO,
-            boolean includeNonInternalDependencies
+            PomFileDTO pomFileDTO
     ) {
         int[] metrics = computeBasicMetrics(fileInstance);
         Map<ImportCategory, List<String>> classifiedDependencies = classifyFileDependencies(
                 pomFileDTO, fileInstance, internalBasePackage
         );
-        List<ClassInstance> allClasses = extractAllProjectClasses(projectCompUnitsWithoutTests);
-
         if (fileInstance.getClasses() == null || fileInstance.getClasses().isEmpty()) {
             return List.of();
         }
@@ -41,9 +37,7 @@ public class FileAnalysisService {
                 .map(classInstance -> {
                     ClassAnalysis analysis = classAnalysisService.analyseClassInstance(
                             classInstance,
-                            allClasses,
-                            classifiedDependencies,
-                            includeNonInternalDependencies
+                            classifiedDependencies
                     );
                     analysis.setClassCount(metrics[0]);
                     analysis.setInterfaceCount(metrics[1]);
@@ -75,31 +69,11 @@ public class FileAnalysisService {
         return new int[]{classCount, interfaceCount, statementCount};
     }
 
-    private ClassInstance extractMainClass(FileInstance fileInstance) {
-        return (fileInstance.getClasses() != null && !fileInstance.getClasses().isEmpty())
-                ? fileInstance.getClasses().get(0)
-                : null;
-    }
-
     private Map<ImportCategory, List<String>> classifyFileDependencies(
             PomFileDTO pomFileDTO,
             FileInstance fileInstance,
             String internalBasePackage
     ) {
         return importClassifierService.classifyDependencies(pomFileDTO, fileInstance, internalBasePackage);
-    }
-
-    private List<ClassInstance> extractAllProjectClasses(List<FileInstance> projectCompUnitsWithoutTests) {
-        return projectCompUnitsWithoutTests.stream()
-                .flatMap(f -> f.getClasses().stream())
-                .toList();
-    }
-
-    private ClassAnalysis buildEmptyAnalysis(int[] metrics) {
-        ClassAnalysis empty = new ClassAnalysis();
-        empty.setClassCount(metrics[0]);
-        empty.setInterfaceCount(metrics[1]);
-        empty.setStatementCount(metrics[2]);
-        return empty;
     }
 }

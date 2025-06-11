@@ -26,33 +26,20 @@ public class ClassAnalysisService {
      * Analyzes a {@link ClassInstance} and generates a {@link ClassAnalysis} containing metrics and dependency classifications.
      *
      * @param classInstance The class to analyze.
-     * @param allProjectClasses List of all classes in the project.
      * @param classifiedDependencies Map of import categories to dependency names.
-     * @param includeNonInternalDependencies Whether to include non-internal dependencies in coupling metrics.
      * @return The analysis result for the given class.
      */
     public ClassAnalysis analyseClassInstance(
             ClassInstance classInstance,
-            List<ClassInstance> allProjectClasses,
-            Map<ImportCategory, List<String>> classifiedDependencies,
-            boolean includeNonInternalDependencies
-    ) {
-        ClassAnalysis classAnalysis = new ClassAnalysis();
+            Map<ImportCategory, List<String>> classifiedDependencies) {
 
+        ClassAnalysis classAnalysis = new ClassAnalysis();
         // Metrics for this class
         classAnalysis.setProgramMetrics(programMetricsService.generateProgramMetrics(classInstance));
         classAnalysis.setComplexityMetrics(complexityMetricsService.calculateComplexityMetrics(classInstance));
-        classAnalysis.setCouplingMetrics(
-                couplingMetricsService.calculateCouplingMetrics(
-                        classInstance,
-                        allProjectClasses,
-                        classifiedDependencies,
-                        includeNonInternalDependencies
-                )
-        );
+        classAnalysis.setCouplingMetrics(couplingMetricsService.calculateCouplingMetrics(classInstance));
         classAnalysis.setCohesionMetrics(cohesionMetricsService.calculateCohesionMetrics(classInstance));
         classAnalysis.setClassifiedDependencies(classifiedDependencies);
-
         return classAnalysis;
     }
 }

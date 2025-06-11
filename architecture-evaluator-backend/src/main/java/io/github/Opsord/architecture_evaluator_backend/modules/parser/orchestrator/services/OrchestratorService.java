@@ -48,7 +48,7 @@ public class OrchestratorService {
             throw new IOException("No Java files found in the project");
         }
 
-        // Filtrar archivos sin tests
+        // Filter files without tests
         List<FileInstance> fileInstancesWithoutTests = fileInstances.stream()
                 .filter(unit -> unit.getFileAnnotations().stream()
                         .noneMatch(a -> a.equalsIgnoreCase(AnnotationType.SPRINGBOOT_TEST.getAnnotation())))
@@ -61,7 +61,6 @@ public class OrchestratorService {
 
         List<ProcessedClassInstance> processedClasses = analyzeCompilationUnits(
                 fileInstances,
-                fileInstancesWithoutTests,
                 pomFileDTO,
                 includeNonInternalDependencies
         );
@@ -80,20 +79,17 @@ public class OrchestratorService {
 
     private List<ProcessedClassInstance> analyzeCompilationUnits(
             List<FileInstance> projectCompUnits,
-            List<FileInstance> projectCompUnitsWithoutTests,
             PomFileDTO pomFileDTO,
             boolean includeNonInternalDependencies
     ) {
         String internalBasePackage = determineInternalBasePackage(pomFileDTO);
 
-        // Analiza todos los archivos y aplana la lista de clases procesadas
+        // Analyze all files and flatten the list of processed classes
         return projectCompUnits.stream()
                 .flatMap(compilationUnit -> analysisService.analyseFileInstance(
                         compilationUnit,
-                        projectCompUnitsWithoutTests,
                         internalBasePackage,
-                        pomFileDTO,
-                        includeNonInternalDependencies
+                        pomFileDTO
                 ).stream())
                 .toList();
     }
@@ -107,7 +103,7 @@ public class OrchestratorService {
         projectAnalysisInstance.setControllers(filterByAnnotation(processedClasses, AnnotationType.CONTROLLER));
         projectAnalysisInstance.setTestClasses(filterByAnnotation(processedClasses, AnnotationType.SPRINGBOOT_TEST));
 
-        // Otras clases que no tienen ninguna de las anotaciones anteriores
+        // Other classes without any of the above annotations
         List<ProcessedClassInstance> otherClasses = processedClasses.stream()
                 .filter(pci -> pci.getClassInstance().getAnnotations().stream()
                         .noneMatch(annotation ->
