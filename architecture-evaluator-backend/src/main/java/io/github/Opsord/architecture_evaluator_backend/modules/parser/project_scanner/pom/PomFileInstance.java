@@ -1,13 +1,11 @@
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom;
+package io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.pom;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 import java.util.List;
 
-@Getter
-@Setter
-public class PomFileDTO {
+@Data
+public class PomFileInstance {
     private ParentSectionDTO parentSection;
     private String groupId;
     private String artifactId;
@@ -17,5 +15,5 @@ public class PomFileDTO {
     private String license;
     private List<String> developers;
     private String javaVersion;
-    private List<DependencyDTO> dependencies;
+    private List<PomDependencyInstance> dependencies;
 }

@@ -1,8 +1,8 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services;
 
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.DependencyDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.ParentSectionDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.PomFileDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.pom.PomDependencyInstance;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.pom.ParentSectionDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.pom.PomFileInstance;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +24,7 @@ public class PomScannerService {
     private static final Logger logger = LoggerFactory.getLogger(PomScannerService.class);
     private final ScannerService scannerService;
 
-    public PomFileDTO scanPomFile(File projectDirectory) {
+    public PomFileInstance scanPomFile(File projectDirectory) {
         if (projectDirectory == null || !projectDirectory.isDirectory()) {
             logger.warn("Invalid project directory: {}", projectDirectory != null ? projectDirectory.getAbsolutePath() : "null");
             return null;
@@ -42,27 +42,27 @@ public class PomScannerService {
             Document document = builder.parse(pomFile);
             document.getDocumentElement().normalize();
 
-            PomFileDTO pomFileDTO = new PomFileDTO();
-            pomFileDTO.setParentSection(getParentInfo(document));
-            pomFileDTO.setGroupId(getTagValue(document, "groupId"));
-            pomFileDTO.setArtifactId(getTagValue(document, "artifactId"));
-            pomFileDTO.setVersion(getTagValue(document, "version"));
-            pomFileDTO.setDescription(getTagValue(document, "description"));
-            pomFileDTO.setUrl(getTagValue(document, "url"));
-            pomFileDTO.setLicense(getLicense(document));
-            pomFileDTO.setDevelopers(getDevelopers(document));
-            pomFileDTO.setJavaVersion(getTagValue(document, "java.version"));
-            pomFileDTO.setDependencies(parseDependencies(document));
+            PomFileInstance pomFileInstance = new PomFileInstance();
+            pomFileInstance.setParentSection(getParentInfo(document));
+            pomFileInstance.setGroupId(getTagValue(document, "groupId"));
+            pomFileInstance.setArtifactId(getTagValue(document, "artifactId"));
+            pomFileInstance.setVersion(getTagValue(document, "version"));
+            pomFileInstance.setDescription(getTagValue(document, "description"));
+            pomFileInstance.setUrl(getTagValue(document, "url"));
+            pomFileInstance.setLicense(getLicense(document));
+            pomFileInstance.setDevelopers(getDevelopers(document));
+            pomFileInstance.setJavaVersion(getTagValue(document, "java.version"));
+            pomFileInstance.setDependencies(parseDependencies(document));
 
-            return pomFileDTO;
+            return pomFileInstance;
         } catch (Exception e) {
             logger.error("Failed to parse pom.xml file in directory: {}", projectDirectory.getAbsolutePath(), e);
             return null;
         }
     }
 
-    private List<DependencyDTO> parseDependencies(Document document) {
-        List<DependencyDTO> dependencyList = new ArrayList<>();
+    private List<PomDependencyInstance> parseDependencies(Document document) {
+        List<PomDependencyInstance> dependencyList = new ArrayList<>();
         NodeList dependencyNodes = document.getElementsByTagName("dependency");
 
         for (int i = 0; i < dependencyNodes.getLength(); i++) {
@@ -72,7 +72,7 @@ public class PomScannerService {
             String version = getTagValue(dependency, "version");
 
             if (groupId != null && artifactId != null) {
-                dependencyList.add(new DependencyDTO(groupId, artifactId, version));
+                dependencyList.add(new PomDependencyInstance(groupId, artifactId, version));
             }
         }
 

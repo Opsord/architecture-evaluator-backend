@@ -1,10 +1,10 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.parts;
 
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_instance.FileInstance;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.DependencyDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.pom.PomDependencyInstance;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.parts.ImportCategory;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.ParentSectionDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.PomFileDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.pom.ParentSectionDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.pom.PomFileInstance;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -18,20 +18,20 @@ public class ImportClassifierService {
     /**
      * Classifies the imported packages of a file into categories based on the project's POM and internal base package.
      *
-     * @param pomFileDTO the POM file data transfer object containing dependencies and parent section
+     * @param pomFileInstance the POM file data transfer object containing dependencies and parent section
      * @param fileInstance the file instance containing imported packages
      * @param internalBasePackage the base package of the internal project
      * @return a map where the key is the import category and the value is a list of import names in that category
      */
-    public Map<ImportCategory, List<String>> classifyDependencies(PomFileDTO pomFileDTO, FileInstance fileInstance, String internalBasePackage) {
+    public Map<ImportCategory, List<String>> classifyDependencies(PomFileInstance pomFileInstance, FileInstance fileInstance, String internalBasePackage) {
         Map<ImportCategory, List<String>> classifiedDependencies = new HashMap<>();
 
         List<String> importedPackages = fileInstance.getImportedPackages();
-        ParentSectionDTO parentSection = pomFileDTO.getParentSection();
+        ParentSectionDTO parentSection = pomFileInstance.getParentSection();
 
         if (importedPackages != null) {
             for (String importName : importedPackages) {
-                ImportCategory category = classify(importName, pomFileDTO.getDependencies(), parentSection, internalBasePackage);
+                ImportCategory category = classify(importName, pomFileInstance.getDependencies(), parentSection, internalBasePackage);
                 classifiedDependencies.computeIfAbsent(category, k -> new ArrayList<>()).add(importName);
             }
         }
@@ -48,7 +48,7 @@ public class ImportClassifierService {
      * @param internalBasePackage the base package of the internal project
      * @return the determined import category
      */
-    public ImportCategory classify(String importName, List<DependencyDTO> knownDependencies, ParentSectionDTO parentSection, String internalBasePackage) {
+    public ImportCategory classify(String importName, List<PomDependencyInstance> knownDependencies, ParentSectionDTO parentSection, String internalBasePackage) {
         if (importName.startsWith("java.") || importName.startsWith("javax.")) {
             return ImportCategory.JAVA_STANDARD;
         } else if (importName.startsWith("spring") || importName.startsWith("org.springframework")) {
@@ -88,8 +88,8 @@ public class ImportClassifierService {
      * @param dependencies the list of dependencies from the POM
      * @return true if the import matches any dependency, false otherwise
      */
-    private boolean matchesAnyDependency(String importName, List<DependencyDTO> dependencies) {
-        for (DependencyDTO dep : dependencies) {
+    private boolean matchesAnyDependency(String importName, List<PomDependencyInstance> dependencies) {
+        for (PomDependencyInstance dep : dependencies) {
             String basePackage = dep.getBasePackage().replace(".", "/");
             String artifactId = dep.getArtifactId();
             if (importName.startsWith(basePackage) || (artifactId != null && importName.contains(artifactId))) {

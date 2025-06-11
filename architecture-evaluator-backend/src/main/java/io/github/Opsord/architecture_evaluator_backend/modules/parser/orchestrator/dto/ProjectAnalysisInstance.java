@@ -1,7 +1,7 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto;
 
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.ProcessedClassInstance;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.PomFileDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.pom.PomFileInstance;
 import lombok.Data;
 
 import java.util.List;
@@ -16,5 +16,5 @@ public class ProjectAnalysisInstance {
     private List<ProcessedClassInstance> controllers;
     private List<ProcessedClassInstance> testClasses;
     private List<ProcessedClassInstance> otherClasses;
-    private PomFileDTO pomFile;
+    private PomFileInstance pomFile;
 }

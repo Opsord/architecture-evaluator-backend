@@ -1,12 +1,12 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.services;
 
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.LayerAnnotation;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_instance.FileInstance;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_instance.FileInstanceService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.ProcessedClassInstance;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.FileAnalysisService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.AnnotationType;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.PomFileDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.pom.PomFileInstance;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.PomScannerService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.ScannerService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.SrcScannerService;
@@ -50,83 +50,69 @@ public class OrchestratorService {
 
         // Filter files without tests
         List<FileInstance> fileInstancesWithoutTests = fileInstances.stream()
-                .filter(unit -> unit.getFileAnnotations().stream()
-                        .noneMatch(a -> a.equalsIgnoreCase(AnnotationType.SPRINGBOOT_TEST.getAnnotation())))
+                .filter(fi -> !fi.getClasses().isEmpty() && fi.getClasses().stream()
+                        .noneMatch(cls -> cls.getLayerAnnotation() == LayerAnnotation.TESTING))
                 .toList();
 
-        PomFileDTO pomFileDTO = pomScannerService.scanPomFile(projectRoot);
+        PomFileInstance pomFileInstance = pomScannerService.scanPomFile(projectRoot);
 
         // Populate class dependencies
         populateClassDependencies(fileInstancesWithoutTests);
 
         List<ProcessedClassInstance> processedClasses = analyzeCompilationUnits(
                 fileInstances,
-                pomFileDTO,
-                includeNonInternalDependencies
-        );
+                pomFileInstance);
 
         ProjectAnalysisInstance projectAnalysisInstance = organizeProjectAnalysis(processedClasses);
         projectAnalysisInstance.setProjectName(projectRoot.getName());
-        projectAnalysisInstance.setPomFile(pomFileDTO);
+        projectAnalysisInstance.setPomFile(pomFileInstance);
 
         logger.info("Orchestration completed for project at path: {}", projectRoot.getAbsolutePath());
         return projectAnalysisInstance;
     }
 
-    private String determineInternalBasePackage(PomFileDTO pomFileDTO) {
-        return pomFileDTO.getGroupId();
+    private String determineInternalBasePackage(PomFileInstance pomFileInstance) {
+        return pomFileInstance.getGroupId();
     }
 
     private List<ProcessedClassInstance> analyzeCompilationUnits(
             List<FileInstance> projectCompUnits,
-            PomFileDTO pomFileDTO,
-            boolean includeNonInternalDependencies
-    ) {
-        String internalBasePackage = determineInternalBasePackage(pomFileDTO);
+            PomFileInstance pomFileInstance) {
+        String internalBasePackage = determineInternalBasePackage(pomFileInstance);
 
         // Analyze all files and flatten the list of processed classes
         return projectCompUnits.stream()
                 .flatMap(compilationUnit -> analysisService.analyseFileInstance(
                         compilationUnit,
                         internalBasePackage,
-                        pomFileDTO
+                        pomFileInstance
                 ).stream())
                 .toList();
     }
 
     public ProjectAnalysisInstance organizeProjectAnalysis(List<ProcessedClassInstance> processedClasses) {
         ProjectAnalysisInstance projectAnalysisInstance = new ProjectAnalysisInstance();
-        projectAnalysisInstance.setEntities(filterByAnnotation(processedClasses, AnnotationType.ENTITY));
-        projectAnalysisInstance.setDocuments(filterByAnnotation(processedClasses, AnnotationType.DOCUMENT));
-        projectAnalysisInstance.setRepositories(filterByAnnotation(processedClasses, AnnotationType.REPOSITORY));
-        projectAnalysisInstance.setServices(filterByAnnotation(processedClasses, AnnotationType.SERVICE));
-        projectAnalysisInstance.setControllers(filterByAnnotation(processedClasses, AnnotationType.CONTROLLER));
-        projectAnalysisInstance.setTestClasses(filterByAnnotation(processedClasses, AnnotationType.SPRINGBOOT_TEST));
-
+        projectAnalysisInstance.setEntities(filterByLayerAnnotation(processedClasses, LayerAnnotation.ENTITY));
+        projectAnalysisInstance.setDocuments(filterByLayerAnnotation(processedClasses, LayerAnnotation.DOCUMENT));
+        projectAnalysisInstance.setRepositories(filterByLayerAnnotation(processedClasses, LayerAnnotation.REPOSITORY));
+        projectAnalysisInstance.setServices(filterByLayerAnnotation(processedClasses, LayerAnnotation.SERVICE));
+        projectAnalysisInstance.setControllers(filterByLayerAnnotation(processedClasses, LayerAnnotation.CONTROLLER));
+        projectAnalysisInstance.setTestClasses(filterByLayerAnnotation(processedClasses, LayerAnnotation.TESTING));
         // Other classes without any of the above annotations
         List<ProcessedClassInstance> otherClasses = processedClasses.stream()
-                .filter(pci -> pci.getClassInstance().getAnnotations().stream()
-                        .noneMatch(annotation ->
-                                List.of(
-                                        AnnotationType.ENTITY.getAnnotation(),
-                                        AnnotationType.DOCUMENT.getAnnotation(),
-                                        AnnotationType.REPOSITORY.getAnnotation(),
-                                        AnnotationType.SERVICE.getAnnotation(),
-                                        AnnotationType.CONTROLLER.getAnnotation(),
-                                        AnnotationType.SPRINGBOOT_TEST.getAnnotation()
-                                ).contains(annotation)))
+                .filter(pci -> pci.getClassInstance().getLayerAnnotation() == LayerAnnotation.OTHER
+                        || pci.getClassInstance().getLayerAnnotation() == LayerAnnotation.UNKNOWN)
                 .toList();
         projectAnalysisInstance.setOtherClasses(otherClasses);
 
         return projectAnalysisInstance;
     }
 
-    private List<ProcessedClassInstance> filterByAnnotation(
+    private List<ProcessedClassInstance> filterByLayerAnnotation(
             List<ProcessedClassInstance> classes,
-            AnnotationType annotationType) {
+            LayerAnnotation layerAnnotation) {
         return classes.stream()
-                .filter(pci -> pci.getClassInstance().getAnnotations().stream()
-                        .anyMatch(annotation -> annotation.equalsIgnoreCase(annotationType.getAnnotation())))
+                .filter(pci -> pci.getClassInstance().getLayerAnnotation() == layerAnnotation)
                 .toList();
     }
 

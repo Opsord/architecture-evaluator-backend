@@ -1,12 +1,11 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services;
 
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_instance.FileInstance;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.ClassAnalysis;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.ProcessedClassInstance;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.parts.ImportCategory;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.parts.ImportClassifierService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.PomFileDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.pom.PomFileInstance;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,11 +22,11 @@ public class FileAnalysisService {
     public List<ProcessedClassInstance> analyseFileInstance(
             FileInstance fileInstance,
             String internalBasePackage,
-            PomFileDTO pomFileDTO
+            PomFileInstance pomFileInstance
     ) {
         int[] metrics = computeBasicMetrics(fileInstance);
         Map<ImportCategory, List<String>> classifiedDependencies = classifyFileDependencies(
-                pomFileDTO, fileInstance, internalBasePackage
+                pomFileInstance, fileInstance, internalBasePackage
         );
         if (fileInstance.getClasses() == null || fileInstance.getClasses().isEmpty()) {
             return List.of();
@@ -70,10 +69,10 @@ public class FileAnalysisService {
     }
 
     private Map<ImportCategory, List<String>> classifyFileDependencies(
-            PomFileDTO pomFileDTO,
+            PomFileInstance pomFileInstance,
             FileInstance fileInstance,
             String internalBasePackage
     ) {
-        return importClassifierService.classifyDependencies(pomFileDTO, fileInstance, internalBasePackage);
+        return importClassifierService.classifyDependencies(pomFileInstance, fileInstance, internalBasePackage);
     }
 }

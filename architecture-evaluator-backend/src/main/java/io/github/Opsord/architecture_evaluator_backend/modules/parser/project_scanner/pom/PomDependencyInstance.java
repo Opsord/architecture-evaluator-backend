@@ -1,11 +1,11 @@
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom;
+package io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.pom;
 
 import lombok.*;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class DependencyDTO {
+public class PomDependencyInstance {
     private String groupId;
     private String artifactId;
     private String version;
