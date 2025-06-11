@@ -1,16 +1,14 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.services;
 
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_instance.FileInstance;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_instance.FileInstanceService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto.AnalysedFileInstance;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto.ProjectAnalysisInstance;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.ClassAnalysis;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.ProcessedClassInstance;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.FileAnalysisService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.AnnotationType;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.PomFileDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.PomScannerService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.ScannerService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.SrcScannerService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto.ProjectAnalysisInstance;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +17,6 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -30,18 +27,8 @@ public class OrchestratorService {
     private final ScannerService scannerService;
     private final PomScannerService pomScannerService;
     private final SrcScannerService srcScannerService;
-    private final FileInstanceService fileInstanceService;
     private final FileAnalysisService analysisService;
 
-    /**
-     * Orchestrates the project analysis by scanning the project and its pom.xml file, analyzing the file instances,
-     * and organizing the results into a ProjectAnalysisInstance.
-     *
-     * @param projectPath The path to the project to be analyzed.
-     * @param includeNonInternalDependencies Whether to include non-internal dependencies in the analysis.
-     * @return A ProjectAnalysisInstance containing the organized analysis results.
-     * @throws IOException If an error occurs during scanning or analysis.
-     */
     public ProjectAnalysisInstance orchestrateProjectAnalysis(String projectPath, boolean includeNonInternalDependencies) throws IOException {
         logger.info("Starting orchestration for project at path: {}", projectPath);
 
@@ -58,7 +45,7 @@ public class OrchestratorService {
             throw new IOException("No Java files found in the project");
         }
 
-        // Filter out test classes
+        // Filtrar archivos sin tests
         List<FileInstance> fileInstancesWithoutTests = fileInstances.stream()
                 .filter(unit -> unit.getFileAnnotations().stream()
                         .noneMatch(a -> a.equalsIgnoreCase(AnnotationType.SPRINGBOOT_TEST.getAnnotation())))
@@ -66,14 +53,14 @@ public class OrchestratorService {
 
         PomFileDTO pomFileDTO = pomScannerService.scanPomFile(projectRoot);
 
-        List<AnalysedFileInstance> analyzedUnits = analyzeCompilationUnits(
+        List<ProcessedClassInstance> processedClasses = analyzeCompilationUnits(
                 fileInstances,
                 fileInstancesWithoutTests,
                 pomFileDTO,
                 includeNonInternalDependencies
         );
 
-        ProjectAnalysisInstance projectAnalysisInstance = organizeProjectAnalysis(analyzedUnits);
+        ProjectAnalysisInstance projectAnalysisInstance = organizeProjectAnalysis(processedClasses);
         projectAnalysisInstance.setProjectName(projectRoot.getName());
         projectAnalysisInstance.setPomFile(pomFileDTO);
 
@@ -81,26 +68,11 @@ public class OrchestratorService {
         return projectAnalysisInstance;
     }
 
-    /**
-     * Determines the internal base package from the given PomFileDTO.
-     *
-     * @param pomFileDTO The PomFileDTO containing the parsed information from the pom.xml file.
-     * @return The internal base package as a String.
-     */
     private String determineInternalBasePackage(PomFileDTO pomFileDTO) {
         return pomFileDTO.getGroupId();
     }
 
-    /**
-     * Analyzes a list of file instances and returns a list of AnalysedFileInstance.
-     *
-     * @param projectCompUnits The list of FileInstance to be analyzed.
-     * @param projectCompUnitsWithoutTests The list of FileInstance without test classes.
-     * @param pomFileDTO The PomFileDTO containing the parsed information from the pom.xml file.
-     * @param includeNonInternalDependencies Whether to include non-internal dependencies in the analysis.
-     * @return A list of AnalysedFileInstance containing the analyzed file instances.
-     */
-    private List<AnalysedFileInstance> analyzeCompilationUnits(
+    private List<ProcessedClassInstance> analyzeCompilationUnits(
             List<FileInstance> projectCompUnits,
             List<FileInstance> projectCompUnitsWithoutTests,
             PomFileDTO pomFileDTO,
@@ -108,87 +80,50 @@ public class OrchestratorService {
     ) {
         String internalBasePackage = determineInternalBasePackage(pomFileDTO);
 
+        // Analiza todos los archivos y aplana la lista de clases procesadas
         return projectCompUnits.stream()
-                .map(compilationUnit -> createAnalysisDTO(
+                .flatMap(compilationUnit -> analysisService.analyseFileInstance(
                         compilationUnit,
                         projectCompUnitsWithoutTests,
                         internalBasePackage,
                         pomFileDTO,
                         includeNonInternalDependencies
-                ))
+                ).stream())
                 .toList();
     }
 
-    /**
-     * Creates an AnalysedFileInstance containing the analysis of the given file instance.
-     *
-     * @param compilationUnit The FileInstance to be analyzed.
-     * @param projectCompUnitsWithoutTests The list of FileInstance without test classes.
-     * @param internalBasePackage The internal base package as a String.
-     * @param pomFileDTO The PomFileDTO containing the parsed information from the pom.xml file.
-     * @param includeNonInternalDependencies Whether to include non-internal dependencies in the analysis.
-     * @return An AnalysedFileInstance containing the analysis.
-     */
-    private AnalysedFileInstance createAnalysisDTO(
-            FileInstance compilationUnit,
-            List<FileInstance> projectCompUnitsWithoutTests,
-            String internalBasePackage,
-            PomFileDTO pomFileDTO,
-            boolean includeNonInternalDependencies
-    ) {
-        ClassAnalysis analysis = analysisService.analyseFileInstance(
-                compilationUnit,
-                projectCompUnitsWithoutTests,
-                internalBasePackage,
-                pomFileDTO,
-                includeNonInternalDependencies
-        );
-
-        AnalysedFileInstance compUnitWithAnalysis = new AnalysedFileInstance();
-        compUnitWithAnalysis.setFileInstance(compilationUnit);
-        compUnitWithAnalysis.setClassAnalyses(List.of(analysis));
-        return compUnitWithAnalysis;
-    }
-
-    /**
-     * Organizes the given list of AnalysedFileInstance into a ProjectAnalysisInstance.
-     *
-     * @param analysedFileInstances The list of AnalysedFileInstance to be organized.
-     * @return A ProjectAnalysisInstance containing the organized file instances.
-     */
-    public ProjectAnalysisInstance organizeProjectAnalysis(List<AnalysedFileInstance> analysedFileInstances) {
+    public ProjectAnalysisInstance organizeProjectAnalysis(List<ProcessedClassInstance> processedClasses) {
         ProjectAnalysisInstance projectAnalysisInstance = new ProjectAnalysisInstance();
-        projectAnalysisInstance.setEntities(filterAnalysedUnitByAnnotation(analysedFileInstances, AnnotationType.ENTITY));
-        projectAnalysisInstance.setDocuments(filterAnalysedUnitByAnnotation(analysedFileInstances, AnnotationType.DOCUMENT));
-        projectAnalysisInstance.setRepositories(filterAnalysedUnitByAnnotation(analysedFileInstances, AnnotationType.REPOSITORY));
-        projectAnalysisInstance.setServices(filterAnalysedUnitByAnnotation(analysedFileInstances, AnnotationType.SERVICE));
-        projectAnalysisInstance.setControllers(filterAnalysedUnitByAnnotation(analysedFileInstances, AnnotationType.CONTROLLER));
-        projectAnalysisInstance.setTestClasses(filterAnalysedUnitByAnnotation(analysedFileInstances, AnnotationType.SPRINGBOOT_TEST));
+        projectAnalysisInstance.setEntities(filterByAnnotation(processedClasses, AnnotationType.ENTITY));
+        projectAnalysisInstance.setDocuments(filterByAnnotation(processedClasses, AnnotationType.DOCUMENT));
+        projectAnalysisInstance.setRepositories(filterByAnnotation(processedClasses, AnnotationType.REPOSITORY));
+        projectAnalysisInstance.setServices(filterByAnnotation(processedClasses, AnnotationType.SERVICE));
+        projectAnalysisInstance.setControllers(filterByAnnotation(processedClasses, AnnotationType.CONTROLLER));
+        projectAnalysisInstance.setTestClasses(filterByAnnotation(processedClasses, AnnotationType.SPRINGBOOT_TEST));
 
-        // Filter out units that don't have any of the AnnotationType annotations
-        List<AnalysedFileInstance> otherClasses = analysedFileInstances.stream()
-                .filter(dto -> dto.getFileInstance().getFileAnnotations().stream()
+        // Otras clases que no tienen ninguna de las anotaciones anteriores
+        List<ProcessedClassInstance> otherClasses = processedClasses.stream()
+                .filter(pci -> pci.getClassInstance().getAnnotations().stream()
                         .noneMatch(annotation ->
-                                Stream.of(AnnotationType.values())
-                                        .anyMatch(type -> type.getAnnotation().equalsIgnoreCase(annotation))))
+                                List.of(
+                                        AnnotationType.ENTITY.getAnnotation(),
+                                        AnnotationType.DOCUMENT.getAnnotation(),
+                                        AnnotationType.REPOSITORY.getAnnotation(),
+                                        AnnotationType.SERVICE.getAnnotation(),
+                                        AnnotationType.CONTROLLER.getAnnotation(),
+                                        AnnotationType.SPRINGBOOT_TEST.getAnnotation()
+                                ).contains(annotation)))
                 .toList();
         projectAnalysisInstance.setOtherClasses(otherClasses);
 
         return projectAnalysisInstance;
     }
 
-    /**
-     * Filters the given list of AnalysedFileInstance by the specified annotation type.
-     *
-     * @param units The list of AnalysedFileInstance to filter.
-     * @param annotationType The AnnotationType to filter by.
-     * @return A filtered list of AnalysedFileInstance.
-     */
-    private List<AnalysedFileInstance> filterAnalysedUnitByAnnotation(
-            List<AnalysedFileInstance> units,
+    private List<ProcessedClassInstance> filterByAnnotation(
+            List<ProcessedClassInstance> classes,
             AnnotationType annotationType) {
-        return units.stream()
-                .filter(dto -> dto.getFileInstance().getFileAnnotations().stream()
+        return classes.stream()
+                .filter(pci -> pci.getClassInstance().getAnnotations().stream()
                         .anyMatch(annotation -> annotation.equalsIgnoreCase(annotationType.getAnnotation())))
                 .toList();
     }
