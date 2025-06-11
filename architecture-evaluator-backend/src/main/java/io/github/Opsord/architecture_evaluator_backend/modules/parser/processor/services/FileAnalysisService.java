@@ -9,6 +9,7 @@ import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_sc
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -32,21 +33,24 @@ public class FileAnalysisService {
             return List.of();
         }
 
-        return fileInstance.getClasses().stream()
-                .map(classInstance -> {
-                    ClassAnalysis analysis = classAnalysisService.analyseClassInstance(
-                            classInstance,
-                            classifiedDependencies
-                    );
-                    analysis.setClassCount(metrics[0]);
-                    analysis.setInterfaceCount(metrics[1]);
-                    analysis.setStatementCount(metrics[2]);
-                    ProcessedClassInstance pci = new ProcessedClassInstance();
-                    pci.setClassInstance(classInstance);
-                    pci.setClassAnalysis(analysis);
-                    return pci;
-                })
-                .toList();
+        // Replace stream with direct list creation for better performance
+        List<ProcessedClassInstance> result = new ArrayList<>(fileInstance.getClasses().size());
+        for (var classInstance : fileInstance.getClasses()) {
+            ClassAnalysis analysis = classAnalysisService.analyseClassInstance(
+                    classInstance,
+                    classifiedDependencies
+            );
+            analysis.setClassCount(metrics[0]);
+            analysis.setInterfaceCount(metrics[1]);
+            analysis.setStatementCount(metrics[2]);
+
+            ProcessedClassInstance pci = new ProcessedClassInstance();
+            pci.setClassInstance(classInstance);
+            pci.setClassAnalysis(analysis);
+            result.add(pci);
+        }
+
+        return result;
     }
 
     // Returns int[]{classCount, interfaceCount, statementCount}
@@ -54,17 +58,27 @@ public class FileAnalysisService {
         int classCount = 0;
         int interfaceCount = 0;
         int statementCount = 0;
+
         if (fileInstance.getClasses() != null) {
-            classCount = (int) fileInstance.getClasses().stream()
-                    .filter(c -> c.getJavaFileType() != null && c.getJavaFileType().name().equals("CLASS"))
-                    .count();
-            interfaceCount = (int) fileInstance.getClasses().stream()
-                    .filter(c -> c.getJavaFileType() != null && c.getJavaFileType().name().equals("INTERFACE"))
-                    .count();
-            statementCount = fileInstance.getClasses().stream()
-                    .mapToInt(c -> c.getStatements() != null ? c.getStatements().size() : 0)
-                    .sum();
+            // Replace multiple streams with a single pass through the collection
+            for (var classInstance : fileInstance.getClasses()) {
+                // Count class types
+                if (classInstance.getJavaFileType() != null) {
+                    String type = classInstance.getJavaFileType().name();
+                    if ("CLASS".equals(type)) {
+                        classCount++;
+                    } else if ("INTERFACE".equals(type)) {
+                        interfaceCount++;
+                    }
+                }
+
+                // Count statements in a single pass
+                if (classInstance.getStatements() != null) {
+                    statementCount += classInstance.getStatements().size();
+                }
+            }
         }
+
         return new int[]{classCount, interfaceCount, statementCount};
     }
 
