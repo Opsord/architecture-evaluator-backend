@@ -1,18 +1,16 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.services;
 
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.CompilationUnitService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.analysis.AnalysedCompUnitDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto.CompUnitWithAnalysisDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto.ProjectAnalysisDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.summary.CompUnitSummaryDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.analysis.CompUnitAnalysisService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.summary.CompUnitSummaryService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_instance.FileInstance;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_instance.FileInstanceService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.ProcessedClassInstance;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.FileAnalysisService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.AnnotationType;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.pom.PomFileDTO;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.PomScannerService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.ScannerService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.SrcScannerService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.dto.CustomCompilationUnitDTO;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto.ProjectAnalysisInstance;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +19,6 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -32,177 +29,126 @@ public class OrchestratorService {
     private final ScannerService scannerService;
     private final PomScannerService pomScannerService;
     private final SrcScannerService srcScannerService;
-    private final CompilationUnitService compilationUnitService;
-    private final CompUnitAnalysisService analysisService;
-    private final CompUnitSummaryService summaryService;
+    private final FileAnalysisService analysisService;
+    private final FileInstanceService fileInstanceService;
 
-    /**
-     * Orchestrates the project analysis by scanning the project and its pom.xml file, analyzing the compilation units,
-     * and organizing the results into a ProjectAnalysisDTO.
-     *
-     * @param projectPath The path to the project to be analyzed.
-     * @param includeNonInternalDependencies Whether to include non-internal dependencies in the analysis.
-     * @return A ProjectAnalysisDTO containing the organized analysis results.
-     * @throws IOException If an error occurs during scanning or analysis.
-     */
-    public ProjectAnalysisDTO orchestrateProjectAnalysis(String projectPath, boolean includeNonInternalDependencies) throws IOException {
+    public ProjectAnalysisInstance orchestrateProjectAnalysis(String projectPath, boolean includeNonInternalDependencies) throws IOException {
         logger.info("Starting orchestration for project at path: {}", projectPath);
 
-        // Find the project root
         File projectRoot = scannerService.findProjectRoot(new File(projectPath));
         if (projectRoot == null) {
             logger.warn("Project root not found for path: {}", projectPath);
             throw new IOException("Project root not found");
         }
 
-        // Scan the src folder for Java files
         List<File> srcFiles = srcScannerService.scanSrcFolder(new File(projectRoot, "src"));
-        List<CustomCompilationUnitDTO> compilationUnits = srcScannerService.parseJavaFiles(srcFiles);
+        List<FileInstance> fileInstances = srcScannerService.parseJavaFiles(srcFiles, projectRoot);
+        if (fileInstances.isEmpty()) {
+            logger.warn("No Java files found in the project at path: {}", projectPath);
+            throw new IOException("No Java files found in the project");
+        }
 
-        // Filter out test classes
-        List<CustomCompilationUnitDTO> compilationUnitsWithoutTests = compilationUnits.stream()
-                .filter(unit -> unit.getAnnotations().stream().noneMatch(a -> a.getName().equalsIgnoreCase(AnnotationType.SPRINGBOOT_TEST.getAnnotation())))
+        // Filter files without tests
+        List<FileInstance> fileInstancesWithoutTests = fileInstances.stream()
+                .filter(unit -> unit.getFileAnnotations().stream()
+                        .noneMatch(a -> a.equalsIgnoreCase(AnnotationType.SPRINGBOOT_TEST.getAnnotation())))
                 .toList();
 
-        // Set the dependent classes for each compilation unit
-        compilationUnitsWithoutTests.forEach(unit ->
-                unit.setDependentClasses(
-                        compilationUnitService.getDependentClasses(
-                                unit.getClassName().isEmpty() ? "" : unit.getClassName().get(0),
-                                compilationUnitsWithoutTests
-                        )
-                )
-        );
-
-        // Parse the pom.xml file
         PomFileDTO pomFileDTO = pomScannerService.scanPomFile(projectRoot);
 
-        // Analyze the compilation units
-        List<CompUnitWithAnalysisDTO> analyzedUnits = analyzeCompilationUnits(
-                compilationUnits,
-                compilationUnitsWithoutTests,
+        // Populate class dependencies
+        populateClassDependencies(fileInstancesWithoutTests);
+
+        List<ProcessedClassInstance> processedClasses = analyzeCompilationUnits(
+                fileInstances,
                 pomFileDTO,
                 includeNonInternalDependencies
         );
 
-        // Organize the analyzed units into a ProjectAnalysisDTO
-        ProjectAnalysisDTO projectAnalysisDTO = organizeProjectAnalysis(analyzedUnits);
-        projectAnalysisDTO.setProjectPath(projectRoot.getAbsolutePath());
-        projectAnalysisDTO.setPomFile(pomFileDTO);
+        ProjectAnalysisInstance projectAnalysisInstance = organizeProjectAnalysis(processedClasses);
+        projectAnalysisInstance.setProjectName(projectRoot.getName());
+        projectAnalysisInstance.setPomFile(pomFileDTO);
 
         logger.info("Orchestration completed for project at path: {}", projectRoot.getAbsolutePath());
-        return projectAnalysisDTO;
+        return projectAnalysisInstance;
     }
 
-    /**
-     * Determines the internal base package from the given PomFileDTO.
-     *
-     * @param pomFileDTO The PomFileDTO containing the parsed information from the pom.xml file.
-     * @return The internal base package as a String.
-     */
     private String determineInternalBasePackage(PomFileDTO pomFileDTO) {
         return pomFileDTO.getGroupId();
     }
 
-    /**
-     * Analyzes a list of compilation units and returns a list of CompUnitWithAnalysisDTO.
-     *
-     * @param projectCompUnits The list of CustomCompilationUnitDTOs to be analyzed.
-     * @param pomFileDTO The PomFileDTO containing the parsed information from the pom.xml file.
-     * @param includeNonInternalDependencies Whether to include non-internal dependencies in the analysis.
-     * @return A list of CompUnitWithAnalysisDTO containing the analyzed compilation units.
-     */
-    private List<CompUnitWithAnalysisDTO> analyzeCompilationUnits(
-            List<CustomCompilationUnitDTO> projectCompUnits,
-            List<CustomCompilationUnitDTO> projectCompUnitsWithoutTests,
+    private List<ProcessedClassInstance> analyzeCompilationUnits(
+            List<FileInstance> projectCompUnits,
             PomFileDTO pomFileDTO,
             boolean includeNonInternalDependencies
     ) {
         String internalBasePackage = determineInternalBasePackage(pomFileDTO);
 
+        // Analyze all files and flatten the list of processed classes
         return projectCompUnits.stream()
-                .map(compilationUnit -> createAnalysisDTO(
+                .flatMap(compilationUnit -> analysisService.analyseFileInstance(
                         compilationUnit,
-                        projectCompUnitsWithoutTests,
                         internalBasePackage,
-                        pomFileDTO,
-                        includeNonInternalDependencies
-                ))
+                        pomFileDTO
+                ).stream())
                 .toList();
     }
 
-    /**
-     * Creates a CompUnitWithAnalysisDTO containing the summary and analysis of the given compilation unit.
-     *
-     * @param compilationUnit The CustomCompilationUnitDTO to be analyzed.
-     * @param internalBasePackage The internal base package as a String.
-     * @param pomFileDTO The PomFileDTO containing the parsed information from the pom.xml file.
-     * @param includeNonInternalDependencies Whether to include non-internal dependencies in the analysis.
-     * @return A CompUnitWithAnalysisDTO containing the summary and analysis.
-     */
-    private CompUnitWithAnalysisDTO createAnalysisDTO(
-            CustomCompilationUnitDTO compilationUnit,
-            List<CustomCompilationUnitDTO> projectCompUnitsWithoutTests,
-            String internalBasePackage,
-            PomFileDTO pomFileDTO,
-            boolean includeNonInternalDependencies
-    ) {
+    public ProjectAnalysisInstance organizeProjectAnalysis(List<ProcessedClassInstance> processedClasses) {
+        ProjectAnalysisInstance projectAnalysisInstance = new ProjectAnalysisInstance();
+        projectAnalysisInstance.setEntities(filterByAnnotation(processedClasses, AnnotationType.ENTITY));
+        projectAnalysisInstance.setDocuments(filterByAnnotation(processedClasses, AnnotationType.DOCUMENT));
+        projectAnalysisInstance.setRepositories(filterByAnnotation(processedClasses, AnnotationType.REPOSITORY));
+        projectAnalysisInstance.setServices(filterByAnnotation(processedClasses, AnnotationType.SERVICE));
+        projectAnalysisInstance.setControllers(filterByAnnotation(processedClasses, AnnotationType.CONTROLLER));
+        projectAnalysisInstance.setTestClasses(filterByAnnotation(processedClasses, AnnotationType.SPRINGBOOT_TEST));
 
-        // Generate the analysis
-        AnalysedCompUnitDTO analysis = analysisService.analyseCompUnit(
-                compilationUnit,
-                projectCompUnitsWithoutTests,
-                internalBasePackage,
-                pomFileDTO,
-                includeNonInternalDependencies
-        );
-
-        // Generate the summary
-        CompUnitSummaryDTO summary = summaryService.createSummary(compilationUnit);
-
-        // Create and return the DTO with both summary and analysis
-        CompUnitWithAnalysisDTO compUnitWithAnalysis = new CompUnitWithAnalysisDTO();
-        compUnitWithAnalysis.setCompUnitSummaryDTO(summary);
-        compUnitWithAnalysis.setAnalysis(analysis);
-        return compUnitWithAnalysis;
-    }
-
-    /**
-     * Organizes the given list of CompUnitWithAnalysisDTO into a ProjectAnalysisDTO.
-     *
-     * @param compUnitWithAnalysisDTOS The list of CompUnitWithAnalysisDTO to be organized.
-     * @return A ProjectAnalysisDTO containing the organized compilation units.
-     */
-    public ProjectAnalysisDTO organizeProjectAnalysis(List<CompUnitWithAnalysisDTO> compUnitWithAnalysisDTOS) {
-        ProjectAnalysisDTO projectAnalysisDTO = new ProjectAnalysisDTO();
-        projectAnalysisDTO.setEntities(filterAnalysedUnitByAnnotation(compUnitWithAnalysisDTOS, AnnotationType.ENTITY));
-        projectAnalysisDTO.setDocuments(filterAnalysedUnitByAnnotation(compUnitWithAnalysisDTOS, AnnotationType.DOCUMENT));
-        projectAnalysisDTO.setRepositories(filterAnalysedUnitByAnnotation(compUnitWithAnalysisDTOS, AnnotationType.REPOSITORY));
-        projectAnalysisDTO.setServices(filterAnalysedUnitByAnnotation(compUnitWithAnalysisDTOS, AnnotationType.SERVICE));
-        projectAnalysisDTO.setControllers(filterAnalysedUnitByAnnotation(compUnitWithAnalysisDTOS, AnnotationType.CONTROLLER));
-        projectAnalysisDTO.setTestClasses(filterAnalysedUnitByAnnotation(compUnitWithAnalysisDTOS, AnnotationType.SPRINGBOOT_TEST));
-
-        // Filter out units that don't have any of the AnnotationType annotations
-        List<CompUnitWithAnalysisDTO> otherClasses = compUnitWithAnalysisDTOS.stream()
-                .filter(dto -> dto.getCompUnitSummaryDTO().getAnnotationDTOS().stream()
+        // Other classes without any of the above annotations
+        List<ProcessedClassInstance> otherClasses = processedClasses.stream()
+                .filter(pci -> pci.getClassInstance().getAnnotations().stream()
                         .noneMatch(annotation ->
-                                Stream.of(AnnotationType.values())
-                                        .anyMatch(type -> type.getAnnotation().equalsIgnoreCase(annotation.getName()))))
+                                List.of(
+                                        AnnotationType.ENTITY.getAnnotation(),
+                                        AnnotationType.DOCUMENT.getAnnotation(),
+                                        AnnotationType.REPOSITORY.getAnnotation(),
+                                        AnnotationType.SERVICE.getAnnotation(),
+                                        AnnotationType.CONTROLLER.getAnnotation(),
+                                        AnnotationType.SPRINGBOOT_TEST.getAnnotation()
+                                ).contains(annotation)))
                 .toList();
-        projectAnalysisDTO.setOtherClasses(otherClasses);
+        projectAnalysisInstance.setOtherClasses(otherClasses);
 
-        return projectAnalysisDTO;
+        return projectAnalysisInstance;
     }
 
-    private List<CompUnitWithAnalysisDTO> filterAnalysedUnitByAnnotation(
-            List<CompUnitWithAnalysisDTO> units,
+    private List<ProcessedClassInstance> filterByAnnotation(
+            List<ProcessedClassInstance> classes,
             AnnotationType annotationType) {
-        return units.stream()
-                .filter(dto -> {
-                    // Check if the analysis contains the annotation category
-                    return dto.getCompUnitSummaryDTO().getAnnotationDTOS().stream()
-                            .anyMatch(category -> category.getName().equalsIgnoreCase(annotationType.getAnnotation()));
-                })
+        return classes.stream()
+                .filter(pci -> pci.getClassInstance().getAnnotations().stream()
+                        .anyMatch(annotation -> annotation.equalsIgnoreCase(annotationType.getAnnotation())))
                 .toList();
+    }
+
+    public void populateClassDependencies(List<FileInstance> allFiles) {
+        // 1. Set classDependencies for each class
+        List<ClassInstance> allClasses = allFiles.stream()
+                .flatMap(f -> f.getClasses().stream())
+                .toList();
+
+        for (ClassInstance cls : allClasses) {
+            List<String> dependencies = fileInstanceService.getDependentClassNamesFromClass(cls, allFiles);
+            cls.setClassDependencies(dependencies);
+        }
+
+        // 2. Set dependentClasses for each class
+        for (ClassInstance cls : allClasses) {
+            String className = cls.getName();
+            List<String> dependents = allClasses.stream()
+                    .filter(other -> other.getClassDependencies() != null && other.getClassDependencies().contains(className))
+                    .map(ClassInstance::getName)
+                    .toList();
+            cls.setDependentClasses(dependents);
+        }
     }
 }

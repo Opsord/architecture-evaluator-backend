@@ -1,0 +1,167 @@
+package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance;
+
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
+import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.JavaFileType;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.LayerAnnotation;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.annotation.AnnotationService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.constructor.ConstructorService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.interface_instance.InterfaceService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.method.MethodService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.statement.StatementService;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.variable.VariableService;
+import lombok.RequiredArgsConstructor;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+@RequiredArgsConstructor
+public class ClassVisitor extends VoidVisitorAdapter<List<ClassInstance>> {
+
+    private final MethodService methodService;
+    private final StatementService statementService;
+    private final VariableService variableService;
+    private final ConstructorService constructorService;
+    private final AnnotationService annotationService;
+    private final InterfaceService interfaceService;
+
+    @Override
+    public void visit(ClassOrInterfaceDeclaration declaration, List<ClassInstance> collector) {
+        super.visit(declaration, collector);
+        ClassInstance instance = new ClassInstance();
+        instance.setName(declaration.getNameAsString());
+
+        // Set JavaFileType
+        if (declaration.isInterface()) {
+            instance.setJavaFileType(JavaFileType.INTERFACE);
+        } else if (declaration.isEnumDeclaration()) {
+            instance.setJavaFileType(JavaFileType.ENUM);
+        } else if (declaration.isAnnotationDeclaration()) {
+            instance.setJavaFileType(JavaFileType.ANNOTATION);
+        } else if (declaration.isRecordDeclaration()) {
+            instance.setJavaFileType(JavaFileType.RECORD);
+        } else if (declaration.isAbstract()) {
+            instance.setJavaFileType(JavaFileType.ABSTRACT_CLASS);
+        } else {
+            instance.setJavaFileType(JavaFileType.CLASS);
+        }
+
+        // Annotations
+        instance.setAnnotations(annotationService.getAnnotationsFromClass(declaration));
+        List<String> annotations = instance.getAnnotations();
+        if (annotations != null) {
+            if (annotations.stream().anyMatch(a -> a.equalsIgnoreCase("Entity"))) {
+                instance.setLayerAnnotation(LayerAnnotation.ENTITY);
+            } else if (annotations.stream().anyMatch(a -> a.equalsIgnoreCase("Document"))) {
+                instance.setLayerAnnotation(LayerAnnotation.DOCUMENT);
+            } else if (annotations.stream().anyMatch(a -> a.equalsIgnoreCase("Service"))) {
+                instance.setLayerAnnotation(LayerAnnotation.SERVICE);
+            } else if (annotations.stream().anyMatch(a -> a.equalsIgnoreCase("Repository"))) {
+                instance.setLayerAnnotation(LayerAnnotation.REPOSITORY);
+            } else if (annotations.stream().anyMatch(a -> a.equalsIgnoreCase("Controller"))) {
+                instance.setLayerAnnotation(LayerAnnotation.CONTROLLER);
+            } else if (annotations.stream().anyMatch(a -> a.equalsIgnoreCase("SpringBootTest"))) {
+                instance.setLayerAnnotation(LayerAnnotation.TESTING);
+            } else {
+                instance.setLayerAnnotation(LayerAnnotation.OTHER);
+            }
+        } else {
+            instance.setLayerAnnotation(LayerAnnotation.UNKNOWN);
+        }
+
+        // Superclasses
+        instance.setSuperClasses(
+                declaration.getExtendedTypes().stream()
+                        .map(NodeWithSimpleName::getNameAsString)
+                        .collect(Collectors.toList())
+        );
+        // Implemented interfaces
+        instance.setImplementedInterfaces(
+                interfaceService.getImplementedInterfaces(declaration)
+        );
+        // Methods
+        instance.setMethods(methodService.getMethods(declaration));
+        // Statements
+        instance.setStatements(statementService.getStatements(declaration));
+        // Variables
+        instance.setClassVariables(variableService.getVariables(declaration));
+        // Constructors
+        instance.setConstructors(constructorService.getConstructors(declaration));
+        // Inner classes
+        List<ClassInstance> innerClasses = new ArrayList<>();
+        declaration.getMembers().forEach(member -> {
+            if (member instanceof ClassOrInterfaceDeclaration inner) {
+                inner.accept(this, innerClasses);
+            }
+        });
+        instance.setInnerClasses(innerClasses);
+
+        // Used classes
+        instance.setUsedClasses(collectUsedClasses(declaration));
+
+        // Calculate lines of code for the class
+        int linesOfCode = declaration.getRange()
+                .map(range -> range.end.line - range.begin.line + 1)
+                .orElse(0);
+        instance.setLinesOfCode(linesOfCode);
+
+        collector.add(instance);
+    }
+
+    private List<String> collectUsedClasses(ClassOrInterfaceDeclaration declaration) {
+        Set<String> usedClasses = new HashSet<>();
+
+        // Superclasses and interfaces
+        declaration.getExtendedTypes().forEach(type ->
+                usedClasses.addAll(extractClassNames(type.getNameAsString()))
+        );
+        declaration.getImplementedTypes().forEach(type ->
+                usedClasses.addAll(extractClassNames(type.getNameAsString()))
+        );
+
+        // Field types
+        declaration.getFields().forEach(field -> {
+            String elementType = field.getElementType().asString();
+            usedClasses.addAll(extractClassNames(elementType));
+        });
+
+        // Method return types and parameter types
+        declaration.getMethods().forEach(method -> {
+            usedClasses.addAll(extractClassNames(method.getType().asString()));
+            method.getParameters().forEach(param ->
+                    usedClasses.addAll(extractClassNames(param.getType().asString()))
+            );
+        });
+
+        // Constructor parameter types
+        declaration.getConstructors().forEach(constructor ->
+                constructor.getParameters().forEach(param ->
+                        usedClasses.addAll(extractClassNames(param.getType().asString()))
+                )
+        );
+
+        return new ArrayList<>(usedClasses);
+    }
+
+    // Utility to split generics, e.g., "List<InstallmentEntity>" -> ["List", "InstallmentEntity"]
+    private List<String> extractClassNames(String type) {
+        List<String> result = new ArrayList<>();
+        if (type == null) return result;
+        int genericStart = type.indexOf('<');
+        if (genericStart > 0) {
+            result.add(type.substring(0, genericStart));
+            String inner = type.substring(genericStart + 1, type.lastIndexOf('>'));
+            for (String part : inner.split(",")) {
+                result.addAll(extractClassNames(part.trim()));
+            }
+        } else {
+            result.add(type);
+        }
+        return result;
+    }
+}
