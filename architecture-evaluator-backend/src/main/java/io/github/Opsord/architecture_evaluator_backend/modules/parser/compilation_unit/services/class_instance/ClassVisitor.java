@@ -117,27 +117,51 @@ public class ClassVisitor extends VoidVisitorAdapter<List<ClassInstance>> {
         Set<String> usedClasses = new HashSet<>();
 
         // Superclasses and interfaces
-        declaration.getExtendedTypes().forEach(type -> usedClasses.add(type.getNameAsString()));
-        declaration.getImplementedTypes().forEach(type -> usedClasses.add(type.getNameAsString()));
+        declaration.getExtendedTypes().forEach(type ->
+                usedClasses.addAll(extractClassNames(type.getNameAsString()))
+        );
+        declaration.getImplementedTypes().forEach(type ->
+                usedClasses.addAll(extractClassNames(type.getNameAsString()))
+        );
 
         // Field types
         declaration.getFields().forEach(field -> {
             String elementType = field.getElementType().asString();
-            usedClasses.add(elementType);
+            usedClasses.addAll(extractClassNames(elementType));
         });
 
         // Method return types and parameter types
         declaration.getMethods().forEach(method -> {
-            usedClasses.add(method.getType().asString());
-            method.getParameters().forEach(param -> usedClasses.add(param.getType().asString()));
+            usedClasses.addAll(extractClassNames(method.getType().asString()));
+            method.getParameters().forEach(param ->
+                    usedClasses.addAll(extractClassNames(param.getType().asString()))
+            );
         });
 
         // Constructor parameter types
         declaration.getConstructors().forEach(constructor ->
-                constructor.getParameters().forEach(param -> usedClasses.add(param.getType().asString()))
+                constructor.getParameters().forEach(param ->
+                        usedClasses.addAll(extractClassNames(param.getType().asString()))
+                )
         );
 
-        // Convert Set to List for the result
         return new ArrayList<>(usedClasses);
+    }
+
+    // Utility to split generics, e.g., "List<InstallmentEntity>" -> ["List", "InstallmentEntity"]
+    private List<String> extractClassNames(String type) {
+        List<String> result = new ArrayList<>();
+        if (type == null) return result;
+        int genericStart = type.indexOf('<');
+        if (genericStart > 0) {
+            result.add(type.substring(0, genericStart));
+            String inner = type.substring(genericStart + 1, type.lastIndexOf('>'));
+            for (String part : inner.split(",")) {
+                result.addAll(extractClassNames(part.trim()));
+            }
+        } else {
+            result.add(type);
+        }
+        return result;
     }
 }

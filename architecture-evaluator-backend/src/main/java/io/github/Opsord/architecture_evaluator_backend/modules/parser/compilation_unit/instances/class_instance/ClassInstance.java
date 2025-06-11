@@ -29,7 +29,9 @@ public class ClassInstance {
     private List<ClassInstance> innerClasses;  // nested types
 
     // --- Dependencies within the class ---
-    private List<String> usedClasses;     // Only names
+    private List<String> usedClasses;     // Every class used in the class
+    private List<String> classDependencies; // Other program classes used in the class
+    private List<String> dependentClasses; // Classes that depend on this class
     private List<GenericUsageInstance> genericUsages;
 
     // --- Exception handling blocks (try/catch) ---

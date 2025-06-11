@@ -1,6 +1,8 @@
 package io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.services;
 
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_instance.FileInstance;
+import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_instance.FileInstanceService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.ProcessedClassInstance;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.FileAnalysisService;
 import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.dto.AnnotationType;
@@ -28,6 +30,7 @@ public class OrchestratorService {
     private final PomScannerService pomScannerService;
     private final SrcScannerService srcScannerService;
     private final FileAnalysisService analysisService;
+    private final FileInstanceService fileInstanceService;
 
     public ProjectAnalysisInstance orchestrateProjectAnalysis(String projectPath, boolean includeNonInternalDependencies) throws IOException {
         logger.info("Starting orchestration for project at path: {}", projectPath);
@@ -52,6 +55,9 @@ public class OrchestratorService {
                 .toList();
 
         PomFileDTO pomFileDTO = pomScannerService.scanPomFile(projectRoot);
+
+        // Populate class dependencies
+        populateClassDependencies(fileInstancesWithoutTests);
 
         List<ProcessedClassInstance> processedClasses = analyzeCompilationUnits(
                 fileInstances,
@@ -126,5 +132,27 @@ public class OrchestratorService {
                 .filter(pci -> pci.getClassInstance().getAnnotations().stream()
                         .anyMatch(annotation -> annotation.equalsIgnoreCase(annotationType.getAnnotation())))
                 .toList();
+    }
+
+    public void populateClassDependencies(List<FileInstance> allFiles) {
+        // 1. Set classDependencies for each class
+        List<ClassInstance> allClasses = allFiles.stream()
+                .flatMap(f -> f.getClasses().stream())
+                .toList();
+
+        for (ClassInstance cls : allClasses) {
+            List<String> dependencies = fileInstanceService.getDependentClassNamesFromClass(cls, allFiles);
+            cls.setClassDependencies(dependencies);
+        }
+
+        // 2. Set dependentClasses for each class
+        for (ClassInstance cls : allClasses) {
+            String className = cls.getName();
+            List<String> dependents = allClasses.stream()
+                    .filter(other -> other.getClassDependencies() != null && other.getClassDependencies().contains(className))
+                    .map(ClassInstance::getName)
+                    .toList();
+            cls.setDependentClasses(dependents);
+        }
     }
 }

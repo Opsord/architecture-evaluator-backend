@@ -46,16 +46,6 @@ public class ClassService {
                 .toList();
     }
 
-    public void setDependencies(ClassInstance classInstance, List<ClassInstance> allClasses) {
-        List<String> existingClassNames = getExistingClassNames(allClasses);
-
-        List<String> filteredUsedClasses = classInstance.getUsedClasses().stream()
-                .filter(existingClassNames::contains)
-                .toList();
-
-        classInstance.setUsedClasses(filteredUsedClasses);
-    }
-
     public List<String> getImportedClasses(ClassInstance classInstance, List<ClassInstance> allClasses) {
         List<String> existingClassNames = getExistingClassNames(allClasses);
         return classInstance.getUsedClasses().stream()
@@ -65,7 +55,7 @@ public class ClassService {
 
     public List<String> getDependentClasses(String className, List<ClassInstance> allClasses) {
         return allClasses.stream()
-                .filter(c -> c.getUsedClasses() != null && c.getUsedClasses().contains(className))
+                .filter(classInstance -> classInstance.getUsedClasses() != null && classInstance.getUsedClasses().contains(className))
                 .map(ClassInstance::getName)
                 .collect(Collectors.toList());
     }
