@@ -1,6 +1,6 @@
 package io.github.opsord.architecture_evaluator_backend.modules.parser.orchestrator.controllers;
 
-import io.github.opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto.ProjectAnalysisInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.orchestrator.instances.ProjectAnalysisInstance;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.orchestrator.services.FileManagerService;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.orchestrator.services.OrchestratorService;
 import lombok.RequiredArgsConstructor;
@@ -27,8 +27,7 @@ public class OrchestratorController {
             @RequestParam(defaultValue = "false") boolean includeNonInternalDependencies) {
         try {
             logger.info("Received request to analyze project at path: {}", projectPath);
-            ProjectAnalysisInstance result = orchestratorService.orchestrateProjectAnalysis(projectPath,
-                    includeNonInternalDependencies);
+            ProjectAnalysisInstance result = orchestratorService.orchestrateProjectAnalysis(projectPath);
             return ResponseEntity.ok(result);
         } catch (IOException e) {
             logger.error("Error analyzing project at path: {}", projectPath, e);
@@ -52,7 +51,7 @@ public class OrchestratorController {
 
             // Call the orchestration service
             ProjectAnalysisInstance result = orchestratorService
-                    .orchestrateProjectAnalysis(extractedDir.getAbsolutePath(), includeNonInternalDependencies);
+                    .orchestrateProjectAnalysis(extractedDir.getAbsolutePath());
 
             return ResponseEntity.ok(result);
         } catch (IOException e) {
@@ -80,8 +79,7 @@ public class OrchestratorController {
             File extractedDir = fileManagerService.extractArchive(zipFile);
 
             // Analyze the extracted project
-            ProjectAnalysisInstance result = orchestratorService.orchestrateProjectAnalysis(extractedDir.getPath(),
-                    includeNonInternalDependencies);
+            ProjectAnalysisInstance result = orchestratorService.orchestrateProjectAnalysis(extractedDir.getPath());
 
             return ResponseEntity.ok(result);
         } catch (IOException ioException) {

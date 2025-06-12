@@ -8,6 +8,12 @@ import org.springframework.stereotype.Service;
 @Service
 public class ComplexityMetricsService {
 
+    /**
+     * Calculates complexity metrics for a given class instance.
+     *
+     * @param classInstance the class instance to analyze
+     * @return a ComplexityMetricsDTO containing the calculated metrics
+     */
     public ComplexityMetricsDTO calculateComplexityMetrics(ClassInstance classInstance) {
         ComplexityMetricsDTO complexityMetrics = new ComplexityMetricsDTO();
 
@@ -42,24 +48,22 @@ public class ComplexityMetricsService {
     }
 
     /**
-     * Advertencia:
-     * Este modelo es una aproximación. En realidad, no todas las sentencias de
-     * control producen exactamente dos salidas
-     * y las sentencias simples (aunque forman parte del flujo) a veces se conectan
-     * de manera secuencial
-     * sin “rama” adicional.
-     * Por ello, esta fórmula te dará una cifra aproximada, pero podría diferir de
-     * lo que
-     * se obtendría si se construye el CFG real del método.
-     * La fórmula es:
+     * Warning:
+     * This model is an approximation. In reality, not all control statements produce exactly two outputs,
+     * and simple statements (although part of the flow) are sometimes connected sequentially
+     * without an additional "branch".
+     * Therefore, this formula will give you an approximate figure, but it may differ from what
+     * would be obtained if the real CFG (Control Flow Graph) of the method is built.
+     * The formula is:
      * CC = E - N + 2P
-     * donde:
-     * E = número de aristas (edges) en el grafo de control de flujo
-     * N = número de nodos (nodes) en el grafo de control de flujo
-     * P = número de componentes conectados (connected components) en el grafo de
-     * control de flujo
-     * En la mayoría de los casos, P = 1, ya que el método es un único bloque de
-     * código.
+     * where:
+     * E = number of edges in the control flow graph
+     * N = number of nodes in the control flow graph
+     * P = number of connected components in the control flow graph
+     * In most cases, P = 1, since the method is a single block of code.
+     *
+     * @param methodInstance the method instance to analyze
+     * @return the approximate McCabe cyclomatic complexity
      */
     private int calculateApproxMcCabeCC(MethodInstance methodInstance) {
         int nodes = methodInstance.getStatementsInfo().getStatements().size()
@@ -71,19 +75,27 @@ public class ComplexityMetricsService {
     }
 
     /**
-     * Improved Cyclomatic Complexity (ICC_p) = (N + S + I + O) / LOC
+     * Calculates the Improved Cyclomatic Complexity (ICC_p).
+     * Formula: ICC_p = (N + S + I + O) / LOC
      * where:
      * N = number of methods
      * S = sum of executable statements
      * I = maximum number of input parameters
      * O = maximum number of output parameters
      * LOC = total lines of code
+     *
+     * @param numberOfMethods number of methods in the class
+     * @param sumOfExecutableStatements total number of executable statements
+     * @param maxInputParameters maximum number of input parameters in any method
+     * @param maxOutputParameters maximum number of output parameters in any method
+     * @param totalLinesOfCode total lines of code in the class
+     * @return the improved cyclomatic complexity value
      */
     private double calculateImprovedCC(int numberOfMethods, int sumOfExecutableStatements, int maxInputParameters,
-            int maxOutputParameters, int totalLinesOfCode) {
+                                       int maxOutputParameters, int totalLinesOfCode) {
         return totalLinesOfCode > 0
                 ? (double) (numberOfMethods + sumOfExecutableStatements + maxInputParameters + maxOutputParameters)
-                        / totalLinesOfCode
+                / totalLinesOfCode
                 : 0;
     }
 }

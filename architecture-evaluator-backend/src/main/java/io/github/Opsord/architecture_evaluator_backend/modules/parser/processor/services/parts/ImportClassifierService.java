@@ -7,10 +7,7 @@ import io.github.opsord.architecture_evaluator_backend.modules.parser.project_sc
 import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.pom.PomFileInstance;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class ImportClassifierService {
@@ -26,17 +23,17 @@ public class ImportClassifierService {
      * @return a map where the key is the import category and the value is a list of
      *         import names in that category
      */
-    public Map<ImportCategory, List<String>> classifyDependencies(PomFileInstance pomFileInstance,
-            FileInstance fileInstance, String internalBasePackage) {
+    public Map<ImportCategory, List<String>> classifyDependencies(Optional<PomFileInstance> pomFileInstance,
+                                                                  FileInstance fileInstance, String internalBasePackage) {
         Map<ImportCategory, List<String>> classifiedDependencies = new HashMap<>();
 
         List<String> importedPackages = fileInstance.getImportedPackages();
-        ParentSectionDTO parentSection = pomFileInstance.getParentSection();
+        ParentSectionDTO parentSection = pomFileInstance.map(PomFileInstance::getParentSection).orElse(null);
 
         if (importedPackages != null) {
+            List<PomDependencyInstance> dependencies = pomFileInstance.map(PomFileInstance::getDependencies).orElse(Collections.emptyList());
             for (String importName : importedPackages) {
-                ImportCategory category = classify(importName, pomFileInstance.getDependencies(), parentSection,
-                        internalBasePackage);
+                ImportCategory category = classify(importName, dependencies, parentSection, internalBasePackage);
                 classifiedDependencies.computeIfAbsent(category, k -> new ArrayList<>()).add(importName);
             }
         }
@@ -54,7 +51,7 @@ public class ImportClassifierService {
      * @return the determined import category
      */
     public ImportCategory classify(String importName, List<PomDependencyInstance> knownDependencies,
-            ParentSectionDTO parentSection, String internalBasePackage) {
+                                   ParentSectionDTO parentSection, String internalBasePackage) {
         if (importName.startsWith("java.") || importName.startsWith("javax.")) {
             return ImportCategory.JAVA_STANDARD;
         } else if (importName.startsWith("spring") || importName.startsWith("org.springframework")) {

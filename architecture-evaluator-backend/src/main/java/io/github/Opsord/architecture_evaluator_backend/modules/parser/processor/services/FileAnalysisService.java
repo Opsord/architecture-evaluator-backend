@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -23,7 +24,7 @@ public class FileAnalysisService {
     public List<ProcessedClassInstance> analyseFileInstance(
             FileInstance fileInstance,
             String internalBasePackage,
-            PomFileInstance pomFileInstance) {
+            Optional<PomFileInstance> pomFileInstance) {
         int[] metrics = computeBasicMetrics(fileInstance);
         Map<ImportCategory, List<String>> classifiedDependencies = classifyFileDependencies(
                 pomFileInstance, fileInstance, internalBasePackage);
@@ -80,7 +81,7 @@ public class FileAnalysisService {
     }
 
     private Map<ImportCategory, List<String>> classifyFileDependencies(
-            PomFileInstance pomFileInstance,
+            Optional<PomFileInstance> pomFileInstance,
             FileInstance fileInstance,
             String internalBasePackage) {
         return importClassifierService.classifyDependencies(pomFileInstance, fileInstance, internalBasePackage);

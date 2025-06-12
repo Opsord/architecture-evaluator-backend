@@ -10,7 +10,7 @@ import io.github.opsord.architecture_evaluator_backend.modules.parser.project_sc
 import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.PomScannerService;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.ScannerService;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.SrcScannerService;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto.ProjectAnalysisInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.orchestrator.instances.ProjectAnalysisInstance;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -32,8 +33,7 @@ public class OrchestratorService {
     private final FileAnalysisService analysisService;
     private final FileInstanceService fileInstanceService;
 
-    public ProjectAnalysisInstance orchestrateProjectAnalysis(String projectPath,
-            boolean includeNonInternalDependencies) throws IOException {
+    public ProjectAnalysisInstance orchestrateProjectAnalysis(String projectPath) throws IOException {
         logger.info("Starting orchestration for project at path: {}", projectPath);
 
         File projectRoot = scannerService.findProjectRoot(new File(projectPath));
@@ -55,7 +55,7 @@ public class OrchestratorService {
                         .noneMatch(cls -> cls.getLayerAnnotation() == LayerAnnotation.TESTING))
                 .toList();
 
-        PomFileInstance pomFileInstance = pomScannerService.scanPomFile(projectRoot);
+        Optional<PomFileInstance> pomFileInstance = pomScannerService.scanPomFile(projectRoot);
 
         // Populate class dependencies
         populateClassDependencies(fileInstancesWithoutTests);
@@ -66,19 +66,20 @@ public class OrchestratorService {
 
         ProjectAnalysisInstance projectAnalysisInstance = organizeProjectAnalysis(processedClasses);
         projectAnalysisInstance.setProjectName(projectRoot.getName());
-        projectAnalysisInstance.setPomFile(pomFileInstance);
+        pomFileInstance.ifPresent(projectAnalysisInstance::setPomFile);
 
         logger.info("Orchestration completed for project at path: {}", projectRoot.getAbsolutePath());
         return projectAnalysisInstance;
     }
 
-    private String determineInternalBasePackage(PomFileInstance pomFileInstance) {
-        return pomFileInstance.getGroupId();
+    private String determineInternalBasePackage(Optional<PomFileInstance> pomFileInstance) {
+        return pomFileInstance.map(PomFileInstance::getGroupId)
+                .orElse("io.github.opsord.architecture_evaluator_backend");
     }
 
     private List<ProcessedClassInstance> analyzeCompilationUnits(
             List<FileInstance> projectCompUnits,
-            PomFileInstance pomFileInstance) {
+            Optional<PomFileInstance> pomFileInstance) {
         String internalBasePackage = determineInternalBasePackage(pomFileInstance);
 
         // Analyze all files and flatten the list of processed classes

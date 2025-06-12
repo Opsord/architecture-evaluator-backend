@@ -1,4 +1,4 @@
-package io.github.opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto;
+package io.github.opsord.architecture_evaluator_backend.modules.parser.orchestrator.instances;
 
 import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.ProcessedClassInstance;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.pom.PomFileInstance;
