@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 public class ClassVisitor extends VoidVisitorAdapter<List<ClassInstance>> {
@@ -30,13 +29,41 @@ public class ClassVisitor extends VoidVisitorAdapter<List<ClassInstance>> {
     private final AnnotationService annotationService;
     private final InterfaceService interfaceService;
 
+    private static final List<String> ENTITY_ANNOTATIONS = List.of("Entity");
+    private static final List<String> DOCUMENT_ANNOTATIONS = List.of("Document");
+    private static final List<String> SERVICE_ANNOTATIONS = List.of("Service");
+    private static final List<String> REPOSITORY_ANNOTATIONS = List.of("Repository");
+    private static final List<String> CONTROLLER_ANNOTATIONS = List.of("Controller", "RestController");
+    private static final List<String> TESTING_ANNOTATIONS = List.of("SpringBootTest");
+
+    /**
+     * Visits a class or interface declaration and populates a ClassInstance with its details.
+     * @param declaration The class or interface declaration node.
+     * @param collector The list to collect ClassInstance objects.
+     */
     @Override
     public void visit(ClassOrInterfaceDeclaration declaration, List<ClassInstance> collector) {
         super.visit(declaration, collector);
         ClassInstance instance = new ClassInstance();
         instance.setName(declaration.getNameAsString());
 
-        // Set JavaFileType
+        setJavaFileType(declaration, instance);
+        setAnnotationsAndLayer(declaration, instance);
+        setInheritance(declaration, instance);
+        setMembers(declaration, instance);
+        setInnerClasses(declaration, instance);
+        instance.setUsedClasses(collectUsedClasses(declaration));
+        setLinesOfCode(declaration, instance);
+
+        collector.add(instance);
+    }
+
+    /**
+     * Sets the Java file type (class, interface, enum, etc.) for the given instance.
+     * @param declaration The class or interface declaration node.
+     * @param instance The ClassInstance to update.
+     */
+    private void setJavaFileType(ClassOrInterfaceDeclaration declaration, ClassInstance instance) {
         if (declaration.isInterface()) {
             instance.setJavaFileType(JavaFileType.INTERFACE);
         } else if (declaration.isEnumDeclaration()) {
@@ -50,22 +77,28 @@ public class ClassVisitor extends VoidVisitorAdapter<List<ClassInstance>> {
         } else {
             instance.setJavaFileType(JavaFileType.CLASS);
         }
+    }
 
-        // Annotations
+    /**
+     * Extracts annotations from the class and determines its layer annotation.
+     * @param declaration The class or interface declaration node.
+     * @param instance The ClassInstance to update.
+     */
+    private void setAnnotationsAndLayer(ClassOrInterfaceDeclaration declaration, ClassInstance instance) {
         instance.setAnnotations(annotationService.getAnnotationsFromClass(declaration));
         List<String> annotations = instance.getAnnotations();
         if (annotations != null) {
-            if (annotations.stream().anyMatch(a -> a.equalsIgnoreCase("Entity"))) {
+            if (annotations.stream().anyMatch(ENTITY_ANNOTATIONS::contains)) {
                 instance.setLayerAnnotation(LayerAnnotation.ENTITY);
-            } else if (annotations.stream().anyMatch(a -> a.equalsIgnoreCase("Document"))) {
+            } else if (annotations.stream().anyMatch(DOCUMENT_ANNOTATIONS::contains)) {
                 instance.setLayerAnnotation(LayerAnnotation.DOCUMENT);
-            } else if (annotations.stream().anyMatch(a -> a.equalsIgnoreCase("Service"))) {
+            } else if (annotations.stream().anyMatch(SERVICE_ANNOTATIONS::contains)) {
                 instance.setLayerAnnotation(LayerAnnotation.SERVICE);
-            } else if (annotations.stream().anyMatch(a -> a.equalsIgnoreCase("Repository"))) {
+            } else if (annotations.stream().anyMatch(REPOSITORY_ANNOTATIONS::contains)) {
                 instance.setLayerAnnotation(LayerAnnotation.REPOSITORY);
-            } else if (annotations.stream().anyMatch(a -> a.equalsIgnoreCase("Controller"))) {
+            } else if (annotations.stream().anyMatch(CONTROLLER_ANNOTATIONS::contains)) {
                 instance.setLayerAnnotation(LayerAnnotation.CONTROLLER);
-            } else if (annotations.stream().anyMatch(a -> a.equalsIgnoreCase("SpringBootTest"))) {
+            } else if (annotations.stream().anyMatch(TESTING_ANNOTATIONS::contains)) {
                 instance.setLayerAnnotation(LayerAnnotation.TESTING);
             } else {
                 instance.setLayerAnnotation(LayerAnnotation.OTHER);
@@ -73,24 +106,40 @@ public class ClassVisitor extends VoidVisitorAdapter<List<ClassInstance>> {
         } else {
             instance.setLayerAnnotation(LayerAnnotation.UNKNOWN);
         }
+    }
 
-        // Superclasses
+    /**
+     * Sets the superclasses and implemented interfaces for the given instance.
+     * @param declaration The class or interface declaration node.
+     * @param instance The ClassInstance to update.
+     */
+    private void setInheritance(ClassOrInterfaceDeclaration declaration, ClassInstance instance) {
         instance.setSuperClasses(
                 declaration.getExtendedTypes().stream()
                         .map(NodeWithSimpleName::getNameAsString)
-                        .collect(Collectors.toList()));
-        // Implemented interfaces
+                        .toList());
         instance.setImplementedInterfaces(
                 interfaceService.getImplementedInterfaces(declaration));
-        // Methods
+    }
+
+    /**
+     * Sets the members (methods, statements, variables, constructors) for the given instance.
+     * @param declaration The class or interface declaration node.
+     * @param instance The ClassInstance to update.
+     */
+    private void setMembers(ClassOrInterfaceDeclaration declaration, ClassInstance instance) {
         instance.setMethods(methodService.getMethods(declaration));
-        // Statements
         instance.setStatements(statementService.getStatements(declaration));
-        // Variables
         instance.setClassVariables(variableService.getVariables(declaration));
-        // Constructors
         instance.setConstructors(constructorService.getConstructors(declaration));
-        // Inner classes
+    }
+
+    /**
+     * Recursively collects and sets inner classes for the given instance.
+     * @param declaration The class or interface declaration node.
+     * @param instance The ClassInstance to update.
+     */
+    private void setInnerClasses(ClassOrInterfaceDeclaration declaration, ClassInstance instance) {
         List<ClassInstance> innerClasses = new ArrayList<>();
         declaration.getMembers().forEach(member -> {
             if (member instanceof ClassOrInterfaceDeclaration inner) {
@@ -98,19 +147,25 @@ public class ClassVisitor extends VoidVisitorAdapter<List<ClassInstance>> {
             }
         });
         instance.setInnerClasses(innerClasses);
+    }
 
-        // Used classes
-        instance.setUsedClasses(collectUsedClasses(declaration));
-
-        // Calculate lines of code for the class
+    /**
+     * Sets the lines of code metric for the given instance.
+     * @param declaration The class or interface declaration node.
+     * @param instance The ClassInstance to update.
+     */
+    private void setLinesOfCode(ClassOrInterfaceDeclaration declaration, ClassInstance instance) {
         int linesOfCode = declaration.getRange()
                 .map(range -> range.end.line - range.begin.line + 1)
                 .orElse(0);
         instance.setLinesOfCode(linesOfCode);
-
-        collector.add(instance);
     }
 
+    /**
+     * Collects all class names used in the declaration (superclasses, interfaces, fields, methods, constructors).
+     * @param declaration The class or interface declaration node.
+     * @return List of used class names.
+     */
     private List<String> collectUsedClasses(ClassOrInterfaceDeclaration declaration) {
         Set<String> usedClasses = new HashSet<>();
 
@@ -138,8 +193,12 @@ public class ClassVisitor extends VoidVisitorAdapter<List<ClassInstance>> {
         return new ArrayList<>(usedClasses);
     }
 
-    // Utility to split generics, e.g., "List<InstallmentEntity>" -> ["List",
-    // "InstallmentEntity"]
+    /**
+     * Utility to extract class names from a type string, including generics.
+     * For example, "List<InstallmentEntity>" returns ["List", "InstallmentEntity"].
+     * @param type The type string.
+     * @return List of class names.
+     */
     private List<String> extractClassNames(String type) {
         List<String> result = new ArrayList<>();
         if (type == null)
