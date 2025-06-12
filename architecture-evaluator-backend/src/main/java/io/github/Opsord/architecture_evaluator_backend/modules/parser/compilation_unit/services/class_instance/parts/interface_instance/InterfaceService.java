@@ -1,5 +1,5 @@
 // InterfaceService.java
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.interface_instance;
+package io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.interface_instance;
 
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import org.springframework.stereotype.Service;

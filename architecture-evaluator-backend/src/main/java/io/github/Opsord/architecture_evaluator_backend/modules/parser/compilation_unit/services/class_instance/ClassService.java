@@ -1,13 +1,13 @@
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance;
+package io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance;
 
 import com.github.javaparser.ast.CompilationUnit;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.annotation.AnnotationService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.constructor.ConstructorService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.interface_instance.InterfaceService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.method.MethodService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.statement.StatementService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.variable.VariableService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.annotation.AnnotationService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.constructor.ConstructorService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.interface_instance.InterfaceService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.method.MethodService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.statement.StatementService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.variable.VariableService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -34,8 +34,7 @@ public class ClassService {
                 variableService,
                 constructorService,
                 annotationService,
-                interfaceService
-                );
+                interfaceService);
         compilationUnit.accept(visitor, classInstances);
         return classInstances;
     }
@@ -55,7 +54,8 @@ public class ClassService {
 
     public List<String> getDependentClasses(String className, List<ClassInstance> allClasses) {
         return allClasses.stream()
-                .filter(classInstance -> classInstance.getUsedClasses() != null && classInstance.getUsedClasses().contains(className))
+                .filter(classInstance -> classInstance.getUsedClasses() != null
+                        && classInstance.getUsedClasses().contains(className))
                 .map(ClassInstance::getName)
                 .collect(Collectors.toList());
     }

@@ -1,6 +1,6 @@
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto;
+package io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto;
 
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
 import lombok.Data;
 
 @Data

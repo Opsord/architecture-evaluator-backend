@@ -1,10 +1,10 @@
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.constructor;
+package io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.constructor;
 
 import com.github.javaparser.ast.body.ConstructorDeclaration;
 import com.github.javaparser.ast.nodeTypes.NodeWithName;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.ConstructorInstance;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.ParameterInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.ConstructorInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.ParameterInstance;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,14 +23,15 @@ public class ConstructorVisitor extends VoidVisitorAdapter<List<ConstructorInsta
                     param.setName(p.getNameAsString());
                     param.setType(p.getType().asString());
                     param.setAnnotations(
-                            p.getAnnotations().stream().map(NodeWithName::getNameAsString).collect(Collectors.toList())
-                    );
+                            p.getAnnotations().stream().map(NodeWithName::getNameAsString)
+                                    .collect(Collectors.toList()));
                     return param;
-                }).collect(Collectors.toList())
-        );
-        ci.setAnnotations(constructor.getAnnotations().stream().map(NodeWithName::getNameAsString).collect(Collectors.toList()));
+                }).collect(Collectors.toList()));
+        ci.setAnnotations(
+                constructor.getAnnotations().stream().map(NodeWithName::getNameAsString).collect(Collectors.toList()));
         ci.setModifiers(constructor.getModifiers().stream().map(Object::toString).collect(Collectors.toList()));
-        ci.setThrownExceptions(constructor.getThrownExceptions().stream().map(Object::toString).collect(Collectors.toList()));
+        ci.setThrownExceptions(
+                constructor.getThrownExceptions().stream().map(Object::toString).collect(Collectors.toList()));
         ci.setBody(constructor.getBody().toString());
         ci.setLineCount(constructor.getBody().getStatements().size());
         // Comments can be added if needed

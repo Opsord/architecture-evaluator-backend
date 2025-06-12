@@ -1,4 +1,4 @@
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services;
+package io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,15 +17,15 @@ public class ScannerService {
     // -------------------------------------------------------------------------
     private static final Set<String> DEFAULT_IGNORED_FOLDERS = Set.of(
             "target", "build", ".git", "node_modules",
-            ".idea", ".vscode", "out", "dist"
-    );
+            ".idea", ".vscode", "out", "dist");
 
     // -------------------------------------------------------------------------
     // Public Methods
     // -------------------------------------------------------------------------
 
     /**
-     * Finds the root directory of a project by looking for a `pom.xml` file and a `src` folder.
+     * Finds the root directory of a project by looking for a `pom.xml` file and a
+     * `src` folder.
      *
      * @param file The starting file or directory.
      * @return The project root directory, or null if not found.
@@ -46,7 +46,8 @@ public class ScannerService {
 
     public File findPomFile(File projectDirectory) {
         if (projectDirectory == null || !projectDirectory.isDirectory()) {
-            logger.warn("Invalid project directory: {}", projectDirectory != null ? projectDirectory.getAbsolutePath() : "null");
+            logger.warn("Invalid project directory: {}",
+                    projectDirectory != null ? projectDirectory.getAbsolutePath() : "null");
             return null;
         }
 
@@ -85,7 +86,8 @@ public class ScannerService {
     }
 
     /**
-     * Checks if a directory is a project root by verifying the presence of `pom.xml` and `src`.
+     * Checks if a directory is a project root by verifying the presence of
+     * `pom.xml` and `src`.
      *
      * @param directory The directory to check.
      * @return True if the directory is a project root, false otherwise.

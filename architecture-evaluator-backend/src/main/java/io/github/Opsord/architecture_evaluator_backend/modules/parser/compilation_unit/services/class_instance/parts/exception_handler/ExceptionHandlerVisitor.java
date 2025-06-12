@@ -1,10 +1,10 @@
 // ExceptionHandlerVisitor.java
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.exception_handler;
+package io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.exception_handler;
 
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.stmt.TryStmt;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.ExceptionHandlingInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.ExceptionHandlingInstance;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,7 +19,8 @@ public class ExceptionHandlerVisitor extends VoidVisitorAdapter<List<ExceptionHa
         exceptionHandlingInstance.setCatchBlocks(tryStmt.getCatchClauses().stream()
                 .map(Node::toString)
                 .collect(Collectors.toList()));
-        exceptionHandlingInstance.setFinallyBlock(tryStmt.getFinallyBlock().map(finallyBlock -> finallyBlock.toString()).orElse(null));
+        exceptionHandlingInstance
+                .setFinallyBlock(tryStmt.getFinallyBlock().map(finallyBlock -> finallyBlock.toString()).orElse(null));
         collector.add(exceptionHandlingInstance);
     }
 }

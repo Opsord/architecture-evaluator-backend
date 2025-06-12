@@ -1,17 +1,17 @@
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance;
+package io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance;
 
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.JavaFileType;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.LayerAnnotation;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.annotation.AnnotationService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.constructor.ConstructorService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.interface_instance.InterfaceService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.method.MethodService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.statement.StatementService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.variable.VariableService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.JavaFileType;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.LayerAnnotation;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.annotation.AnnotationService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.constructor.ConstructorService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.interface_instance.InterfaceService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.method.MethodService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.statement.StatementService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.variable.VariableService;
 import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
@@ -78,12 +78,10 @@ public class ClassVisitor extends VoidVisitorAdapter<List<ClassInstance>> {
         instance.setSuperClasses(
                 declaration.getExtendedTypes().stream()
                         .map(NodeWithSimpleName::getNameAsString)
-                        .collect(Collectors.toList())
-        );
+                        .collect(Collectors.toList()));
         // Implemented interfaces
         instance.setImplementedInterfaces(
-                interfaceService.getImplementedInterfaces(declaration)
-        );
+                interfaceService.getImplementedInterfaces(declaration));
         // Methods
         instance.setMethods(methodService.getMethods(declaration));
         // Statements
@@ -117,12 +115,9 @@ public class ClassVisitor extends VoidVisitorAdapter<List<ClassInstance>> {
         Set<String> usedClasses = new HashSet<>();
 
         // Superclasses and interfaces
-        declaration.getExtendedTypes().forEach(type ->
-                usedClasses.addAll(extractClassNames(type.getNameAsString()))
-        );
-        declaration.getImplementedTypes().forEach(type ->
-                usedClasses.addAll(extractClassNames(type.getNameAsString()))
-        );
+        declaration.getExtendedTypes().forEach(type -> usedClasses.addAll(extractClassNames(type.getNameAsString())));
+        declaration.getImplementedTypes()
+                .forEach(type -> usedClasses.addAll(extractClassNames(type.getNameAsString())));
 
         // Field types
         declaration.getFields().forEach(field -> {
@@ -133,25 +128,22 @@ public class ClassVisitor extends VoidVisitorAdapter<List<ClassInstance>> {
         // Method return types and parameter types
         declaration.getMethods().forEach(method -> {
             usedClasses.addAll(extractClassNames(method.getType().asString()));
-            method.getParameters().forEach(param ->
-                    usedClasses.addAll(extractClassNames(param.getType().asString()))
-            );
+            method.getParameters().forEach(param -> usedClasses.addAll(extractClassNames(param.getType().asString())));
         });
 
         // Constructor parameter types
-        declaration.getConstructors().forEach(constructor ->
-                constructor.getParameters().forEach(param ->
-                        usedClasses.addAll(extractClassNames(param.getType().asString()))
-                )
-        );
+        declaration.getConstructors().forEach(constructor -> constructor.getParameters()
+                .forEach(param -> usedClasses.addAll(extractClassNames(param.getType().asString()))));
 
         return new ArrayList<>(usedClasses);
     }
 
-    // Utility to split generics, e.g., "List<InstallmentEntity>" -> ["List", "InstallmentEntity"]
+    // Utility to split generics, e.g., "List<InstallmentEntity>" -> ["List",
+    // "InstallmentEntity"]
     private List<String> extractClassNames(String type) {
         List<String> result = new ArrayList<>();
-        if (type == null) return result;
+        if (type == null)
+            return result;
         int genericStart = type.indexOf('<');
         if (genericStart > 0) {
             result.add(type.substring(0, genericStart));

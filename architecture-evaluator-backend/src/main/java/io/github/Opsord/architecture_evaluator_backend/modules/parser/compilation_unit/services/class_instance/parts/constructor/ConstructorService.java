@@ -1,7 +1,7 @@
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.constructor;
+package io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.constructor;
 
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.ConstructorInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.ConstructorInstance;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;

@@ -1,7 +1,7 @@
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.parts;
+package io.github.opsord.architecture_evaluator_backend.modules.parser.processor.services.parts;
 
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.parts.CouplingMetricsDTO;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.parts.CouplingMetricsDTO;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 
@@ -14,7 +14,7 @@ public class CouplingMetricsService {
     /**
      * Calculates the coupling metrics for a given class.
      */
-    public CouplingMetricsDTO calculateCouplingMetrics(ClassInstance classInstance){
+    public CouplingMetricsDTO calculateCouplingMetrics(ClassInstance classInstance) {
         int afferentCoupling = calculateAfferentCoupling(classInstance);
         int efferentCoupling = calculateEfferentCoupling(classInstance);
         double instability = calculateInstability(afferentCoupling, efferentCoupling);
@@ -30,9 +30,10 @@ public class CouplingMetricsService {
     /**
      * Efferent coupling: number of classes this class depends on.
      */
-    public int calculateEfferentCoupling(ClassInstance classInstance){
+    public int calculateEfferentCoupling(ClassInstance classInstance) {
         List<String> dependencies = classInstance.getClassDependencies();
-        if (dependencies == null) return 0;
+        if (dependencies == null)
+            return 0;
         return dependencies.size();
     }
 
@@ -41,7 +42,8 @@ public class CouplingMetricsService {
      */
     public int calculateAfferentCoupling(ClassInstance classInstance) {
         List<String> dependentClasses = classInstance.getDependentClasses();
-        if (dependentClasses == null) return 0;
+        if (dependentClasses == null)
+            return 0;
         return dependentClasses.size();
     }
 

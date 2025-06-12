@@ -8,7 +8,7 @@
 		<version>3.4.4</version>
 		<relativePath/> <!-- lookup parent from a repository -->
 	</parent>
-	<groupId>io.github.Opsord</groupId>
+	<groupId>io.github.opsord</groupId>
 	<artifactId>architecture-evaluator-backend</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Architecture Evaluator - Backend</name>

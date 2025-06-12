@@ -1,4 +1,4 @@
-package io.github.Opsord.architecture_evaluator_backend.test_codes;
+package io.github.opsord.architecture_evaluator_backend.test_codes;
 
 public class Sample01 {
     /**

@@ -1,9 +1,9 @@
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.parts;
+package io.github.opsord.architecture_evaluator_backend.modules.parser.processor.services.parts;
 
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.method.MethodInstance;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.statement.StatementService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.parts.ProgramMetricsDTO;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.method.MethodInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.statement.StatementService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.parts.ProgramMetricsDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

@@ -1,12 +1,12 @@
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_instance;
+package io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_instance;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_instance.FileInstance;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.ClassService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.annotation.AnnotationService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_instance.package_part.PackageService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_instance.FileInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.ClassService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.annotation.AnnotationService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_instance.package_part.PackageService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +30,8 @@ public class FileInstanceService {
     private final AnnotationService annotationService;
 
     /**
-     * Parses a Java file and returns a FileInstance representing its structure and metadata.
+     * Parses a Java file and returns a FileInstance representing its structure and
+     * metadata.
      *
      * @param file The Java source file to parse.
      * @return The parsed FileInstance.
@@ -112,7 +113,8 @@ public class FileInstanceService {
     }
 
     /**
-     * Returns a list of FileInstance objects that are imported by the given FileInstance.
+     * Returns a list of FileInstance objects that are imported by the given
+     * FileInstance.
      *
      * @param fileInstance The FileInstance to analyze.
      * @param allFiles     The list of all FileInstance objects in the project.
@@ -132,7 +134,8 @@ public class FileInstanceService {
                                 .filter(file -> file.getPackageName().equals(packageName));
                     } else {
                         return allFiles.stream()
-                                .filter(file -> file.getClasses().stream().anyMatch(cls -> imported.equals(cls.getName())));
+                                .filter(file -> file.getClasses().stream()
+                                        .anyMatch(cls -> imported.equals(cls.getName())));
                     }
                 })
                 .distinct()
@@ -173,7 +176,8 @@ public class FileInstanceService {
     }
 
     /**
-     * Returns a list of dependent class names used by all classes in a given FileInstance.
+     * Returns a list of dependent class names used by all classes in a given
+     * FileInstance.
      *
      * @param fileInstance The FileInstance to analyze.
      * @param allFiles     The list of all FileInstance objects in the project.
@@ -190,13 +194,15 @@ public class FileInstanceService {
     }
 
     /**
-     * Returns a list of dependent ClassInstance objects used by all classes in a given FileInstance.
+     * Returns a list of dependent ClassInstance objects used by all classes in a
+     * given FileInstance.
      *
      * @param fileInstance The FileInstance to analyze.
      * @param allFiles     The list of all FileInstance objects in the project.
      * @return A list of dependent ClassInstance objects.
      */
-    public List<ClassInstance> getDependentClassInstancesFromFile(FileInstance fileInstance, List<FileInstance> allFiles) {
+    public List<ClassInstance> getDependentClassInstancesFromFile(FileInstance fileInstance,
+            List<FileInstance> allFiles) {
         return fileInstance.getClasses().stream()
                 .flatMap(cls -> getDependentClassNamesFromClass(cls, allFiles).stream())
                 .distinct()
@@ -211,14 +217,16 @@ public class FileInstanceService {
      * Returns a list of FileInstance objects that import a given class or package.
      *
      * @param targetClassOrPackage The class or package name to search for.
-     * @param allFiles             The list of all FileInstance objects in the project.
+     * @param allFiles             The list of all FileInstance objects in the
+     *                             project.
      * @return A list of FileInstance objects that import the target.
      */
     public List<FileInstance> getDependentFileInstances(String targetClassOrPackage, List<FileInstance> allFiles) {
         return allFiles.stream()
                 .filter(file -> file.getImportedPackages().stream()
                         .anyMatch(imported -> imported.equals(targetClassOrPackage) ||
-                                (imported.endsWith(".*") && targetClassOrPackage.startsWith(imported.substring(0, imported.length() - 2)))))
+                                (imported.endsWith(".*") && targetClassOrPackage
+                                        .startsWith(imported.substring(0, imported.length() - 2)))))
                 .distinct()
                 .toList();
     }

@@ -1,4 +1,4 @@
-package io.github.Opsord.architecture_evaluator_backend;
+package io.github.opsord.architecture_evaluator_backend;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

@@ -1,8 +1,8 @@
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services;
+package io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services;
 
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.pom.PomDependencyInstance;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.pom.ParentSectionDTO;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.pom.PomFileInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.pom.PomDependencyInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.pom.ParentSectionDTO;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.pom.PomFileInstance;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +26,8 @@ public class PomScannerService {
 
     public PomFileInstance scanPomFile(File projectDirectory) {
         if (projectDirectory == null || !projectDirectory.isDirectory()) {
-            logger.warn("Invalid project directory: {}", projectDirectory != null ? projectDirectory.getAbsolutePath() : "null");
+            logger.warn("Invalid project directory: {}",
+                    projectDirectory != null ? projectDirectory.getAbsolutePath() : "null");
             return null;
         }
 

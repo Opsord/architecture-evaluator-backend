@@ -1,16 +1,16 @@
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.method;
+package io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.method;
 
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.nodeTypes.NodeWithName;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.ParameterInstance;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.VariableInstance;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.method.MethodInstance;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.method.parts.BasicInfo;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.method.parts.MethodMetrics;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.method.parts.StatementsInfo;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.statement.StatementService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.variable.VariableVisitor;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.ParameterInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.VariableInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.method.MethodInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.method.parts.BasicInfo;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.method.parts.MethodMetrics;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.method.parts.StatementsInfo;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.statement.StatementService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.variable.VariableVisitor;
 import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
@@ -56,8 +56,7 @@ public class MethodVisitor extends VoidVisitorAdapter<List<MethodInstance>> {
             param.setName(p.getNameAsString());
             param.setType(p.getType().asString());
             param.setAnnotations(
-                    p.getAnnotations().stream().map(NodeWithName::getNameAsString).collect(Collectors.toList())
-            );
+                    p.getAnnotations().stream().map(NodeWithName::getNameAsString).collect(Collectors.toList()));
             return param;
         }).collect(Collectors.toList());
     }
@@ -79,7 +78,8 @@ public class MethodVisitor extends VoidVisitorAdapter<List<MethodInstance>> {
         int linesOfCode = method.getBody()
                 .map(body -> body.getTokenRange()
                         .map(tokens -> Math.toIntExact(StreamSupport.stream(tokens.spliterator(), false)
-                                .filter(token -> !token.toString().startsWith("//") && !token.toString().startsWith("/*"))
+                                .filter(token -> !token.toString().startsWith("//")
+                                        && !token.toString().startsWith("/*"))
                                 .map(token -> token.getRange().map(range -> range.begin.line).orElse(0))
                                 .distinct()
                                 .count()))

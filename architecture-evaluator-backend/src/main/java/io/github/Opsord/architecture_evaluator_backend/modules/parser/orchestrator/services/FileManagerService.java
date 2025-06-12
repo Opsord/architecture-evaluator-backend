@@ -1,4 +1,4 @@
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.services;
+package io.github.opsord.architecture_evaluator_backend.modules.parser.orchestrator.services;
 
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveStreamFactory;
@@ -30,7 +30,7 @@ public class FileManagerService {
 
         // Download the ZIP file
         try (InputStream in = new URL(zipUrl).openStream();
-             OutputStream out = new FileOutputStream(zipFile)) {
+                OutputStream out = new FileOutputStream(zipFile)) {
             in.transferTo(out);
         }
 
@@ -51,8 +51,8 @@ public class FileManagerService {
         }
 
         try (InputStream fis = new FileInputStream(archive);
-             BufferedInputStream bis = new BufferedInputStream(fis);
-             var archiveStream = new ArchiveStreamFactory().createArchiveInputStream(bis)) {
+                BufferedInputStream bis = new BufferedInputStream(fis);
+                var archiveStream = new ArchiveStreamFactory().createArchiveInputStream(bis)) {
 
             ArchiveEntry entry;
             while ((entry = archiveStream.getNextEntry()) != null) {

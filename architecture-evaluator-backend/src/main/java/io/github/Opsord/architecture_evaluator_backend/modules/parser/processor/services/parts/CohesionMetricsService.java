@@ -1,9 +1,9 @@
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.parts;
+package io.github.opsord.architecture_evaluator_backend.modules.parser.processor.services.parts;
 
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.VariableInstance;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.method.MethodInstance;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.parts.CohesionMetricsDTO;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.VariableInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.method.MethodInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.parts.CohesionMetricsDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -53,7 +53,10 @@ public class CohesionMetricsService {
         int connected = 0, disconnected = 0;
         for (int i = 0; i < nMethods; i++) {
             for (int j = i + 1; j < nMethods; j++) {
-                if (graph[i][j]) connected++; else disconnected++;
+                if (graph[i][j])
+                    connected++;
+                else
+                    disconnected++;
             }
         }
         return Math.max(disconnected - connected, 0);
@@ -69,7 +72,8 @@ public class CohesionMetricsService {
 
     private double calculateLCOM2(List<MethodInstance> methods, List<VariableInstance> vars) {
         int M = methods.size(), A = vars.size();
-        if (M <= 1 || A == 0) return 0.0;
+        if (M <= 1 || A == 0)
+            return 0.0;
 
         // Count accesses per variable
         Map<String, Long> accessCount = methods.stream()
@@ -82,7 +86,7 @@ public class CohesionMetricsService {
                 .mapToLong(v -> accessCount.getOrDefault(v.getName(), 0L))
                 .sum();
 
-        double lcom2 = 1.0 - (sumMAj / (double)(M * A));
+        double lcom2 = 1.0 - (sumMAj / (double) (M * A));
         return Math.max(0.0, lcom2);
     }
 
@@ -94,7 +98,8 @@ public class CohesionMetricsService {
         int n = methods.size();
         boolean[][] graph = new boolean[n][n];
         // copy base
-        for (int i = 0; i < n; i++) graph[i] = Arrays.copyOf(baseGraph[i], n);
+        for (int i = 0; i < n; i++)
+            graph[i] = Arrays.copyOf(baseGraph[i], n);
 
         // add method-call edges (undirected)
         for (int i = 0; i < n; i++) {
@@ -109,7 +114,8 @@ public class CohesionMetricsService {
     }
 
     private Set<String> extractCalledNames(MethodInstance methodInstance) {
-        if (methodInstance.getStatementsInfo() == null) return Collections.emptySet();
+        if (methodInstance.getStatementsInfo() == null)
+            return Collections.emptySet();
         return methodInstance.getStatementsInfo().getStatements().stream()
                 .filter(s -> s.getType().name().equals("EXPRESSION"))
                 .map(s -> s.getStructure().replaceAll("\\s*\\(\\)\\s*;", ""))
@@ -122,7 +128,8 @@ public class CohesionMetricsService {
 
     private double calculateLCOM5(List<MethodInstance> methods, List<VariableInstance> vars) {
         int M = methods.size(), A = vars.size();
-        if (M == 0 || A == 0) return 0.0;
+        if (M == 0 || A == 0)
+            return 0.0;
 
         long totalDistinct = methods.stream()
                 .mapToLong(m -> m.getMethodVariables().stream()
@@ -131,7 +138,7 @@ public class CohesionMetricsService {
                         .distinct().count())
                 .sum();
 
-        double lcom5 = 1.0 - (totalDistinct / (double)(M * A));
+        double lcom5 = 1.0 - (totalDistinct / (double) (M * A));
         return Math.max(0.0, lcom5);
     }
 
@@ -151,7 +158,8 @@ public class CohesionMetricsService {
                 Set<String> f2 = methods.get(j).getMethodVariables().stream()
                         .map(VariableInstance::getName).filter(varNames::contains).collect(Collectors.toSet());
                 f1.retainAll(f2);
-                if (!f1.isEmpty()) graph[i][j] = graph[j][i] = true;
+                if (!f1.isEmpty())
+                    graph[i][j] = graph[j][i] = true;
             }
         }
         return graph;

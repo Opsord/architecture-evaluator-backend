@@ -1,11 +1,11 @@
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services;
+package io.github.opsord.architecture_evaluator_backend.modules.parser.processor.services;
 
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_instance.FileInstance;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.ClassAnalysis;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.ProcessedClassInstance;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.parts.ImportCategory;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.parts.ImportClassifierService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.pom.PomFileInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_instance.FileInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.ClassAnalysis;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.ProcessedClassInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.parts.ImportCategory;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.services.parts.ImportClassifierService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.pom.PomFileInstance;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,12 +23,10 @@ public class FileAnalysisService {
     public List<ProcessedClassInstance> analyseFileInstance(
             FileInstance fileInstance,
             String internalBasePackage,
-            PomFileInstance pomFileInstance
-    ) {
+            PomFileInstance pomFileInstance) {
         int[] metrics = computeBasicMetrics(fileInstance);
         Map<ImportCategory, List<String>> classifiedDependencies = classifyFileDependencies(
-                pomFileInstance, fileInstance, internalBasePackage
-        );
+                pomFileInstance, fileInstance, internalBasePackage);
         if (fileInstance.getClasses() == null || fileInstance.getClasses().isEmpty()) {
             return List.of();
         }
@@ -38,8 +36,7 @@ public class FileAnalysisService {
         for (var classInstance : fileInstance.getClasses()) {
             ClassAnalysis analysis = classAnalysisService.analyseClassInstance(
                     classInstance,
-                    classifiedDependencies
-            );
+                    classifiedDependencies);
             analysis.setClassCount(metrics[0]);
             analysis.setInterfaceCount(metrics[1]);
             analysis.setStatementCount(metrics[2]);
@@ -79,14 +76,13 @@ public class FileAnalysisService {
             }
         }
 
-        return new int[]{classCount, interfaceCount, statementCount};
+        return new int[] { classCount, interfaceCount, statementCount };
     }
 
     private Map<ImportCategory, List<String>> classifyFileDependencies(
             PomFileInstance pomFileInstance,
             FileInstance fileInstance,
-            String internalBasePackage
-    ) {
+            String internalBasePackage) {
         return importClassifierService.classifyDependencies(pomFileInstance, fileInstance, internalBasePackage);
     }
 }

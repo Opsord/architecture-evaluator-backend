@@ -1,16 +1,16 @@
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.services;
+package io.github.opsord.architecture_evaluator_backend.modules.parser.orchestrator.services;
 
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.LayerAnnotation;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_instance.FileInstance;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_instance.FileInstanceService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.ProcessedClassInstance;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.services.FileAnalysisService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.pom.PomFileInstance;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.PomScannerService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.ScannerService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.SrcScannerService;
-import io.github.Opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto.ProjectAnalysisInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.LayerAnnotation;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_instance.FileInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_instance.FileInstanceService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.ProcessedClassInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.services.FileAnalysisService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.pom.PomFileInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.PomScannerService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.ScannerService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.SrcScannerService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.orchestrator.dto.ProjectAnalysisInstance;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +32,8 @@ public class OrchestratorService {
     private final FileAnalysisService analysisService;
     private final FileInstanceService fileInstanceService;
 
-    public ProjectAnalysisInstance orchestrateProjectAnalysis(String projectPath, boolean includeNonInternalDependencies) throws IOException {
+    public ProjectAnalysisInstance orchestrateProjectAnalysis(String projectPath,
+            boolean includeNonInternalDependencies) throws IOException {
         logger.info("Starting orchestration for project at path: {}", projectPath);
 
         File projectRoot = scannerService.findProjectRoot(new File(projectPath));
@@ -85,8 +86,7 @@ public class OrchestratorService {
                 .flatMap(compilationUnit -> analysisService.analyseFileInstance(
                         compilationUnit,
                         internalBasePackage,
-                        pomFileInstance
-                ).stream())
+                        pomFileInstance).stream())
                 .toList();
     }
 
@@ -131,7 +131,8 @@ public class OrchestratorService {
         for (ClassInstance cls : allClasses) {
             String className = cls.getName();
             List<String> dependents = allClasses.stream()
-                    .filter(other -> other.getClassDependencies() != null && other.getClassDependencies().contains(className))
+                    .filter(other -> other.getClassDependencies() != null
+                            && other.getClassDependencies().contains(className))
                     .map(ClassInstance::getName)
                     .toList();
             cls.setDependentClasses(dependents);

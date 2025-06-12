@@ -1,4 +1,4 @@
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.processor.dto.parts;
+package io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.parts;
 
 import lombok.Data;
 

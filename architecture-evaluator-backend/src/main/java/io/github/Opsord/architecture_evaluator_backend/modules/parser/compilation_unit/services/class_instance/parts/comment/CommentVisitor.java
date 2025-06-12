@@ -1,5 +1,5 @@
 // CommentVisitor.java
-package io.github.Opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.comment;
+package io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.comment;
 
 import com.github.javaparser.ast.comments.BlockComment;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
