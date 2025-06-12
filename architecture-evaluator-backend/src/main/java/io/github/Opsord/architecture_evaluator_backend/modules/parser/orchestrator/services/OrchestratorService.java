@@ -1,3 +1,4 @@
+// backend/architecture-evaluator-backend/src/main/java/io/github/opsord/architecture_evaluator_backend/modules/parser/orchestrator/services/OrchestratorService.java
 package io.github.opsord.architecture_evaluator_backend.modules.parser.orchestrator.services;
 
 import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
@@ -6,8 +7,10 @@ import io.github.opsord.architecture_evaluator_backend.modules.parser.compilatio
 import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_instance.FileInstanceService;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.ProcessedClassInstance;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.services.FileAnalysisService;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.pom.PomFileInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.instances.pom.PomFileInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.instances.gradle.GradleFileInstance;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.PomScannerService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.GradleScannerService;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.ScannerService;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.SrcScannerService;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.orchestrator.instances.ProjectAnalysisInstance;
@@ -29,6 +32,7 @@ public class OrchestratorService {
 
     private final ScannerService scannerService;
     private final PomScannerService pomScannerService;
+    private final GradleScannerService gradleScannerService;
     private final SrcScannerService srcScannerService;
     private final FileAnalysisService analysisService;
     private final FileInstanceService fileInstanceService;
@@ -56,31 +60,40 @@ public class OrchestratorService {
                 .toList();
 
         Optional<PomFileInstance> pomFileInstance = pomScannerService.scanPomFile(projectRoot);
+        Optional<GradleFileInstance> gradleFileInstance = gradleScannerService.scanGradleFile(projectRoot);
 
         // Populate class dependencies
         populateClassDependencies(fileInstancesWithoutTests);
 
         List<ProcessedClassInstance> processedClasses = analyzeCompilationUnits(
                 fileInstances,
-                pomFileInstance);
+                pomFileInstance,
+                gradleFileInstance);
 
         ProjectAnalysisInstance projectAnalysisInstance = organizeProjectAnalysis(processedClasses);
         projectAnalysisInstance.setProjectName(projectRoot.getName());
         pomFileInstance.ifPresent(projectAnalysisInstance::setPomFile);
+        gradleFileInstance.ifPresent(projectAnalysisInstance::setGradleFile);
 
         logger.info("Orchestration completed for project at path: {}", projectRoot.getAbsolutePath());
         return projectAnalysisInstance;
     }
 
-    private String determineInternalBasePackage(Optional<PomFileInstance> pomFileInstance) {
-        return pomFileInstance.map(PomFileInstance::getGroupId)
-                .orElse("io.github.opsord.architecture_evaluator_backend");
+    private String determineInternalBasePackage(Optional<PomFileInstance> pomFileInstance, Optional<GradleFileInstance> gradleFileInstance) {
+        if (pomFileInstance.isPresent()) {
+            return pomFileInstance.get().getGroupId();
+        } else if (gradleFileInstance.isPresent()) {
+            return gradleFileInstance.get().getGroup();
+        } else {
+            return "io.github.opsord.architecture_evaluator_backend";
+        }
     }
 
     private List<ProcessedClassInstance> analyzeCompilationUnits(
             List<FileInstance> projectCompUnits,
-            Optional<PomFileInstance> pomFileInstance) {
-        String internalBasePackage = determineInternalBasePackage(pomFileInstance);
+            Optional<PomFileInstance> pomFileInstance,
+            Optional<GradleFileInstance> gradleFileInstance) {
+        String internalBasePackage = determineInternalBasePackage(pomFileInstance, gradleFileInstance);
 
         // Analyze all files and flatten the list of processed classes
         return projectCompUnits.stream()

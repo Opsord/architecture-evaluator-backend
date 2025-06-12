@@ -21,7 +21,7 @@ public class CohesionMetricsService {
         List<MethodInstance> methods = classInstance.getMethods();
         List<VariableInstance> vars = classInstance.getClassVariables().stream()
                 .filter(v -> "instance".equals(v.getScope()))
-                .collect(Collectors.toList());
+                .toList();
 
         // Precompute field-sharing adjacency
         boolean[][] fieldGraph = buildFieldGraph(methods, vars);
@@ -37,7 +37,7 @@ public class CohesionMetricsService {
 
         // Section: LCOM4
         boolean[][] fullGraph = mergeCallGraph(fieldGraph, methods);
-        metrics.setLackOfCohesion4(calculateLCOM3(fullGraph));
+        metrics.setLackOfCohesion4(Math.max(0, calculateLCOM3(fullGraph)));
 
         // Section: LCOM5
         metrics.setLackOfCohesion5(calculateLCOM5(methods, vars));
@@ -50,7 +50,8 @@ public class CohesionMetricsService {
     // -------------------------------------------------------------------------
 
     private int calculateLCOM1(int nMethods, boolean[][] graph) {
-        int connected = 0, disconnected = 0;
+        int connected = 0;
+        int disconnected = 0;
         for (int i = 0; i < nMethods; i++) {
             for (int j = i + 1; j < nMethods; j++) {
                 if (graph[i][j])
@@ -63,7 +64,7 @@ public class CohesionMetricsService {
     }
 
     private int calculateLCOM3(boolean[][] graph) {
-        return countConnectedComponents(graph) - 1;
+        return Math.max(0, countConnectedComponents(graph) - 1);
     }
 
     // -------------------------------------------------------------------------

@@ -5,7 +5,7 @@ import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.
 import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.ProcessedClassInstance;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.parts.ImportCategory;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.services.parts.ImportClassifierService;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.pom.PomFileInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.instances.pom.PomFileInstance;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

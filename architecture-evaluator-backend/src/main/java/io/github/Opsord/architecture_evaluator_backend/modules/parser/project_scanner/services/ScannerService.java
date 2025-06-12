@@ -6,30 +6,19 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.util.Set;
+import java.util.List;
 
 @Service
 public class ScannerService {
 
     private static final Logger logger = LoggerFactory.getLogger(ScannerService.class);
 
-    // -------------------------------------------------------------------------
-    // Constants
-    // -------------------------------------------------------------------------
     private static final Set<String> DEFAULT_IGNORED_FOLDERS = Set.of(
             "target", "build", ".git", "node_modules",
             ".idea", ".vscode", "out", "dist");
 
-    // -------------------------------------------------------------------------
-    // Public Methods
-    // -------------------------------------------------------------------------
+    private static final List<String> GRADLE_FILES = List.of("build.gradle", "build.gradle.kts");
 
-    /**
-     * Finds the root directory of a project by looking for a `pom.xml` file and a
-     * `src` folder.
-     *
-     * @param file The starting file or directory.
-     * @return The project root directory, or null if not found.
-     */
     public File findProjectRoot(File file) {
         if (!isValidDirectory(file)) {
             return null;
@@ -61,16 +50,23 @@ public class ScannerService {
         return null;
     }
 
-    // -------------------------------------------------------------------------
-    // Private Methods
-    // -------------------------------------------------------------------------
+    public File findGradleFile(File projectDirectory) {
+        if (projectDirectory == null || !projectDirectory.isDirectory()) {
+            logger.warn("Invalid project directory: {}",
+                    projectDirectory != null ? projectDirectory.getAbsolutePath() : "null");
+            return null;
+        }
+        for (String fileName : GRADLE_FILES) {
+            File gradleFile = new File(projectDirectory, fileName);
+            if (gradleFile.exists()) {
+                logger.info("Found Gradle file at: {}", gradleFile.getAbsolutePath());
+                return gradleFile;
+            }
+        }
+        logger.warn("No Gradle build file found in directory: {}", projectDirectory.getAbsolutePath());
+        return null;
+    }
 
-    /**
-     * Validates if the given file is a directory and not ignored.
-     *
-     * @param file The file to validate.
-     * @return True if the file is a valid directory, false otherwise.
-     */
     private boolean isValidDirectory(File file) {
         if (file == null || !file.isDirectory()) {
             logger.warn("Invalid starting directory: {}", file != null ? file.getAbsolutePath() : "null");
@@ -87,21 +83,15 @@ public class ScannerService {
 
     /**
      * Checks if a directory is a project root by verifying the presence of
-     * `pom.xml` and `src`.
-     *
-     * @param directory The directory to check.
-     * @return True if the directory is a project root, false otherwise.
+     * `pom.xml` or Gradle build file and `src`.
      */
     private boolean isProjectRoot(File directory) {
-        return new File(directory, "pom.xml").exists() && new File(directory, "src").exists();
+        boolean hasSrc = new File(directory, "src").exists();
+        boolean hasPom = new File(directory, "pom.xml").exists();
+        boolean hasGradle = GRADLE_FILES.stream().anyMatch(f -> new File(directory, f).exists());
+        return hasSrc && (hasPom || hasGradle);
     }
 
-    /**
-     * Recursively scans subdirectories to find the project root.
-     *
-     * @param directory The directory to scan.
-     * @return The project root directory, or null if not found.
-     */
     private File scanSubdirectoriesForProjectRoot(File directory) {
         File[] subDirectories = directory.listFiles(File::isDirectory);
         if (subDirectories == null) {

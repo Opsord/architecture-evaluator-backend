@@ -1,4 +1,4 @@
-package io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.pom;
+package io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.instances.pom;
 
 import lombok.*;
 

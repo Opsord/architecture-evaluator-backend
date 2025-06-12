@@ -1,7 +1,8 @@
 package io.github.opsord.architecture_evaluator_backend.modules.parser.orchestrator.instances;
 
 import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.ProcessedClassInstance;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.pom.PomFileInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.instances.gradle.GradleFileInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.instances.pom.PomFileInstance;
 import lombok.Data;
 
 import java.util.List;
@@ -17,4 +18,5 @@ public class ProjectAnalysisInstance {
     private List<ProcessedClassInstance> testClasses;
     private List<ProcessedClassInstance> otherClasses;
     private PomFileInstance pomFile;
+    private GradleFileInstance gradleFile;
 }

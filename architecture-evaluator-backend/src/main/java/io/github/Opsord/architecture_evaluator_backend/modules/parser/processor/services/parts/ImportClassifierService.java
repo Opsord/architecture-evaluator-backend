@@ -1,10 +1,10 @@
 package io.github.opsord.architecture_evaluator_backend.modules.parser.processor.services.parts;
 
 import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_instance.FileInstance;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.pom.PomDependencyInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.instances.pom.PomDependencyInstance;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.parts.ImportCategory;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.pom.ParentSectionDTO;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.pom.PomFileInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.instances.pom.ParentSectionDTO;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.instances.pom.PomFileInstance;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
