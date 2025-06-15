@@ -51,27 +51,43 @@ public class FileManagerService {
         }
 
         try (InputStream fis = new FileInputStream(archive);
-                BufferedInputStream bis = new BufferedInputStream(fis);
-                var archiveStream = new ArchiveStreamFactory().createArchiveInputStream(bis)) {
+             BufferedInputStream bis = new BufferedInputStream(fis);
+             var archiveStream = new ArchiveStreamFactory().createArchiveInputStream(bis)) {
 
             ArchiveEntry entry;
             while ((entry = archiveStream.getNextEntry()) != null) {
-                File outputFile = new File(extractedDir, entry.getName());
-                if (entry.isDirectory()) {
-                    if (!outputFile.exists() && !outputFile.mkdirs()) {
-                        throw new IOException("Failed to create directory: " + outputFile.getAbsolutePath());
-                    }
-                } else {
-                    try (OutputStream os = Files.newOutputStream(outputFile.toPath())) {
-                        archiveStream.transferTo(os); // Use InputStream.transferTo for copying
-                    }
-                }
+                processArchiveEntry(entry, archiveStream, extractedDir);
             }
         } catch (Exception e) {
             throw new IOException("Error extracting archive: " + archive.getName(), e);
         }
 
         return extractedDir;
+    }
+
+    private void processArchiveEntry(ArchiveEntry entry, InputStream archiveStream, File extractedDir) throws IOException {
+        String entryName = entry.getName().replace("\\", "/");
+        File outputFile = new File(extractedDir, entryName);
+        String canonicalExtractedDir = extractedDir.getCanonicalPath();
+        String canonicalOutputFile = outputFile.getCanonicalPath();
+
+        if (!canonicalOutputFile.startsWith(canonicalExtractedDir + File.separator)) {
+            throw new IOException("Entry is outside of the target dir: " + entry.getName());
+        }
+
+        if (entry.isDirectory()) {
+            if (!outputFile.exists() && !outputFile.mkdirs()) {
+                throw new IOException("Failed to create directory: " + outputFile.getAbsolutePath());
+            }
+        } else {
+            File parent = outputFile.getParentFile();
+            if (!parent.exists() && !parent.mkdirs()) {
+                throw new IOException("Failed to create parent directory: " + parent.getAbsolutePath());
+            }
+            try (OutputStream os = Files.newOutputStream(outputFile.toPath())) {
+                archiveStream.transferTo(os);
+            }
+        }
     }
 
     public void deleteRecursively(File file) {

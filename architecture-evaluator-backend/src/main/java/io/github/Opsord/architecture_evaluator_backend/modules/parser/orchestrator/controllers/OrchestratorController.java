@@ -23,8 +23,7 @@ public class OrchestratorController {
     private final FileManagerService fileManagerService;
 
     @PostMapping("/analyze")
-    public ResponseEntity<ProjectAnalysisInstance> analyzeProject(@RequestParam String projectPath,
-            @RequestParam(defaultValue = "false") boolean includeNonInternalDependencies) {
+    public ResponseEntity<ProjectAnalysisInstance> analyzeProject(@RequestParam String projectPath) {
         try {
             logger.info("Received request to analyze project at path: {}", projectPath);
             ProjectAnalysisInstance result = orchestratorService.orchestrateProjectAnalysis(projectPath);
@@ -36,8 +35,7 @@ public class OrchestratorController {
     }
 
     @PostMapping("/analyze-upload")
-    public ResponseEntity<ProjectAnalysisInstance> analyzeProject(@RequestParam("project") MultipartFile projectFolder,
-            @RequestParam(defaultValue = "false") boolean includeNonInternalDependencies) {
+    public ResponseEntity<ProjectAnalysisInstance> analyzeProject(@RequestParam("project") MultipartFile projectFolder) {
         File tempDir = null;
         try {
             logger.info("Received request to analyze project from uploaded folder");
@@ -65,8 +63,7 @@ public class OrchestratorController {
     }
 
     @PostMapping("/analyze-github")
-    public ResponseEntity<ProjectAnalysisInstance> analyzeGitHubRepo(@RequestParam String repoUrl,
-            @RequestParam(defaultValue = "false") boolean includeNonInternalDependencies) {
+    public ResponseEntity<ProjectAnalysisInstance> analyzeGitHubRepo(@RequestParam String repoUrl) {
         File tempDir = null;
         try {
             logger.info("Received request to analyze GitHub repository: {}", repoUrl);

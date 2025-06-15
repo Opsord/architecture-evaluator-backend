@@ -50,23 +50,6 @@ public class ScannerService {
         return null;
     }
 
-    public File findGradleFile(File projectDirectory) {
-        if (projectDirectory == null || !projectDirectory.isDirectory()) {
-            logger.warn("Invalid project directory: {}",
-                    projectDirectory != null ? projectDirectory.getAbsolutePath() : "null");
-            return null;
-        }
-        for (String fileName : GRADLE_FILES) {
-            File gradleFile = new File(projectDirectory, fileName);
-            if (gradleFile.exists()) {
-                logger.info("Found Gradle file at: {}", gradleFile.getAbsolutePath());
-                return gradleFile;
-            }
-        }
-        logger.warn("No Gradle build file found in directory: {}", projectDirectory.getAbsolutePath());
-        return null;
-    }
-
     private boolean isValidDirectory(File file) {
         if (file == null || !file.isDirectory()) {
             logger.warn("Invalid starting directory: {}", file != null ? file.getAbsolutePath() : "null");

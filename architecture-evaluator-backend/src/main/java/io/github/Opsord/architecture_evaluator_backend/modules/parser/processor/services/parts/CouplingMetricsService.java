@@ -54,6 +54,6 @@ public class CouplingMetricsService {
         if (afferentCoupling + efferentCoupling == 0) {
             return 0;
         }
-        return (double) efferentCoupling / (afferentCoupling + afferentCoupling);
+        return (double) efferentCoupling / (efferentCoupling + afferentCoupling);
     }
 }
