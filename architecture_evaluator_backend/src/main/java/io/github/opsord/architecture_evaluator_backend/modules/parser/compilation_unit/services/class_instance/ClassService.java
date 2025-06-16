@@ -38,25 +38,4 @@ public class ClassService {
         compilationUnit.accept(visitor, classInstances);
         return classInstances;
     }
-
-    public List<String> getExistingClassNames(List<ClassInstance> classInstances) {
-        return classInstances.stream()
-                .map(ClassInstance::getName)
-                .toList();
-    }
-
-    public List<String> getImportedClasses(ClassInstance classInstance, List<ClassInstance> allClasses) {
-        List<String> existingClassNames = getExistingClassNames(allClasses);
-        return classInstance.getUsedClasses().stream()
-                .filter(existingClassNames::contains)
-                .toList();
-    }
-
-    public List<String> getDependentClasses(String className, List<ClassInstance> allClasses) {
-        return allClasses.stream()
-                .filter(classInstance -> classInstance.getUsedClasses() != null
-                        && classInstance.getUsedClasses().contains(className))
-                .map(ClassInstance::getName)
-                .collect(Collectors.toList());
-    }
 }

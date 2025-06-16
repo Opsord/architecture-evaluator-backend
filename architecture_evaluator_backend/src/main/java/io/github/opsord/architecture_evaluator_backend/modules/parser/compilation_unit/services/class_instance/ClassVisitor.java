@@ -34,7 +34,7 @@ public class ClassVisitor extends VoidVisitorAdapter<List<ClassInstance>> {
     private static final List<String> SERVICE_ANNOTATIONS = List.of("Service");
     private static final List<String> REPOSITORY_ANNOTATIONS = List.of("Repository");
     private static final List<String> CONTROLLER_ANNOTATIONS = List.of("Controller", "RestController");
-    private static final List<String> TESTING_ANNOTATIONS = List.of("SpringBootTest");
+    private static final List<String> TESTING_ANNOTATIONS = List.of("SpringBootTest", "Test");
 
     /**
      * Visits a class or interface declaration and populates a ClassInstance with its details.
