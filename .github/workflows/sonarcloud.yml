@@ -34,4 +34,4 @@ jobs:
         working-directory: architecture_evaluator_backend
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=Opsord_architecture-evaluator-backend
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Pcoverage -Dsonar.projectKey=Opsord_architecture-evaluator-backend
