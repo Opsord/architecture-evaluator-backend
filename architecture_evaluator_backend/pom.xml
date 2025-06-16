@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from a repository -->
 	</parent>
 	<groupId>io.github.opsord</groupId>
-	<artifactId>architecture-evaluator-backend</artifactId>
+	<artifactId>architecture_evaluator_backend</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Architecture Evaluator - Backend</name>
 	<description>This is the backend service for the Architecture Evaluator, a web application designed to assess the architecture of Java applications built with Spring Boot.</description>

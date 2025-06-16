@@ -1,4 +1,4 @@
-// File: backend/architecture-evaluator-backend/src/main/java/io/github/opsord/architecture_evaluator_backend/modules/parser/orchestrator/services/FileManagerService.java
+// File: backend/architecture_evaluator-backend/src/main/java/io/github/opsord/architecture_evaluator_backend/modules/parser/orchestrator/services/FileManagerService.java
 package io.github.opsord.architecture_evaluator_backend.modules.parser.orchestrator.services;
 
 import org.apache.commons.compress.archivers.ArchiveEntry;
