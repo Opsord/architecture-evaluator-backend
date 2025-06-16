@@ -13,7 +13,8 @@ import java.util.Objects;
 @Getter
 @Setter
 @ToString
-@RequiredArgsConstructor
+// Remove one of these conflicting annotations:
+// @RequiredArgsConstructor - this creates a constructor with required fields
 @NoArgsConstructor
 @AllArgsConstructor
 public class Exam {
