@@ -1,4 +1,4 @@
-package io.github.opsord.architecture_evaluator_backend.test_codes;
+package io.github.opsord.architecture_evaluator_backend.test_codes.simple_samples;
 
 import java.io.BufferedReader;
 import java.io.IOException;
