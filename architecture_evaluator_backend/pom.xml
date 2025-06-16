@@ -60,13 +60,6 @@
 			<scope>test</scope>
 		</dependency>
 
-		<!-- Database Dependencies -->
-		<!-- PostgreSQL: JDBC driver for PostgreSQL database -->
-<!--		<dependency>-->
-<!--			<groupId>org.postgresql</groupId>-->
-<!--			<artifactId>postgresql</artifactId>-->
-<!--			<scope>runtime</scope>-->
-<!--		</dependency>-->
 
 		<!-- Utility Dependencies -->
 		<!-- Java Parser: Library for parsing, analyzing, and processing Java source code -->
@@ -103,6 +96,14 @@
 			<artifactId>commons-compress</artifactId>
 			<version>1.27.1</version>
 		</dependency>
+
+		<!-- JacoCo Maven Plugin: Used for code coverage analysis -->
+		<!-- https://mvnrepository.com/artifact/org.jacoco/jacoco-maven-plugin -->
+		<dependency>
+			<groupId>org.jacoco</groupId>
+			<artifactId>jacoco-maven-plugin</artifactId>
+			<version>0.8.13</version>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -134,5 +135,39 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<profile>
+			<id>coverage</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.jacoco</groupId>
+						<artifactId>jacoco-maven-plugin</artifactId>
+						<version>0.8.13</version>
+						<executions>
+							<execution>
+								<id>prepare-agent</id>
+								<goals>
+									<goal>prepare-agent</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>report</id>
+								<goals>
+									<goal>report</goal>
+								</goals>
+								<configuration>
+									<formats>
+										<format>XML</format>
+									</formats>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 
 </project>
