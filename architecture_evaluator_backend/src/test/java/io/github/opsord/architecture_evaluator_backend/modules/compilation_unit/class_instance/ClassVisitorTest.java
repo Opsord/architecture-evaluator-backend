@@ -117,4 +117,38 @@ class ClassVisitorTest {
         assertTrue(instance.getLinesOfCode() > 0);
     }
 
+    @Test
+    void testLayerAnnotationsDetection() {
+        String source = """
+            @Entity
+            class EntityClass {}
+
+            @Repository
+            class RepoClass {}
+
+            @Controller
+            class ControllerClass {}
+
+            @RestController
+            class RestControllerClass {}
+
+            @Document
+            class DocumentClass {}
+
+            @Custom
+            class CustomClass {}
+        """;
+
+        CompilationUnit cu = StaticJavaParser.parse(source);
+        List<ClassInstance> result = classService.getClassesFromCompUnit(cu);
+
+        assertEquals(6, result.size());
+
+        assertEquals(LayerAnnotation.ENTITY, result.get(0).getLayerAnnotation());
+        assertEquals(LayerAnnotation.REPOSITORY, result.get(1).getLayerAnnotation());
+        assertEquals(LayerAnnotation.CONTROLLER, result.get(2).getLayerAnnotation());
+        assertEquals(LayerAnnotation.CONTROLLER, result.get(3).getLayerAnnotation());
+        assertEquals(LayerAnnotation.DOCUMENT, result.get(4).getLayerAnnotation());
+    }
+
 }
