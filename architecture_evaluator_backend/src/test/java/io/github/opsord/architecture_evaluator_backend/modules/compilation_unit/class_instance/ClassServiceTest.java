@@ -1,6 +1,6 @@
 package io.github.opsord.architecture_evaluator_backend.modules.compilation_unit.class_instance;
 
-import com.github.javaparser.JavaParser;
+import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.ClassService;
@@ -13,14 +13,15 @@ import io.github.opsord.architecture_evaluator_backend.modules.parser.compilatio
 import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.variable.VariableService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
-import java.io.File;
-import java.nio.file.Files;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class ClassServiceTest {
+
     private ClassService classService;
 
     @BeforeEach
@@ -45,18 +46,74 @@ class ClassServiceTest {
     }
 
     @Test
-    void testGetClassesFromCompUnit_withSample01() throws Exception {
-        File file = new File("src/test/java/io/github/opsord/architecture_evaluator_backend/test_codes/Sample01.java");
-        String code = Files.readString(file.toPath());
-        JavaParser javaParser = new JavaParser();
-        CompilationUnit cu = javaParser.parse(code).getResult().orElseThrow(() -> new RuntimeException("Parsing failed"));
+    void testGetClassFromValidJavaClass() {
+        String source = """
+            package com.example;
 
-        List<ClassInstance> classes = classService.getClassesFromCompUnit(cu);
+            public class ExampleClass {
+                private int number;
+                public ExampleClass() {}
+                public void doSomething() {}
+            }
+        """;
 
-        assertEquals(1, classes.size());
-        ClassInstance instance = classes.get(0);
-        assertEquals("Sample01", instance.getName());
-        assertEquals(2, instance.getMethods().size()); // foo + main
-        assertTrue(instance.getLinesOfCode() > 0);
+        CompilationUnit cu = StaticJavaParser.parse(source);
+        List<ClassInstance> result = classService.getClassesFromCompUnit(cu);
+
+        assertEquals(1, result.size(), "Debe haber una clase extraída");
+
+        ClassInstance instance = result.get(0);
+        assertEquals("ExampleClass", instance.getName(), "El nombre de la clase debe coincidir");
+        assertEquals(1, instance.getConstructors().size(), "Debe haber un constructor detectado");
+        assertEquals(1, instance.getMethods().size(), "Debe haber un método detectado");
+        assertEquals(1, instance.getClassVariables().size(), "Debe haber una variable de clase detectada");
+    }
+
+    @Test
+    void testEmptyCompilationUnitReturnsEmptyList() {
+        String source = "";
+        CompilationUnit cu = StaticJavaParser.parse(source);
+        List<ClassInstance> result = classService.getClassesFromCompUnit(cu);
+
+        assertTrue(result.isEmpty(), "No debería haber clases detectadas");
+    }
+
+    @Test
+    void testInnerClassIsDetected() {
+        String source = """
+        public class Outer {
+            class Inner {}
+        }
+    """;
+
+        CompilationUnit cu = StaticJavaParser.parse(source);
+        List<ClassInstance> result = classService.getClassesFromCompUnit(cu);
+
+        assertEquals(2, result.size(), "Debe haber dos clases extraídas");
+
+        // Find the outer class by name
+        ClassInstance outer = result.stream()
+                .filter(c -> "Outer".equals(c.getName()))
+                .findFirst()
+                .orElseThrow();
+
+        assertEquals("Outer", outer.getName());
+        assertEquals(1, outer.getInnerClasses().size(), "Debe detectar una clase interna");
+        assertEquals("Inner", outer.getInnerClasses().get(0).getName(), "El nombre de la clase interna debe coincidir");
+    }
+
+    @Test
+    void testMultipleTopLevelClasses() {
+        String source = """
+            class A {}
+            class B {}
+        """;
+
+        CompilationUnit cu = StaticJavaParser.parse(source);
+        List<ClassInstance> result = classService.getClassesFromCompUnit(cu);
+
+        assertEquals(2, result.size(), "Debe detectar dos clases en el archivo");
+        assertTrue(result.stream().anyMatch(c -> c.getName().equals("A")));
+        assertTrue(result.stream().anyMatch(c -> c.getName().equals("B")));
     }
 }
