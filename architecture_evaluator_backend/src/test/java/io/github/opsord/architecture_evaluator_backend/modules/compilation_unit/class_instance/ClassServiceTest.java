@@ -6,6 +6,7 @@ import io.github.opsord.architecture_evaluator_backend.modules.parser.compilatio
 import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.ClassService;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.annotation.AnnotationService;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.constructor.ConstructorService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.exception_handler.ExceptionHandlerService;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.interface_instance.InterfaceService;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.method.MethodService;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.statement.StatementService;
@@ -30,6 +31,7 @@ class ClassServiceTest {
         ConstructorService constructorService = new ConstructorService();
         AnnotationService annotationService = new AnnotationService();
         InterfaceService interfaceService = new InterfaceService();
+        ExceptionHandlerService exceptionHandlerService = new ExceptionHandlerService();
 
         classService = new ClassService(
                 methodService,
@@ -37,7 +39,8 @@ class ClassServiceTest {
                 variableService,
                 constructorService,
                 annotationService,
-                interfaceService
+                interfaceService,
+                exceptionHandlerService
         );
     }
 

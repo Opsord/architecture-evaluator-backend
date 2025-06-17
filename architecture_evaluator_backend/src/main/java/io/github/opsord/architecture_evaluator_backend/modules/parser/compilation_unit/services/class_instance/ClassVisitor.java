@@ -8,6 +8,7 @@ import io.github.opsord.architecture_evaluator_backend.modules.parser.compilatio
 import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.LayerAnnotation;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.annotation.AnnotationService;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.constructor.ConstructorService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.exception_handler.ExceptionHandlerService;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.interface_instance.InterfaceService;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.method.MethodService;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.statement.StatementService;
@@ -28,6 +29,7 @@ public class ClassVisitor extends VoidVisitorAdapter<List<ClassInstance>> {
     private final ConstructorService constructorService;
     private final AnnotationService annotationService;
     private final InterfaceService interfaceService;
+    private final ExceptionHandlerService exceptionHandlerService;
 
     private static final List<String> ENTITY_ANNOTATIONS = List.of("Entity");
     private static final List<String> DOCUMENT_ANNOTATIONS = List.of("Document");
@@ -49,6 +51,7 @@ public class ClassVisitor extends VoidVisitorAdapter<List<ClassInstance>> {
 
         setJavaFileType(declaration, instance);
         setAnnotationsAndLayer(declaration, instance);
+        setExceptionHandling(declaration, instance);
         setInheritance(declaration, instance);
         setMembers(declaration, instance);
         setInnerClasses(declaration, instance);
@@ -150,6 +153,15 @@ public class ClassVisitor extends VoidVisitorAdapter<List<ClassInstance>> {
     }
 
     /**
+     * Sets the exception handling blocks for the given instance.
+     * @param declaration The class or interface declaration node.
+     * @param instance The ClassInstance to update.
+     */
+    private void setExceptionHandling(ClassOrInterfaceDeclaration declaration, ClassInstance instance) {
+        instance.setExceptionHandling(exceptionHandlerService.getExceptionHandling(declaration));
+    }
+
+    /**
      * Sets the lines of code metric for the given instance.
      * @param declaration The class or interface declaration node.
      * @param instance The ClassInstance to update.
@@ -184,6 +196,17 @@ public class ClassVisitor extends VoidVisitorAdapter<List<ClassInstance>> {
         declaration.getMethods().forEach(method -> {
             usedClasses.addAll(extractClassNames(method.getType().asString()));
             method.getParameters().forEach(param -> usedClasses.addAll(extractClassNames(param.getType().asString())));
+        });
+
+        // Exception types in method signatures
+        declaration.getMethods().forEach(method -> {
+            method.getBody().ifPresent(body ->
+                    body.findAll(com.github.javaparser.ast.stmt.CatchClause.class)
+                            .forEach(catchClause -> {
+                                String exceptionType = catchClause.getParameter().getType().asString();
+                                usedClasses.addAll(extractClassNames(exceptionType));
+                            })
+            );
         });
 
         // Constructor parameter types
