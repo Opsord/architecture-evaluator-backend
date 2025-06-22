@@ -199,15 +199,15 @@ public class ClassVisitor extends VoidVisitorAdapter<List<ClassInstance>> {
         });
 
         // Exception types in method signatures
-        declaration.getMethods().forEach(method -> {
+        declaration.getMethods().forEach(method ->
             method.getBody().ifPresent(body ->
                     body.findAll(com.github.javaparser.ast.stmt.CatchClause.class)
                             .forEach(catchClause -> {
                                 String exceptionType = catchClause.getParameter().getType().asString();
                                 usedClasses.addAll(extractClassNames(exceptionType));
                             })
-            );
-        });
+            )
+        );
 
         // Constructor parameter types
         declaration.getConstructors().forEach(constructor -> constructor.getParameters()

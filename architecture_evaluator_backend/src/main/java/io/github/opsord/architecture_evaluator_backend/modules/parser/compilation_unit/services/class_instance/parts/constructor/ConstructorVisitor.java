@@ -7,7 +7,6 @@ import io.github.opsord.architecture_evaluator_backend.modules.parser.compilatio
 import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.ParameterInstance;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class ConstructorVisitor extends VoidVisitorAdapter<List<ConstructorInstance>> {
 
@@ -24,14 +23,14 @@ public class ConstructorVisitor extends VoidVisitorAdapter<List<ConstructorInsta
                     param.setType(p.getType().asString());
                     param.setAnnotations(
                             p.getAnnotations().stream().map(NodeWithName::getNameAsString)
-                                    .collect(Collectors.toList()));
+                                    .toList());
                     return param;
-                }).collect(Collectors.toList()));
+                }).toList());
         ci.setAnnotations(
-                constructor.getAnnotations().stream().map(NodeWithName::getNameAsString).collect(Collectors.toList()));
-        ci.setModifiers(constructor.getModifiers().stream().map(Object::toString).collect(Collectors.toList()));
+                constructor.getAnnotations().stream().map(NodeWithName::getNameAsString).toList());
+        ci.setModifiers(constructor.getModifiers().stream().map(Object::toString).toList());
         ci.setThrownExceptions(
-                constructor.getThrownExceptions().stream().map(Object::toString).collect(Collectors.toList()));
+                constructor.getThrownExceptions().stream().map(Object::toString).toList());
         ci.setBody(constructor.getBody().toString());
         ci.setLineCount(constructor.getBody().getStatements().size());
         // Comments can be added if needed

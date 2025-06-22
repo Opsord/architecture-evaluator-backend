@@ -15,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 @RequiredArgsConstructor
@@ -56,9 +55,9 @@ public class MethodVisitor extends VoidVisitorAdapter<List<MethodInstance>> {
             param.setName(p.getNameAsString());
             param.setType(p.getType().asString());
             param.setAnnotations(
-                    p.getAnnotations().stream().map(NodeWithName::getNameAsString).collect(Collectors.toList()));
+                    p.getAnnotations().stream().map(NodeWithName::getNameAsString).toList());
             return param;
-        }).collect(Collectors.toList());
+        }).toList();
     }
 
     private List<ParameterInstance> populateOutputParameters(MethodDeclaration method) {

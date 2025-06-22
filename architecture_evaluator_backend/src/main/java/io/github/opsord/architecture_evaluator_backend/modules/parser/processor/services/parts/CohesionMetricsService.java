@@ -72,8 +72,9 @@ public class CohesionMetricsService {
     // -------------------------------------------------------------------------
 
     private double calculateLCOM2(List<MethodInstance> methods, List<VariableInstance> vars) {
-        int M = methods.size(), A = vars.size();
-        if (M <= 1 || A == 0)
+        int numberOfMethods = methods.size();
+        int numberOfVariables = vars.size();
+        if (numberOfMethods <= 1 || numberOfVariables == 0)
             return 0.0;
 
         // Count accesses per variable
@@ -87,7 +88,7 @@ public class CohesionMetricsService {
                 .mapToLong(v -> accessCount.getOrDefault(v.getName(), 0L))
                 .sum();
 
-        double lcom2 = 1.0 - (sumMAj / (double) (M * A));
+        double lcom2 = 1.0 - (sumMAj / (double) (numberOfMethods * numberOfVariables));
         return Math.max(0.0, lcom2);
     }
 
@@ -128,8 +129,9 @@ public class CohesionMetricsService {
     // -------------------------------------------------------------------------
 
     private double calculateLCOM5(List<MethodInstance> methods, List<VariableInstance> vars) {
-        int M = methods.size(), A = vars.size();
-        if (M == 0 || A == 0)
+        int numberOfMethods = methods.size();
+        int numberOfVariables = vars.size();
+        if (numberOfMethods == 0 || numberOfVariables == 0)
             return 0.0;
 
         long totalDistinct = methods.stream()
@@ -139,7 +141,7 @@ public class CohesionMetricsService {
                         .distinct().count())
                 .sum();
 
-        double lcom5 = 1.0 - (totalDistinct / (double) (M * A));
+        double lcom5 = 1.0 - (totalDistinct / (double) (numberOfMethods * numberOfVariables));
         return Math.max(0.0, lcom5);
     }
 
@@ -148,12 +150,12 @@ public class CohesionMetricsService {
     // -------------------------------------------------------------------------
 
     private boolean[][] buildFieldGraph(List<MethodInstance> methods, List<VariableInstance> vars) {
-        int n = methods.size();
-        boolean[][] graph = new boolean[n][n];
+        int numberOfMethods = methods.size();
+        boolean[][] graph = new boolean[numberOfMethods][numberOfMethods];
         Set<String> varNames = vars.stream().map(VariableInstance::getName).collect(Collectors.toSet());
 
-        for (int i = 0; i < n; i++) {
-            for (int j = i + 1; j < n; j++) {
+        for (int i = 0; i < numberOfMethods; i++) {
+            for (int j = i + 1; j < numberOfMethods; j++) {
                 Set<String> f1 = methods.get(i).getMethodVariables().stream()
                         .map(VariableInstance::getName).filter(varNames::contains).collect(Collectors.toSet());
                 Set<String> f2 = methods.get(j).getMethodVariables().stream()
