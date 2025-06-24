@@ -2,15 +2,15 @@ package io.github.opsord.architecture_evaluator_backend.modules.compilation_unit
 
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.ClassService;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.annotation.AnnotationService;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.constructor.ConstructorService;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.exception_handler.ExceptionHandlerService;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.interface_instance.InterfaceService;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.method.MethodService;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.statement.StatementService;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.variable.VariableService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_types.ClassInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_types.class_instance.ClassService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_types.annotation_instance.AnnotationService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.constructor.ConstructorService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.exception_handler.ExceptionHandlerService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_types.interface_instance.InterfaceService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.method.MethodService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.statement.StatementService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.variable.VariableService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -29,7 +29,7 @@ class ClassServiceTest {
         VariableService variableService = new VariableService();
         ConstructorService constructorService = new ConstructorService();
         AnnotationService annotationService = new AnnotationService();
-        InterfaceService interfaceService = new InterfaceService();
+        InterfaceService interfaceService = new InterfaceService(annotationService, methodService);
         ExceptionHandlerService exceptionHandlerService = new ExceptionHandlerService();
 
         classService = new ClassService(

@@ -1,6 +1,7 @@
 package io.github.opsord.architecture_evaluator_backend.modules.parser.processor.services.parts;
 
-import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.JavaTypeInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_types.ClassInstance;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.parts.CouplingMetricsDTO;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
@@ -12,19 +13,26 @@ import java.util.List;
 public class CouplingMetricsService {
 
     /**
-     * Calculates the coupling metrics for a given class.
+     * Calculates the coupling metrics for a given Java type instance.
      */
-    public CouplingMetricsDTO calculateCouplingMetrics(ClassInstance classInstance) {
-        int afferentCoupling = calculateAfferentCoupling(classInstance);
-        int efferentCoupling = calculateEfferentCoupling(classInstance);
-        double instability = calculateInstability(afferentCoupling, efferentCoupling);
+    public CouplingMetricsDTO calculateCouplingMetrics(JavaTypeInstance javaTypeInstance) {
+        if (javaTypeInstance == null || javaTypeInstance.getType() == null || javaTypeInstance.getContent() == null) {
+            return new CouplingMetricsDTO();
+        }
+        if (javaTypeInstance.getType().isClassType()) {
+            ClassInstance classInstance = (ClassInstance) javaTypeInstance.getContent();
+            int afferentCoupling = calculateAfferentCoupling(classInstance);
+            int efferentCoupling = calculateEfferentCoupling(classInstance);
+            double instability = calculateInstability(afferentCoupling, efferentCoupling);
 
-        CouplingMetricsDTO couplingMetrics = new CouplingMetricsDTO();
-        couplingMetrics.setAfferentCoupling(afferentCoupling);
-        couplingMetrics.setEfferentCoupling(efferentCoupling);
-        couplingMetrics.setInstability(instability);
+            CouplingMetricsDTO couplingMetrics = new CouplingMetricsDTO();
+            couplingMetrics.setAfferentCoupling(afferentCoupling);
+            couplingMetrics.setEfferentCoupling(efferentCoupling);
+            couplingMetrics.setInstability(instability);
 
-        return couplingMetrics;
+            return couplingMetrics;
+        }
+        return new CouplingMetricsDTO();
     }
 
     /**

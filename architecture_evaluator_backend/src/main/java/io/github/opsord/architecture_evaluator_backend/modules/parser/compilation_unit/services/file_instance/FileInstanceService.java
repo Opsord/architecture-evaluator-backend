@@ -2,10 +2,15 @@ package io.github.opsord.architecture_evaluator_backend.modules.parser.compilati
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_instance.FileInstance;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.ClassService;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.annotation.AnnotationService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.FileInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.JavaTypeInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_types.ClassInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_types.class_instance.ClassService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_types.abstract_class_instance.AbstractClassService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_types.interface_instance.InterfaceService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_types.record_instance.RecordService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_types.exception_instance.ExceptionService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_types.annotation_instance.AnnotationService;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_instance.package_part.PackageService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -14,10 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -26,143 +28,58 @@ public class FileInstanceService {
     private static final Logger logger = LoggerFactory.getLogger(FileInstanceService.class);
 
     private final ClassService classService;
-    private final PackageService packageService;
+    private final InterfaceService interfaceService;
+    private final AbstractClassService abstractClassService;
+    private final RecordService recordService;
+    private final ExceptionService exceptionService;
     private final AnnotationService annotationService;
+    private final PackageService packageService;
 
-    /**
-     * Parses a Java file and returns a FileInstance representing its structure and
-     * metadata.
-     *
-     * @param file The Java source file to parse.
-     * @return The parsed FileInstance.
-     * @throws FileNotFoundException If the file does not exist or cannot be parsed.
-     */
     public FileInstance parseJavaFile(File file, File projectRoot) throws FileNotFoundException {
+        // Log the start of parsing
         logger.info("Starting to parse file: {}", file.getAbsolutePath());
+
+        // Create a new JavaParser instance
         JavaParser javaParser = new JavaParser();
+
+        // Parse the Java file into a CompilationUnit (AST)
         CompilationUnit compilationUnit = javaParser.parse(file).getResult()
                 .orElseThrow(() -> new FileNotFoundException("File not found or could not be parsed"));
         logger.info("Successfully parsed file: {}", file.getAbsolutePath());
 
+        // Create a new FileInstance to hold the parsed information
         FileInstance fileInstance = new FileInstance();
         fileInstance.setFileName(file.getName());
 
-        // Compute a relative path
+        // Compute the relative path from the project root to the file
         String relativePath = projectRoot.toPath().toAbsolutePath()
                 .relativize(file.toPath().toAbsolutePath())
                 .toString();
         fileInstance.setFilePath(relativePath);
 
-        FileInstanceVisitor visitor = new FileInstanceVisitor(packageService, annotationService, classService);
+        // Create a visitor to extract all relevant information from the CompilationUnit
+        FileInstanceVisitor visitor = new FileInstanceVisitor(
+                packageService,
+                annotationService,
+                interfaceService,
+                classService
+        );
+
+        // Visit the CompilationUnit to fill the FileInstance fields
         compilationUnit.accept(visitor, fileInstance);
 
+        // Set the package name (redundant if already set by the visitor, but ensures it's present)
+        fileInstance.setPackageName(packageService.getPackageNameFromCompUnit(compilationUnit));
+
+        // Set file-level annotations
+        fileInstance.setFileAnnotations(annotationService.getAnnotationsFromCompUnit(compilationUnit));
+
+        // Return the fully populated FileInstance
         return fileInstance;
     }
 
-    /**
-     * Calculates the number of lines of code in a CompilationUnit.
-     *
-     * @param compilationUnit The CompilationUnit to analyze.
-     * @return The number of lines of code.
-     */
-    public int calculateLinesOfCode(CompilationUnit compilationUnit) {
-        return compilationUnit.getRange()
-                .map(range -> range.end.line - range.begin.line + 1)
-                .orElse(0);
-    }
 
-    /**
-     * Finds all class names in a given package from a list of FileInstance objects.
-     *
-     * @param packageName The package name to search for.
-     * @param allFiles    The list of all FileInstance objects.
-     * @return A list of class names in the specified package.
-     */
-    private List<String> findClassesInPackage(String packageName, List<FileInstance> allFiles) {
-        return allFiles.stream()
-                .filter(file -> file.getPackageName().equals(packageName))
-                .flatMap(file -> file.getClasses().stream().map(ClassInstance::getName))
-                .toList();
-    }
 
-    /**
-     * Returns a list of imported class names for a given FileInstance.
-     *
-     * @param fileInstance The FileInstance to analyze.
-     * @param allFiles     The list of all FileInstance objects in the project.
-     * @return A list of imported class names.
-     */
-    public List<String> getImportedClasses(FileInstance fileInstance, List<FileInstance> allFiles) {
-        Set<String> selfClassNames = new HashSet<>();
-        if (fileInstance.getClasses() != null) {
-            fileInstance.getClasses().forEach(cls -> selfClassNames.add(cls.getName()));
-        }
-
-        return fileInstance.getImportedPackages().stream()
-                .flatMap(imported -> {
-                    if (imported.endsWith(".*")) {
-                        String packageName = imported.substring(0, imported.length() - 2);
-                        return findClassesInPackage(packageName, allFiles).stream();
-                    } else {
-                        return Stream.of(imported);
-                    }
-                })
-                .distinct()
-                .filter(className -> !selfClassNames.contains(className))
-                .toList();
-    }
-
-    /**
-     * Returns a list of FileInstance objects that are imported by the given
-     * FileInstance.
-     *
-     * @param fileInstance The FileInstance to analyze.
-     * @param allFiles     The list of all FileInstance objects in the project.
-     * @return A list of imported FileInstance objects.
-     */
-    public List<FileInstance> getImportedFileInstances(FileInstance fileInstance, List<FileInstance> allFiles) {
-        Set<String> selfClassNames = new HashSet<>();
-        if (fileInstance.getClasses() != null) {
-            fileInstance.getClasses().forEach(cls -> selfClassNames.add(cls.getName()));
-        }
-
-        return fileInstance.getImportedPackages().stream()
-                .flatMap(imported -> {
-                    if (imported.endsWith(".*")) {
-                        String packageName = imported.substring(0, imported.length() - 2);
-                        return allFiles.stream()
-                                .filter(file -> file.getPackageName().equals(packageName));
-                    } else {
-                        return allFiles.stream()
-                                .filter(file -> file.getClasses().stream()
-                                        .anyMatch(cls -> imported.equals(cls.getName())));
-                    }
-                })
-                .distinct()
-                .filter(file -> file.getClasses().stream().noneMatch(cls -> selfClassNames.contains(cls.getName())))
-                .toList();
-    }
-
-    /**
-     * Finds all FileInstance objects from a given package.
-     *
-     * @param packageName The package name to search for.
-     * @param allFiles    The list of all FileInstance objects.
-     * @return A list of FileInstance objects in the specified package.
-     */
-    public List<FileInstance> findFilesFromPackage(String packageName, List<FileInstance> allFiles) {
-        return allFiles.stream()
-                .filter(file -> file.getPackageName().equals(packageName))
-                .toList();
-    }
-
-    /**
-     * Returns a list of dependent class names used by a given ClassInstance.
-     *
-     * @param classInstance The ClassInstance to analyze.
-     * @param allFiles      The list of all FileInstance objects in the project.
-     * @return A list of dependent class names.
-     */
     public List<String> getDependentClassNamesFromClass(ClassInstance classInstance, List<FileInstance> allFiles) {
         if (classInstance.getUsedClasses() == null) {
             return List.of();
@@ -170,65 +87,11 @@ public class FileInstanceService {
         return classInstance.getUsedClasses().stream()
                 .distinct()
                 .filter(usedClass -> allFiles.stream()
-                        .anyMatch(file -> file.getClasses().stream()
-                                .anyMatch(cls -> cls.getName().equals(usedClass))))
+                        .anyMatch(file -> file.getJavaTypeInstance().stream()
+                                .anyMatch(javaTypeInstance -> javaTypeInstance
+                                        .getClass()
+                                        .getName()
+                                        .equals(usedClass))))
                 .toList();
     }
-
-    /**
-     * Returns a list of dependent class names used by all classes in a given
-     * FileInstance.
-     *
-     * @param fileInstance The FileInstance to analyze.
-     * @param allFiles     The list of all FileInstance objects in the project.
-     * @return A list of dependent class names.
-     */
-    public List<String> getDependentClassNamesFromFile(FileInstance fileInstance, List<FileInstance> allFiles) {
-        if (fileInstance.getClasses() == null) {
-            return List.of();
-        }
-        return fileInstance.getClasses().stream()
-                .flatMap(cls -> getDependentClassNamesFromClass(cls, allFiles).stream())
-                .distinct()
-                .toList();
-    }
-
-    /**
-     * Returns a list of dependent ClassInstance objects used by all classes in a
-     * given FileInstance.
-     *
-     * @param fileInstance The FileInstance to analyze.
-     * @param allFiles     The list of all FileInstance objects in the project.
-     * @return A list of dependent ClassInstance objects.
-     */
-    public List<ClassInstance> getDependentClassInstancesFromFile(FileInstance fileInstance,
-            List<FileInstance> allFiles) {
-        return fileInstance.getClasses().stream()
-                .flatMap(cls -> getDependentClassNamesFromClass(cls, allFiles).stream())
-                .distinct()
-                .flatMap(className -> allFiles.stream()
-                        .flatMap(file -> file.getClasses().stream()
-                                .filter(cls -> cls.getName().equals(className))))
-                .distinct()
-                .toList();
-    }
-
-    /**
-     * Returns a list of FileInstance objects that import a given class or package.
-     *
-     * @param targetClassOrPackage The class or package name to search for.
-     * @param allFiles             The list of all FileInstance objects in the
-     *                             project.
-     * @return A list of FileInstance objects that import the target.
-     */
-    public List<FileInstance> getDependentFileInstances(String targetClassOrPackage, List<FileInstance> allFiles) {
-        return allFiles.stream()
-                .filter(file -> file.getImportedPackages().stream()
-                        .anyMatch(imported -> imported.equals(targetClassOrPackage) ||
-                                (imported.endsWith(".*") && targetClassOrPackage
-                                        .startsWith(imported.substring(0, imported.length() - 2)))))
-                .distinct()
-                .toList();
-    }
-
 }

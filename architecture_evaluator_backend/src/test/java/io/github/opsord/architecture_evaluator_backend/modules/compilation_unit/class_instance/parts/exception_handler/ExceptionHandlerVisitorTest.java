@@ -3,8 +3,8 @@ package io.github.opsord.architecture_evaluator_backend.modules.compilation_unit
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.ExceptionHandlingInstance;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.exception_handler.ExceptionHandlerVisitor;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.parts.ExceptionHandlingInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.parts.exception_handler.ExceptionHandlerVisitor;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;

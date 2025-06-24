@@ -1,7 +1,6 @@
 package io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services;
 
-import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.LayerAnnotation;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_instance.FileInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.FileInstance;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_instance.FileInstanceService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -54,20 +53,5 @@ public class SrcScannerService {
             }
         }
         return fileInstances;
-    }
-
-    /**
-     * Filters FileInstances by LayerType.
-     */
-    public List<FileInstance> filterByLayerType(List<FileInstance> fileInstances, LayerAnnotation layerAnnotation) {
-        List<FileInstance> filtered = new ArrayList<>();
-        for (FileInstance unit : fileInstances) {
-            if (unit.getClasses() != null && !unit.getClasses().isEmpty()) {
-                if (unit.getClasses().get(0).getLayerAnnotation() == layerAnnotation) {
-                    filtered.add(unit);
-                }
-            }
-        }
-        return filtered;
     }
 }

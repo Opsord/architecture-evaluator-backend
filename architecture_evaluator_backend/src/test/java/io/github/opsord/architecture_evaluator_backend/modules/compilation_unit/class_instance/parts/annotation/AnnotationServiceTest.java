@@ -3,7 +3,7 @@ package io.github.opsord.architecture_evaluator_backend.modules.compilation_unit
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.annotation.AnnotationService;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_types.annotation_instance.AnnotationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -64,7 +64,7 @@ class AnnotationServiceTest {
     }
 
     @Test
-    void testGetAnnotationsFromFile_multipleClasses() {
+    void testGetAnnotationsFromCompUnit_multipleClasses() {
         String source = """
             @Entity
             class A {}
@@ -76,7 +76,7 @@ class AnnotationServiceTest {
         """;
         CompilationUnit cu = StaticJavaParser.parse(source);
 
-        List<String> annotations = annotationService.getAnnotationsFromFile(cu);
+        List<String> annotations = annotationService.getAnnotationsFromCompUnit(cu);
 
         assertEquals(2, annotations.size());
         assertTrue(annotations.contains("Entity"));

@@ -3,7 +3,7 @@ package io.github.opsord.architecture_evaluator_backend.modules.compilation_unit
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.annotation.AnnotationVisitor;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_types.annotation_instance.AnnotationVisitor;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;

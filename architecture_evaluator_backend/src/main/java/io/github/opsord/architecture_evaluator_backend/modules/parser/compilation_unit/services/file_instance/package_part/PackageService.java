@@ -16,4 +16,10 @@ public class PackageService {
         compilationUnit.accept(visitor, importedPackages);
         return importedPackages;
     }
+
+    public String getPackageNameFromCompUnit(CompilationUnit compilationUnit) {
+        return compilationUnit.getPackageDeclaration()
+                .map(pkg -> pkg.getName().asString())
+                .orElse("");
+    }
 }

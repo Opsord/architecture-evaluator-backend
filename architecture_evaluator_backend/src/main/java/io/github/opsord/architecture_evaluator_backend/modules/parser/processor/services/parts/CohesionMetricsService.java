@@ -1,8 +1,9 @@
 package io.github.opsord.architecture_evaluator_backend.modules.parser.processor.services.parts;
 
-import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.VariableInstance;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.method.MethodInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.JavaTypeInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_types.ClassInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.parts.VariableInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.parts.method.MethodInstance;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.parts.CohesionMetricsDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,35 +15,44 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CohesionMetricsService {
 
-    public CohesionMetricsDTO calculateCohesionMetrics(ClassInstance classInstance) {
-        CohesionMetricsDTO metrics = new CohesionMetricsDTO();
+    private static final String INSTANCE_SCOPE = "instance";
 
-        // Cache core data
-        List<MethodInstance> methods = classInstance.getMethods();
-        List<VariableInstance> vars = classInstance.getClassVariables().stream()
-                .filter(v -> "instance".equals(v.getScope()))
-                .toList();
+    public CohesionMetricsDTO calculateCohesionMetrics(JavaTypeInstance javaTypeInstance) {
+        if (javaTypeInstance == null || javaTypeInstance.getType() == null || javaTypeInstance.getContent() == null) {
+            return new CohesionMetricsDTO();
+        }
+        if (javaTypeInstance.getType().isClassType()) {
+            ClassInstance classInstance = (ClassInstance) javaTypeInstance.getContent();
+            CohesionMetricsDTO metrics = new CohesionMetricsDTO();
 
-        // Precompute field-sharing adjacency
-        boolean[][] fieldGraph = buildFieldGraph(methods, vars);
+            // Cache core data
+            List<MethodInstance> methods = classInstance.getMethods();
+            List<VariableInstance> vars = classInstance.getClassVariables().stream()
+                    .filter(v -> INSTANCE_SCOPE.equals(v.getScope()))
+                    .toList();
 
-        // Section: LCOM1
-        metrics.setLackOfCohesion1(calculateLCOM1(methods.size(), fieldGraph));
+            // Precompute field-sharing adjacency
+            boolean[][] fieldGraph = buildFieldGraph(methods, vars);
 
-        // Section: LCOM2
-        metrics.setLackOfCohesion2(calculateLCOM2(methods, vars));
+            // Section: LCOM1
+            metrics.setLackOfCohesion1(calculateLCOM1(methods.size(), fieldGraph));
 
-        // Section: LCOM3
-        metrics.setLackOfCohesion3(calculateLCOM3(fieldGraph));
+            // Section: LCOM2
+            metrics.setLackOfCohesion2(calculateLCOM2(methods, vars));
 
-        // Section: LCOM4
-        boolean[][] fullGraph = mergeCallGraph(fieldGraph, methods);
-        metrics.setLackOfCohesion4(Math.max(0, calculateLCOM3(fullGraph)));
+            // Section: LCOM3
+            metrics.setLackOfCohesion3(calculateLCOM3(fieldGraph));
 
-        // Section: LCOM5
-        metrics.setLackOfCohesion5(calculateLCOM5(methods, vars));
+            // Section: LCOM4
+            boolean[][] fullGraph = mergeCallGraph(fieldGraph, methods);
+            metrics.setLackOfCohesion4(Math.max(0, calculateLCOM3(fullGraph)));
 
-        return metrics;
+            // Section: LCOM5
+            metrics.setLackOfCohesion5(calculateLCOM5(methods, vars));
+
+            return metrics;
+        }
+        return new CohesionMetricsDTO();
     }
 
     // -------------------------------------------------------------------------
@@ -80,7 +90,7 @@ public class CohesionMetricsService {
         // Count accesses per variable
         Map<String, Long> accessCount = methods.stream()
                 .flatMap(m -> m.getMethodVariables().stream())
-                .filter(v -> "instance".equals(v.getScope()))
+                .filter(v -> INSTANCE_SCOPE.equals(v.getScope()))
                 .map(VariableInstance::getName)
                 .collect(Collectors.groupingBy(name -> name, Collectors.counting()));
 
@@ -136,7 +146,7 @@ public class CohesionMetricsService {
 
         long totalDistinct = methods.stream()
                 .mapToLong(m -> m.getMethodVariables().stream()
-                        .filter(v -> "instance".equals(v.getScope()))
+                        .filter(v -> INSTANCE_SCOPE.equals(v.getScope()))
                         .map(VariableInstance::getName)
                         .distinct().count())
                 .sum();
