@@ -1,4 +1,4 @@
-package io.github.opsord.architecture_evaluator_backend.modules.compilation_unit.class_instance.parts.variable;
+package io.github.opsord.architecture_evaluator_backend.modules.compilation_unit.parts.variable;
 
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;

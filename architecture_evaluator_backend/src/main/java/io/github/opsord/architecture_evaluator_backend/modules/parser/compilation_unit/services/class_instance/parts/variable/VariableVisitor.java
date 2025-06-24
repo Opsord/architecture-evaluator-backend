@@ -17,10 +17,11 @@ public class VariableVisitor extends VoidVisitorAdapter<List<VariableInstance>> 
         variableInstance.setType(variable.getType().asString());
 
         // Distinguish between instance and local variables
-        if (variable.getParentNode().isPresent() && variable.getParentNode().get() instanceof FieldDeclaration) {
-            variableInstance.setScope("instance"); // Mark as an instance variable
+        var parentNodeOpt = variable.getParentNode();
+        if (parentNodeOpt.isPresent() && parentNodeOpt.get() instanceof FieldDeclaration) {
+            variableInstance.setScope("instance");
         } else {
-            variableInstance.setScope("local"); // Mark as a local variable
+            variableInstance.setScope("local");
         }
 
         collector.add(variableInstance);

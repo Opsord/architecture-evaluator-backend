@@ -1,4 +1,4 @@
-package io.github.opsord.architecture_evaluator_backend.modules.compilation_unit.class_instance.parts.exception_handler;
+package io.github.opsord.architecture_evaluator_backend.modules.compilation_unit.parts.exception_handler;
 
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;

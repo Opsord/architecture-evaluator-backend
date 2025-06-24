@@ -10,13 +10,6 @@ import java.util.List;
 @Service
 public class InterfaceService {
 
-    public List<String> getInterfaceNames(ClassOrInterfaceDeclaration classOrInterfaceDeclaration) {
-        List<String> interfaceNames = new ArrayList<>();
-        InterfaceVisitor visitor = new InterfaceVisitor();
-        classOrInterfaceDeclaration.accept(visitor, interfaceNames);
-        return interfaceNames;
-    }
-
     public List<String> getImplementedInterfaces(ClassOrInterfaceDeclaration classOrInterfaceDeclaration) {
         List<String> implementedInterfaces = new ArrayList<>();
         InterfaceVisitor visitor = new InterfaceVisitor();
