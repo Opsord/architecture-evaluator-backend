@@ -25,7 +25,7 @@ public class ImportClassifierService {
      */
     public Map<ImportCategory, List<String>> classifyDependencies(Optional<PomFileInstance> pomFileInstance,
                                                                   FileInstance fileInstance, String internalBasePackage) {
-        Map<ImportCategory, List<String>> classifiedDependencies = new HashMap<>();
+        Map<ImportCategory, List<String>> classifiedDependencies = new EnumMap<>(ImportCategory.class);
 
         List<String> importedPackages = fileInstance.getImportedPackages();
         ParentSectionDTO parentSection = pomFileInstance.map(PomFileInstance::getParentSection).orElse(null);

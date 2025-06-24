@@ -70,7 +70,6 @@ public class GradleScannerService {
     }
 
     private String extractJavaVersion(List<String> lines) {
-        // Looks for: sourceCompatibility = '17' or java { sourceCompatibility = JavaVersion.VERSION_17 }
         Pattern pattern1 = Pattern.compile("sourceCompatibility\\s*=\\s*['\"]?([\\w.]+)['\"]?");
         Pattern pattern2 = Pattern.compile("sourceCompatibility\\s*=\\s*JavaVersion\\.VERSION_(\\d+)");
         for (String line : lines) {

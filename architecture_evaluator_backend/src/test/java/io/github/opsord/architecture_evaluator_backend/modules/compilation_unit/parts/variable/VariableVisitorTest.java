@@ -29,10 +29,10 @@ class VariableVisitorTest {
         clazz.accept(visitor, variables);
 
         assertEquals(1, variables.size());
-        VariableInstance var = variables.get(0);
-        assertEquals("number", var.getName());
-        assertEquals("int", var.getType());
-        assertEquals("instance", var.getScope());
+        VariableInstance variableInstance = variables.get(0);
+        assertEquals("number", variableInstance.getName());
+        assertEquals("int", variableInstance.getType());
+        assertEquals("instance", variableInstance.getScope());
     }
 
     @Test
@@ -52,10 +52,10 @@ class VariableVisitorTest {
         clazz.accept(visitor, variables);
 
         assertEquals(1, variables.size());
-        VariableInstance var = variables.get(0);
-        assertEquals("text", var.getName());
-        assertEquals("String", var.getType());
-        assertEquals("local", var.getScope());
+        VariableInstance variableInstance = variables.get(0);
+        assertEquals("text", variableInstance.getName());
+        assertEquals("String", variableInstance.getType());
+        assertEquals("local", variableInstance.getScope());
     }
 
     @Test

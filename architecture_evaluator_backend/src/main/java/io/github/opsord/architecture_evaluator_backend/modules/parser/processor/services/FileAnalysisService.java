@@ -51,7 +51,6 @@ public class FileAnalysisService {
         return result;
     }
 
-    // Returns int[]{classCount, interfaceCount, statementCount}
     private int[] computeBasicMetrics(FileInstance fileInstance) {
         int classCount = 0;
         int interfaceCount = 0;

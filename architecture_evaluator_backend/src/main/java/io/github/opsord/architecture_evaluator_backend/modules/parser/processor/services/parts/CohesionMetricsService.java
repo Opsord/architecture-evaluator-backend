@@ -14,13 +14,15 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CohesionMetricsService {
 
+    private static final String INSTANCE_SCOPE = "instance";
+
     public CohesionMetricsDTO calculateCohesionMetrics(ClassInstance classInstance) {
         CohesionMetricsDTO metrics = new CohesionMetricsDTO();
 
         // Cache core data
         List<MethodInstance> methods = classInstance.getMethods();
         List<VariableInstance> vars = classInstance.getClassVariables().stream()
-                .filter(v -> "instance".equals(v.getScope()))
+                .filter(v -> INSTANCE_SCOPE.equals(v.getScope()))
                 .toList();
 
         // Precompute field-sharing adjacency
@@ -80,7 +82,7 @@ public class CohesionMetricsService {
         // Count accesses per variable
         Map<String, Long> accessCount = methods.stream()
                 .flatMap(m -> m.getMethodVariables().stream())
-                .filter(v -> "instance".equals(v.getScope()))
+                .filter(v -> INSTANCE_SCOPE.equals(v.getScope()))
                 .map(VariableInstance::getName)
                 .collect(Collectors.groupingBy(name -> name, Collectors.counting()));
 
@@ -136,7 +138,7 @@ public class CohesionMetricsService {
 
         long totalDistinct = methods.stream()
                 .mapToLong(m -> m.getMethodVariables().stream()
-                        .filter(v -> "instance".equals(v.getScope()))
+                        .filter(v -> INSTANCE_SCOPE.equals(v.getScope()))
                         .map(VariableInstance::getName)
                         .distinct().count())
                 .sum();
