@@ -72,10 +72,6 @@ public class ClassVisitor extends VoidVisitorAdapter<List<ClassInstance>> {
         } else if (declaration.isEnumDeclaration()) {
             instance.setJavaFileType(JavaFileType.ENUM);
         } else if (declaration.isAnnotationDeclaration()) {
-            instance.setJavaFileType(JavaFileType.ANNOTATION);
-        } else if (declaration.isRecordDeclaration()) {
-            instance.setJavaFileType(JavaFileType.RECORD);
-        } else if (declaration.isAbstract()) {
             instance.setJavaFileType(JavaFileType.ABSTRACT_CLASS);
         } else {
             instance.setJavaFileType(JavaFileType.CLASS);
