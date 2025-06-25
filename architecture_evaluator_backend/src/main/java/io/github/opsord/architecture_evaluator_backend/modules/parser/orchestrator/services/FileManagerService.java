@@ -109,15 +109,29 @@ public class FileManagerService {
     }
 
     /**
-     * Saves an uploaded file to a secure temporary directory.
+     * Saves an uploaded file to a secure temporary directory with a sanitized filename.
      * @param file The uploaded MultipartFile.
      * @return The saved file.
      * @throws IOException If an error occurs during file saving.
      */
     public File saveUploadedFile(MultipartFile file) throws IOException {
         File tempDir = createSecureTempDirectory("uploadedProject");
-        File uploadedFile = new File(tempDir, Objects.requireNonNull(file.getOriginalFilename()));
+
+        // Sanitize the filename: extract extension and generate a secure name
+        String originalFilename = Objects.requireNonNull(file.getOriginalFilename());
+        String extension = "";
+        int lastDotIndex = originalFilename.lastIndexOf('.');
+        if (lastDotIndex > 0) {
+            extension = originalFilename.substring(lastDotIndex);
+        }
+
+        // Generate a secure filename using UUID
+        String secureFilename = java.util.UUID.randomUUID() + extension;
+
+        // Create the file using the secure name
+        File uploadedFile = new File(tempDir, secureFilename);
         file.transferTo(uploadedFile);
+
         return uploadedFile;
     }
 
@@ -171,15 +185,25 @@ public class FileManagerService {
 
     /**
      * Processes a single entry from an archive, extracting it to the target directory.
-     * Prevents directory traversal attacks by checking canonical paths.
+     * Prevents directory traversal attacks by normalizing paths and checking canonical paths.
      */
     private void processArchiveEntry(ArchiveEntry entry, InputStream archiveStream, File extractedDir) throws IOException {
+        // Normalize the entry name and remove any path traversal attempts
         String entryName = entry.getName().replace("\\", "/");
+
+        // Remove any leading slashes or drive letters
+        entryName = entryName.replaceAll("^[/\\\\]|^[A-Za-z]:", "");
+
+        // Remove any path traversal sequences
+        entryName = entryName.replace("\\.\\./", "");
+
+        // Construct a safe output file path
         File outputFile = new File(extractedDir, entryName);
+
+        // Security check: ensure the entry is within the extraction directory
         String canonicalExtractedDir = extractedDir.getCanonicalPath();
         String canonicalOutputFile = outputFile.getCanonicalPath();
 
-        // Security check: ensure the entry is within the extraction directory
         if (!canonicalOutputFile.startsWith(canonicalExtractedDir + File.separator)) {
             throw new IOException("Entry is outside of the target dir: " + entry.getName());
         }
