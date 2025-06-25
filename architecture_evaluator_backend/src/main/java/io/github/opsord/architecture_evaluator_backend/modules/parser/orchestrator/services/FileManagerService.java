@@ -108,27 +108,27 @@ public class FileManagerService {
         return parts;
     }
 
-    /**
-     * Saves an uploaded file to a secure temporary directory with a sanitized filename.
-     * @param file The uploaded MultipartFile.
-     * @return The saved file.
-     * @throws IOException If an error occurs during file saving.
-     */
     public File saveUploadedFile(MultipartFile file) throws IOException {
         File tempDir = createSecureTempDirectory("uploadedProject");
 
-        // Sanitize the filename: extract extension and generate a secure name
+        // Get the original filename and validate the extension
         String originalFilename = Objects.requireNonNull(file.getOriginalFilename());
         String extension = "";
         int lastDotIndex = originalFilename.lastIndexOf('.');
         if (lastDotIndex > 0) {
-            extension = originalFilename.substring(lastDotIndex);
+            extension = originalFilename.substring(lastDotIndex).toLowerCase();
+            // Allow only specific archive file extensions
+            if (!extension.matches("\\.(zip|tar|gz|rar|7z)$")) {
+                throw new IOException("Invalid file extension");
+            }
+        } else {
+            throw new IOException("File must have an extension");
         }
 
-        // Generate a secure filename using UUID
+        // Generate a secure filename using UUID to prevent conflicts
         String secureFilename = java.util.UUID.randomUUID() + extension;
 
-        // Create the file using the secure name
+        // Create the file in the temporary directory
         File uploadedFile = new File(tempDir, secureFilename);
         file.transferTo(uploadedFile);
 
