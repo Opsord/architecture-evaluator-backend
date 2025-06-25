@@ -52,12 +52,12 @@ public class ScannerService {
 
     private boolean isValidDirectory(File file) {
         if (file == null || !file.isDirectory()) {
-            logger.warn("Invalid starting directory: {}", file != null ? file.getAbsolutePath() : "null");
+            logger.warn("Invalid starting directory");
             return false;
         }
 
         if (DEFAULT_IGNORED_FOLDERS.contains(file.getName())) {
-            logger.info("Skipping ignored folder: {}", file.getAbsolutePath());
+            logger.info("Skipping ignored folder");
             return false;
         }
 
