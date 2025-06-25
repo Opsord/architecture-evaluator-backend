@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
@@ -33,25 +32,80 @@ public class FileManagerService {
      * @param repoUrl The URL of the GitHub repository.
      * @return The downloaded ZIP file.
      * @throws IOException If an error occurs during download or file creation.
+     * @throws IllegalArgumentException If the provided URL is not a valid GitHub repository URL.
      */
-    public File downloadGitHubRepository(String repoUrl) throws IOException {
-        // Ensure the URL ends with a slash
-        if (!repoUrl.endsWith("/")) {
-            repoUrl += "/";
+    public File downloadGitHubRepository(String repoUrl) throws IOException, IllegalArgumentException {
+        // Validate that this is a GitHub URL
+        if (!isValidGitHubUrl(repoUrl)) {
+            throw new IllegalArgumentException("Invalid GitHub repository URL: " + repoUrl);
         }
-        String zipUrl = repoUrl + "archive/refs/heads/main.zip";
+
+        // Extract owner and repo name from the URL
+        String[] parts = extractGitHubRepoDetails(repoUrl);
+        String owner = parts[0];
+        String repo = parts[1];
+
+        // Construct the ZIP URL using the extracted components
+        String zipUrlString = String.format("https://github.com/%s/%s/archive/refs/heads/main.zip", owner, repo);
 
         // Create a secure temporary directory for the ZIP file
         File tempDir = createSecureTempDirectory("githubRepo");
+        return getZipFile(tempDir, zipUrlString);
+    }
+
+    private File getZipFile(File tempDir, String zipUrlString) throws IOException {
         File zipFile = new File(tempDir, "repo.zip");
 
-        // Download the ZIP file
-        try (InputStream in = new URL(zipUrl).openStream();
-             OutputStream out = new FileOutputStream(zipFile)) {
-            in.transferTo(out);
+        // Download the ZIP file using URI (more secure than URL)
+        try {
+            java.net.URI uri = new java.net.URI(zipUrlString);
+            try (InputStream in = uri.toURL().openStream();
+                 OutputStream out = new FileOutputStream(zipFile)) {
+                in.transferTo(out);
+            }
+        } catch (java.net.URISyntaxException e) {
+            throw new IllegalArgumentException("Invalid URL syntax: " + e.getMessage(), e);
+        }
+        return zipFile;
+    }
+
+    /**
+     * Validates if the provided URL is a legitimate GitHub repository URL.
+     * @param url The URL to validate.
+     * @return true if the URL is a valid GitHub repository URL, false otherwise.
+     */
+    private boolean isValidGitHubUrl(String url) {
+        if (url == null || url.isEmpty()) {
+            return false;
         }
 
-        return zipFile;
+        // Basic pattern matching for GitHub URLs
+        // Accepts formats like:
+        // - https://github.com/username/repo
+        // - http://github.com/username/repo
+        // - github.com/username/repo
+        String pattern = "^(https?://)?(www\\.)?github\\.com/[\\w-]+/[\\w.-]+/?$";
+        return url.matches(pattern);
+    }
+
+    /**
+     * Extracts the owner and repository name from a GitHub URL.
+     * @param url The GitHub URL.
+     * @return String array containing [owner, repositoryName].
+     * @throws IllegalArgumentException if the URL format is invalid.
+     */
+    private String[] extractGitHubRepoDetails(String url) {
+        // Remove protocol if present
+        String cleaned = url.replaceAll("^(https?://)?(www\\.)?github\\.com/", "");
+        // Remove the trailing slash if present
+        cleaned = cleaned.endsWith("/") ? cleaned.substring(0, cleaned.length() - 1) : cleaned;
+
+        String[] parts = cleaned.split("/");
+        if (parts.length != 2) {
+            throw new IllegalArgumentException("Invalid GitHub URL format. Expected format: github.com/owner/repo");
+        }
+
+        return parts;
     }
 
     /**
