@@ -230,7 +230,7 @@ public class FileManagerService {
      * @return The created temporary directory.
      * @throws IOException If directory creation fails.
      */
-    private File createSecureTempDirectory(String prefix) throws IOException {
+    public File createSecureTempDirectory(String prefix) throws IOException {
         String os = System.getProperty("os.name").toLowerCase();
         File tempDir;
         if (os.contains("win")) {

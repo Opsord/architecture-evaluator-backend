@@ -22,14 +22,15 @@ public class OrchestratorController {
     private final OrchestratorService orchestratorService;
     private final FileManagerService fileManagerService;
 
-    @PostMapping("/analyze")
     public ResponseEntity<ProjectAnalysisInstance> analyzeProject(@RequestParam String projectPath) {
         try {
-            logger.info("Received request to analyze project locally");
+            // Sanitize projectPath for logging to prevent log injection
+            String safeProjectPath = projectPath.replaceAll("[\\r\\n]", "_");
+            logger.info("Received request to analyze project locally: {}", safeProjectPath);
             ProjectAnalysisInstance result = orchestratorService.orchestrateProjectAnalysis(projectPath);
             return ResponseEntity.ok(result);
         } catch (IOException e) {
-            logger.error("Error analyzing project at path: {}", projectPath, e);
+            logger.error("Error analyzing project at path: {}", projectPath.replaceAll("[\\r\\n]", "_"), e);
             return ResponseEntity.internalServerError().build();
         }
     }

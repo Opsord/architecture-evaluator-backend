@@ -238,4 +238,98 @@ class FileManagerServiceTest {
         assertFalse(file.exists(), "File should not exist after deletion attempt");
     }
 
+    @Test
+    void testCreateSecureTempDirectory_emptyPrefix() throws Exception {
+        var method = FileManagerService.class.getDeclaredMethod("createSecureTempDirectory", String.class);
+        method.setAccessible(true);
+        try {
+            File dir = (File) method.invoke(fileManagerService, "");
+            assertTrue(dir.exists());
+            fileManagerService.deleteRecursively(dir);
+        } catch (Exception e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof IOException && cause.getMessage().contains("Failed to set secure permissions")) {
+                // On Windows, the permission setting may fail; skip this assertion
+                return;
+            }
+            throw e;
+        }
+    }
+
+    @Test
+    void testCreateSecureTempDirectory_specialCharsPrefix() throws Exception {
+        var method = FileManagerService.class.getDeclaredMethod("createSecureTempDirectory", String.class);
+        method.setAccessible(true);
+        String prefix = "prefix!@#$%^&*()";
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("win")) {
+            Exception ex = assertThrows(Exception.class, () -> {
+                try {
+                    method.invoke(fileManagerService, prefix);
+                } catch (java.lang.reflect.InvocationTargetException e) {
+                    throw e.getCause();
+                }
+            });
+            assertTrue(ex instanceof IOException, "Expected IOException but got: " + ex.getClass());
+        } else {
+            File dir = (File) method.invoke(fileManagerService, prefix);
+            assertTrue(dir.exists());
+            fileManagerService.deleteRecursively(dir);
+        }
+    }
+
+    @Test
+    void testCreateSecureTempDirectory_directoryAlreadyExists() throws Exception {
+        String prefix = "existingDirTest";
+        File baseTemp = new File(System.getProperty("java.io.tmpdir"));
+        File existingDir = new File(baseTemp, prefix + "-alreadyexists");
+        existingDir.mkdir();
+        var method = FileManagerService.class.getDeclaredMethod("createSecureTempDirectory", String.class);
+        method.setAccessible(true);
+        try {
+            Exception ex = assertThrows(Exception.class, () -> {
+                try {
+                    method.invoke(fileManagerService, prefix);
+                } catch (java.lang.reflect.InvocationTargetException e) {
+                    throw e.getCause();
+                }
+            });
+            assertTrue(ex instanceof IOException, "Expected IOException but got: " + ex.getClass());
+        } finally {
+            existingDir.delete();
+        }
+    }
+
+    @Test
+    void testCreateSecureTempDirectory_permissionFailure() throws Exception {
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("win")) {
+            File baseTemp = new File(System.getProperty("java.io.tmpdir"));
+            File tempDir = new File(baseTemp, "failperm-" + java.util.UUID.randomUUID());
+            tempDir.mkdir();
+            // Remove permissions so setReadable/setWritable/setExecutable will fail
+            tempDir.setReadable(false, false);
+            tempDir.setWritable(false, false);
+            tempDir.setExecutable(false, false);
+            try {
+                var method = FileManagerService.class.getDeclaredMethod("createSecureTempDirectory", String.class);
+                method.setAccessible(true);
+                Exception ex = assertThrows(Exception.class, () -> {
+                    try {
+                        method.invoke(fileManagerService, "failperm");
+                    } catch (java.lang.reflect.InvocationTargetException e) {
+                        throw e.getCause();
+                    }
+                });
+                assertTrue(ex instanceof IOException, "Expected IOException but got: " + ex.getClass());
+            } finally {
+                // Restore permissions to allow deletion
+                tempDir.setReadable(true, false);
+                tempDir.setWritable(true, false);
+                tempDir.setExecutable(true, false);
+                tempDir.delete();
+            }
+        }
+    }
+
 }
