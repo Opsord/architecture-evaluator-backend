@@ -6,5 +6,5 @@ import lombok.Data;
 @Data
 public class ProcessedClassInstance {
     private ClassInstance classInstance;
-    private ClassAnalysis classAnalysis;
+    private ClassAnalysisInstance classAnalysisInstance;
 }

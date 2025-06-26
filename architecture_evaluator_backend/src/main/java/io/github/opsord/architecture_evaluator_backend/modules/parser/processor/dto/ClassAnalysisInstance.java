@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 @Data
-public class ClassAnalysis {
+public class ClassAnalysisInstance {
     private int classCount;
     private int interfaceCount;
     private int statementCount;

@@ -1,7 +1,7 @@
 package io.github.opsord.architecture_evaluator_backend.modules.parser.processor.services;
 
 import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_instance.FileInstance;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.ClassAnalysis;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.ClassAnalysisInstance;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.ProcessedClassInstance;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.parts.ImportCategory;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.services.parts.ImportClassifierService;
@@ -35,7 +35,7 @@ public class FileAnalysisService {
         // Replace stream with direct list creation for better performance
         List<ProcessedClassInstance> result = new ArrayList<>(fileInstance.getClasses().size());
         for (var classInstance : fileInstance.getClasses()) {
-            ClassAnalysis analysis = classAnalysisService.analyseClassInstance(
+            ClassAnalysisInstance analysis = classAnalysisService.analyseClassInstance(
                     classInstance,
                     classifiedDependencies);
             analysis.setClassCount(metrics[0]);
@@ -44,7 +44,7 @@ public class FileAnalysisService {
 
             ProcessedClassInstance pci = new ProcessedClassInstance();
             pci.setClassInstance(classInstance);
-            pci.setClassAnalysis(analysis);
+            pci.setClassAnalysisInstance(analysis);
             result.add(pci);
         }
 
