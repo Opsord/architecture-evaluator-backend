@@ -25,7 +25,7 @@ public class OrchestratorController {
     @PostMapping("/analyze")
     public ResponseEntity<ProjectAnalysisInstance> analyzeProject(@RequestParam String projectPath) {
         try {
-            logger.info("Received request to analyze project at path: {}", projectPath);
+            logger.info("Received request to analyze project locally");
             ProjectAnalysisInstance result = orchestratorService.orchestrateProjectAnalysis(projectPath);
             return ResponseEntity.ok(result);
         } catch (IOException e) {
@@ -66,7 +66,7 @@ public class OrchestratorController {
     public ResponseEntity<ProjectAnalysisInstance> analyzeGitHubRepo(@RequestParam String repoUrl) {
         File tempDir = null;
         try {
-            logger.info("Received request to analyze GitHub repository: {}", repoUrl);
+            logger.info("Received request to analyze GitHub repository");
 
             // Download the repository as a ZIP file
             File zipFile = fileManagerService.downloadGitHubRepository(repoUrl);

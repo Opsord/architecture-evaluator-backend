@@ -60,6 +60,8 @@ class ScannerServiceTest {
     void testFindProjectRoot_onlyPom() throws Exception {
         File tempDir = Files.createTempDirectory("project").toFile();
         new File(tempDir, "pom.xml").createNewFile();
+        // Add an extra file to differentiate from testFindProjectRoot_noSrc
+        new File(tempDir, "README.md").createNewFile();
 
         File root = scannerService.findProjectRoot(tempDir);
         assertNull(root);

@@ -1,6 +1,7 @@
 package io.github.opsord.architecture_evaluator_backend.modules.orchestrator;
 
 import io.github.opsord.architecture_evaluator_backend.modules.parser.orchestrator.services.FileManagerService;
+import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.junit.jupiter.api.*;
@@ -165,10 +166,76 @@ class FileManagerServiceTest {
         } catch (Exception e) {
             Throwable cause = e.getCause();
             if (cause instanceof IOException && cause.getMessage().contains("Failed to set secure permissions")) {
-                // On Windows, permission setting may fail; skip this assertion
+                // On Windows, the permission setting may fail; skip this assertion
                 return;
             }
             throw e;
         }
     }
+
+    @Test
+    void testDownloadGitHubRepository_invalidUrl() {
+        assertThrows(IllegalArgumentException.class, () ->
+                fileManagerService.downloadGitHubRepository("https://gitlab.com/user/repo")
+        );
+    }
+
+    @Test
+    void testDownloadGitHubRepository_invalidSyntax() {
+        assertThrows(IllegalArgumentException.class, () ->
+                fileManagerService.downloadGitHubRepository("ht!tp://github.com/user/repo")
+        );
+    }
+
+    @Test
+    void testExtractArchive_entryOutsideExtractionDir() throws Exception {
+        // Crea un zip con una entrada maliciosa
+        File tempDir = Files.createTempDirectory("ziptest").toFile();
+        File zipFile = new File(tempDir, "test.zip");
+        try (ZipArchiveOutputStream zos = new ZipArchiveOutputStream(zipFile)) {
+            ZipArchiveEntry entry = new ZipArchiveEntry("../evil.txt");
+            zos.putArchiveEntry(entry);
+            zos.write("bad".getBytes());
+            zos.closeArchiveEntry();
+        }
+        assertThrows(IOException.class, () -> fileManagerService.extractArchive(zipFile));
+        fileManagerService.deleteRecursively(tempDir);
+    }
+
+    @Test
+    void testProcessArchiveEntry_directoryCreationFailure() throws Exception {
+        File tempDir = Files.createTempDirectory("faildirtest").toFile();
+        File extractedDir = new File(tempDir, "extracted");
+        extractedDir.delete(); // Ensure it does not exist
+
+        FileManagerService service = new FileManagerService();
+        ArchiveEntry entry = mock(ArchiveEntry.class);
+        when(entry.getName()).thenReturn("dir/");
+        when(entry.isDirectory()).thenReturn(true);
+
+        // Make extractedDir a file, so mkdir() will fail
+        assertTrue(extractedDir.createNewFile());
+
+        var method = FileManagerService.class.getDeclaredMethod("processArchiveEntry", ArchiveEntry.class, InputStream.class, File.class);
+        method.setAccessible(true);
+        assertThrows(IOException.class, () -> {
+            try {
+                method.invoke(service, entry, new ByteArrayInputStream(new byte[0]), extractedDir);
+            } catch (java.lang.reflect.InvocationTargetException e) {
+                throw e.getCause();
+            }
+        });
+
+        extractedDir.delete();
+        tempDir.delete();
+    }
+
+    @Test
+    void testDeleteRecursively_nonExistentFile() {
+        File file = new File("nonexistentfile.txt");
+        // No debe lanzar excepción
+        fileManagerService.deleteRecursively(file);
+        assertFalse(file.exists(), "File should not exist after deletion attempt");
+    }
+
 }
