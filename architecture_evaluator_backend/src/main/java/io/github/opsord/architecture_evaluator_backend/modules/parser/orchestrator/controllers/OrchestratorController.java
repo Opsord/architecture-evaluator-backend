@@ -22,6 +22,7 @@ public class OrchestratorController {
     private final OrchestratorService orchestratorService;
     private final FileManagerService fileManagerService;
 
+    @PostMapping("/analyze")
     public ResponseEntity<ProjectAnalysisInstance> analyzeProject(@RequestParam String projectPath) {
         try {
             // Sanitize projectPath for logging to prevent log injection
@@ -53,8 +54,8 @@ public class OrchestratorController {
                     .orchestrateProjectAnalysis(extractedDir.getAbsolutePath());
 
             return ResponseEntity.ok(result);
-        } catch (IOException e) {
-            logger.error("Error analyzing uploaded project", e);
+        } catch (IOException ioException) {
+            logger.error("Error analyzing uploaded project", ioException);
             return ResponseEntity.internalServerError().build();
         } finally {
             if (tempDir != null) {
