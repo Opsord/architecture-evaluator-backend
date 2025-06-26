@@ -94,9 +94,8 @@ public class ImportClassifierService {
      */
     private boolean matchesAnyDependency(String importName, List<PomDependencyInstance> dependencies) {
         for (PomDependencyInstance dep : dependencies) {
-            String basePackage = dep.getBasePackage().replace(".", "/");
-            String artifactId = dep.getArtifactId();
-            if (importName.startsWith(basePackage) || (artifactId != null && importName.contains(artifactId))) {
+            String basePackage = dep.getBasePackage();
+            if (basePackage != null && !basePackage.isEmpty() && importName.startsWith(basePackage)) {
                 return true;
             }
         }
