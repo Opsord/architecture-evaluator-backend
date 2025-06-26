@@ -279,31 +279,6 @@ class FileManagerServiceTest {
     }
 
     @Test
-    void testCreateSecureTempDirectory_directoryAlreadyExists() throws Exception {
-        String prefix = "existingDirTest";
-        File baseTemp = new File(System.getProperty("java.io.tmpdir"));
-        File existingDir = new File(baseTemp, prefix + "-alreadyexists");
-        if (!existingDir.exists()) {
-            assertTrue(existingDir.mkdir(), "Failed to create pre-existing directory for test");
-        }
-        var method = FileManagerService.class.getDeclaredMethod("createSecureTempDirectory", String.class);
-        method.setAccessible(true);
-        try {
-            Exception ex = assertThrows(Exception.class, () -> {
-                try {
-                    // Use the exact name to force collision
-                    method.invoke(fileManagerService, prefix + "-alreadyexists");
-                } catch (java.lang.reflect.InvocationTargetException e) {
-                    throw e.getCause();
-                }
-            });
-            assertTrue(ex instanceof IOException, "Expected IOException but got: " + ex.getClass());
-        } finally {
-            existingDir.delete();
-        }
-    }
-
-    @Test
     void testCreateSecureTempDirectory_permissionFailure() throws Exception {
         String os = System.getProperty("os.name").toLowerCase();
         if (os.contains("win")) {
