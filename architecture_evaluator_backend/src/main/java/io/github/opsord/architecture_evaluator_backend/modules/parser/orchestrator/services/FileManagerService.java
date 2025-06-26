@@ -231,20 +231,25 @@ public class FileManagerService {
      * @throws IOException If directory creation fails.
      */
     private File createSecureTempDirectory(String prefix) throws IOException {
-        File tempDir;
         String os = System.getProperty("os.name").toLowerCase();
+        File tempDir;
         if (os.contains("win")) {
-            tempDir = Files.createTempDirectory(prefix).toFile();
-            // Set permissions and log if any fail
-            if (!tempDir.setReadable(true, true)) {
-                logger.warn("Failed to set readable permission on temp directory: {}", tempDir.getAbsolutePath());
+            // Create a temporary directory in the system temp folder
+            File baseTemp = new File(System.getProperty("java.io.tmpdir"));
+            File userTempDir;
+            do {
+                userTempDir = new File(baseTemp, prefix + "-" + java.util.UUID.randomUUID());
+            } while (userTempDir.exists());
+            if (!userTempDir.mkdir()) {
+                throw new IOException("Failed to create secure temp directory: " + userTempDir.getAbsolutePath());
             }
-            if (!tempDir.setWritable(true, true)) {
-                logger.warn("Failed to set writable permission on temp directory: {}", tempDir.getAbsolutePath());
+            // Restrict permissions to an owner only
+            if (!userTempDir.setReadable(true, true) ||
+                    !userTempDir.setWritable(true, true) ||
+                    !userTempDir.setExecutable(true, true)) {
+                throw new IOException("Failed to set secure permissions on temp directory: " + userTempDir.getAbsolutePath());
             }
-            if (!tempDir.setExecutable(true, true)) {
-                logger.warn("Failed to set executable permission on temp directory: {}", tempDir.getAbsolutePath());
-            }
+            tempDir = userTempDir;
         } else {
             FileAttribute<Set<PosixFilePermission>> attr =
                     PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwx------"));
