@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -239,46 +240,6 @@ class FileManagerServiceTest {
     }
 
     @Test
-    void testCreateSecureTempDirectory_emptyPrefix() throws Exception {
-        var method = FileManagerService.class.getDeclaredMethod("createSecureTempDirectory", String.class);
-        method.setAccessible(true);
-        try {
-            File dir = (File) method.invoke(fileManagerService, "");
-            assertTrue(dir.exists());
-            fileManagerService.deleteRecursively(dir);
-        } catch (Exception e) {
-            Throwable cause = e.getCause();
-            if (cause instanceof IOException && cause.getMessage().contains("Failed to set secure permissions")) {
-                // On Windows, the permission setting may fail; skip this assertion
-                return;
-            }
-            throw e;
-        }
-    }
-
-    @Test
-    void testCreateSecureTempDirectory_specialCharsPrefix() throws Exception {
-        var method = FileManagerService.class.getDeclaredMethod("createSecureTempDirectory", String.class);
-        method.setAccessible(true);
-        String prefix = "prefix!@#$%^&*()";
-        String os = System.getProperty("os.name").toLowerCase();
-        if (os.contains("win")) {
-            Exception ex = assertThrows(Exception.class, () -> {
-                try {
-                    method.invoke(fileManagerService, prefix);
-                } catch (java.lang.reflect.InvocationTargetException e) {
-                    throw e.getCause();
-                }
-            });
-            assertTrue(ex instanceof IOException, "Expected IOException but got: " + ex.getClass());
-        } else {
-            File dir = (File) method.invoke(fileManagerService, prefix);
-            assertTrue(dir.exists());
-            fileManagerService.deleteRecursively(dir);
-        }
-    }
-
-    @Test
     void testCreateSecureTempDirectory_permissionFailure() throws Exception {
         String os = System.getProperty("os.name").toLowerCase();
         if (os.contains("win")) {
@@ -302,6 +263,75 @@ class FileManagerServiceTest {
                 assertTrue(ex instanceof IOException, "Expected IOException but got: " + ex.getClass());
             } finally {
                 // Restore permissions to allow deletion
+                tempDir.setReadable(true, false);
+                tempDir.setWritable(true, false);
+                tempDir.setExecutable(true, false);
+                tempDir.delete();
+            }
+        }
+    }
+
+    @Test
+    void testCreateSecureTempDirectory_normalPrefix() throws IOException {
+        try {
+            File dir = fileManagerService.createSecureTempDirectory("testprefix");
+            assertTrue(dir.exists());
+            assertTrue(dir.isDirectory());
+            fileManagerService.deleteRecursively(dir);
+        } catch (IOException e) {
+            if (e.getMessage().contains("Failed to set secure permissions")) {
+                // On Windows, the permission setting may fail; skip this assertion
+                return;
+            }
+            throw e;
+        }
+    }
+    @Test
+    void testCreateSecureTempDirectory_emptyPrefix() throws IOException {
+        try {
+            File dir = fileManagerService.createSecureTempDirectory("");
+            assertTrue(dir.exists());
+            assertTrue(dir.isDirectory());
+            fileManagerService.deleteRecursively(dir);
+        } catch (IOException e) {
+            if (e.getMessage().contains("Failed to set secure permissions")) {
+                // On Windows, the permission setting may fail; skip this assertion
+                return;
+            }
+            throw e;
+        }
+    }
+
+    @Test
+    void testCreateSecureTempDirectory_specialCharsPrefix() throws Exception {
+        String prefix = "prefix!@#$%^&*()";
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("win")) {
+            Exception ex = assertThrows(IOException.class, () -> fileManagerService.createSecureTempDirectory(prefix));
+            assertTrue(ex.getMessage().contains("Failed to create secure temp directory") ||
+                    ex.getMessage().contains("Failed to set secure permissions"));
+        } else {
+            File dir = fileManagerService.createSecureTempDirectory(prefix);
+            assertTrue(dir.exists());
+            fileManagerService.deleteRecursively(dir);
+        }
+    }
+
+    @Test
+    void testCreateSecureTempDirectory_permissionFailure_windowsOnly() {
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("win")) {
+            File baseTemp = new File(System.getProperty("java.io.tmpdir"));
+            File tempDir = new File(baseTemp, "failperm-" + UUID.randomUUID());
+            tempDir.mkdir();
+            tempDir.setReadable(false, false);
+            tempDir.setWritable(false, false);
+            tempDir.setExecutable(false, false);
+            try {
+                Exception ex = assertThrows(IOException.class, () -> fileManagerService.createSecureTempDirectory("failperm"));
+                assertTrue(ex.getMessage().contains("Failed to create secure temp directory") ||
+                        ex.getMessage().contains("Failed to set secure permissions"));
+            } finally {
                 tempDir.setReadable(true, false);
                 tempDir.setWritable(true, false);
                 tempDir.setExecutable(true, false);
