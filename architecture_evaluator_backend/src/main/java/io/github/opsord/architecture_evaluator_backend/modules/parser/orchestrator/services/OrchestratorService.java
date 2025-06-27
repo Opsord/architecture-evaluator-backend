@@ -38,18 +38,18 @@ public class OrchestratorService {
     private final FileInstanceService fileInstanceService;
 
     public ProjectAnalysisInstance orchestrateProjectAnalysis(String projectPath) throws IOException {
-        logger.info("Starting orchestration for project at path: {}", projectPath);
+        logger.info("Starting orchestration for project");
 
         File projectRoot = scannerService.findProjectRoot(new File(projectPath));
         if (projectRoot == null) {
-            logger.warn("Project root not found for path: {}", projectPath);
+            logger.warn("Project root not found");
             throw new IOException("Project root not found");
         }
 
         List<File> srcFiles = srcScannerService.scanSrcFolder(new File(projectRoot, "src"));
         List<FileInstance> fileInstances = srcScannerService.parseJavaFiles(srcFiles, projectRoot);
         if (fileInstances.isEmpty()) {
-            logger.warn("No Java files found in the project at path: {}", projectPath);
+            logger.warn("No Java files found in the project");
             throw new IOException("No Java files found in the project");
         }
 

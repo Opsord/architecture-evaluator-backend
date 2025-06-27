@@ -59,9 +59,8 @@ class FileManagerServiceTest {
         assertThrows(IllegalArgumentException.class, () -> {
             try {
                 method.invoke(fileManagerService, "https://github.com/user");
-            } catch (java.lang.reflect.InvocationTargetException e) {
-                // Rethrow the actual cause
-                throw e.getCause();
+            } catch (java.lang.reflect.InvocationTargetException exception) {
+                throw exception.getCause();
             }
         });
     }
@@ -72,8 +71,11 @@ class FileManagerServiceTest {
         when(multipartFile.getOriginalFilename()).thenReturn("test.zip");
         File tempFile = File.createTempFile("test", ".zip");
         doAnswer(invocation -> {
-            File dest = invocation.getArgument(0);
-            Files.copy(tempFile.toPath(), dest.toPath());
+            try {
+                Files.copy(tempFile.toPath(), ((File) invocation.getArgument(0)).toPath());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
             return null;
         }).when(multipartFile).transferTo(any(File.class));
 
@@ -136,6 +138,8 @@ class FileManagerServiceTest {
             notArchive.createNewFile();
             assertThrows(IOException.class, () -> fileManagerService.extractArchive(notArchive));
         } catch (IOException ignored) {
+            // Ignore if file creation fails, as we are testing for exception handling
+            fail("Failed to create test file: " + notArchive.getAbsolutePath());
         } finally {
             notArchive.delete();
         }

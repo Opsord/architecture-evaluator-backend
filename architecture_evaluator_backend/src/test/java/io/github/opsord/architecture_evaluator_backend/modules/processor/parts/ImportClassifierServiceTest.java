@@ -22,7 +22,7 @@ class ImportClassifierServiceTest {
         return file;
     }
 
-    private PomDependencyInstance dep(String groupId, String artifactId, String basePackage) {
+    private PomDependencyInstance dep(String groupId, String artifactId) {
         PomDependencyInstance d = new PomDependencyInstance();
         d.setGroupId(groupId);
         d.setArtifactId(artifactId);
@@ -50,7 +50,7 @@ class ImportClassifierServiceTest {
         );
         FileInstance file = fileWithImports(imports);
 
-        PomDependencyInstance knownDep = dep("external.known.lib", "lib", "external.known.lib");
+        PomDependencyInstance knownDep = dep("external.known.lib", "lib");
         ParentSectionDTO parentSection = parent("parent.groupid", "parent-artifact");
         PomFileInstance pom = new PomFileInstance();
         pom.setDependencies(List.of(knownDep));
@@ -70,7 +70,7 @@ class ImportClassifierServiceTest {
 
     @Test
     void classify_singleImport() {
-        PomDependencyInstance knownDep = dep("external.known.lib", "lib", "external.known.lib");
+        PomDependencyInstance knownDep = dep("external.known.lib", "lib");
         ParentSectionDTO parentSection = parent("parent.groupid", "parent-artifact");
         List<PomDependencyInstance> deps = List.of(knownDep);
 

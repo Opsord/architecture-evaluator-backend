@@ -70,7 +70,7 @@ class OrchestratorServiceTest {
 
         when(scannerService.findProjectRoot(any())).thenReturn(projectRoot);
         when(srcScannerService.scanSrcFolder(any())).thenReturn(srcFiles);
-        when(srcScannerService.parseJavaFiles(eq(srcFiles), eq(projectRoot))).thenReturn(fileInstances);
+        when(srcScannerService.parseJavaFiles(srcFiles, projectRoot)).thenReturn(fileInstances);
         when(pomScannerService.scanPomFile(any())).thenReturn(Optional.empty());
         when(gradleScannerService.scanGradleFile(any())).thenReturn(Optional.empty());
         when(analysisService.analyseFileInstance(any(), any(), any())).thenReturn(List.of(processed));
@@ -146,8 +146,8 @@ class OrchestratorServiceTest {
         FileInstance fileB = new FileInstance(); fileB.setClasses(List.of(b));
         List<FileInstance> allFiles = List.of(fileA, fileB);
 
-        when(fileInstanceService.getDependentClassNamesFromClass(eq(a), eq(allFiles))).thenReturn(List.of("B"));
-        when(fileInstanceService.getDependentClassNamesFromClass(eq(b), eq(allFiles))).thenReturn(List.of());
+        when(fileInstanceService.getDependentClassNamesFromClass(a, allFiles)).thenReturn(List.of("B"));
+        when(fileInstanceService.getDependentClassNamesFromClass(b, allFiles)).thenReturn(List.of());
 
         orchestratorService.populateClassDependencies(allFiles);
 
