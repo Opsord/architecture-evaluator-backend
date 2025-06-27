@@ -35,7 +35,6 @@ public class FileManagerService {
      * @throws IOException If an error occurs during download or file creation.
      * @throws IllegalArgumentException If the provided URL is not a valid GitHub repository URL.
      */
-    @Generated(value = "CodeCoverageExclusion")
     public File downloadGitHubRepository(String repoUrl) throws IOException, IllegalArgumentException {
         // Validate that this is a GitHub URL
         if (!isValidGitHubUrl(repoUrl)) {
@@ -232,7 +231,6 @@ public class FileManagerService {
      * @return The created temporary directory.
      * @throws IOException If directory creation fails.
      */
-    @Generated(value = "CodeCoverageExclusion")
     public File createSecureTempDirectory(String prefix) throws IOException {
         String os = System.getProperty("os.name").toLowerCase();
         File tempDir;

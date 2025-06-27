@@ -340,4 +340,23 @@ class FileManagerServiceTest {
         }
     }
 
+    @Test
+    void testCreateSecureTempDirectory_windowsBranch() throws Exception {
+        String originalOs = System.getProperty("os.name");
+        System.setProperty("os.name", "Windows 10");
+        try {
+            File dir = fileManagerService.createSecureTempDirectory("winprefix");
+            assertTrue(dir.exists());
+            assertTrue(dir.isDirectory());
+            fileManagerService.deleteRecursively(dir);
+        } catch (IOException e) {
+            // On Windows, the permission setting may fail; skip this assertion
+            if (!e.getMessage().contains("Failed to set secure permissions")) {
+                throw e;
+            }
+        } finally {
+            System.setProperty("os.name", originalOs);
+        }
+    }
+
 }
