@@ -243,12 +243,7 @@ public class FileManagerService {
             if (!userTempDir.mkdir()) {
                 throw new IOException("Failed to create secure temp directory: " + userTempDir.getAbsolutePath());
             }
-            // Restrict permissions to an owner only
-            if (!userTempDir.setReadable(true, true) ||
-                    !userTempDir.setWritable(true, true) ||
-                    !userTempDir.setExecutable(true, true)) {
-                throw new IOException("Failed to set secure permissions on temp directory: " + userTempDir.getAbsolutePath());
-            }
+            // On Windows, skip the strict permission setting (not supported)
             tempDir = userTempDir;
         } else {
             FileAttribute<Set<PosixFilePermission>> attr =
