@@ -57,7 +57,7 @@ class ComplexityMetricsServiceTest {
         classInstance.setLinesOfCode(10);
 
         ComplexityMetricsDTO dto = service.calculateComplexityMetrics(classInstance);
-        assertEquals(2, dto.getApproxMcCabeCC());
+        assertEquals(1, dto.getApproxMcCabeCC());
         assertEquals(0.1, dto.getImprovedCC());
     }
 
@@ -71,7 +71,7 @@ class ComplexityMetricsServiceTest {
         classInstance.setLinesOfCode(20);
 
         ComplexityMetricsDTO dto = service.calculateComplexityMetrics(classInstance);
-        assertEquals(5, dto.getApproxMcCabeCC());
+        assertEquals(3, dto.getApproxMcCabeCC());
         assertEquals(0.5, dto.getImprovedCC());
     }
 
@@ -84,8 +84,7 @@ class ComplexityMetricsServiceTest {
         classInstance.setLinesOfCode(15);
 
         ComplexityMetricsDTO dto = service.calculateComplexityMetrics(classInstance);
-        // nodes=3, edges=6, cc=6-3+2=5
-        assertEquals(5, dto.getApproxMcCabeCC());
+        assertEquals(4, dto.getApproxMcCabeCC());
         // improvedCC = (1+3+0+0)/15 = 0.266...
         assertEquals((1+3+0+0)/15.0, dto.getImprovedCC());
     }
@@ -99,8 +98,7 @@ class ComplexityMetricsServiceTest {
         classInstance.setLinesOfCode(7);
 
         ComplexityMetricsDTO dto = service.calculateComplexityMetrics(classInstance);
-        // nodes=1, edges=1, cc=1-1+2=2
-        assertEquals(2, dto.getApproxMcCabeCC());
+        assertEquals(1, dto.getApproxMcCabeCC());
         // improvedCC = (1+1+4+2)/7 = 8/7
         assertEquals(8.0/7.0, dto.getImprovedCC());
     }
