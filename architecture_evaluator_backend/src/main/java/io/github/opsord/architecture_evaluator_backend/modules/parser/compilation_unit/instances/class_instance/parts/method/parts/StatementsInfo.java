@@ -7,8 +7,14 @@ import java.util.List;
 
 @Data
 public class StatementsInfo {
-    private int numberOfStatements;
-    private int numberOfExecutableStatements;
-    private int numberOfControlStatements;
-    private List<StatementInstance> statements;
+    private int numberOfStatements;              // all statements
+    private int numberOfExecutableStatements;    // EXPRESSION, RETURN, THROW ...
+    private int numberOfControlStatements;       // IF, FOR, WHILE, SWITCH, TRY, CATCH
+    private int numberOfReturnStatements;        // RETURN
+    private int numberOfThrowStatements;         // THROW
+    private int numberOfCatchClauses;            // CATCH
+    private int numberOfLogicalOperators;        // "&&" or "||"
+    private int numberOfTernaryOperators;        // ?:
+
+    private List<StatementInstance> statements;  // raw AST fragments
 }

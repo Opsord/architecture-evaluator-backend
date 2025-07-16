@@ -4,6 +4,7 @@ package io.github.opsord.architecture_evaluator_backend.modules.parser.compilati
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.expr.Expression;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.method.parts.StatementsInfo;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.method.parts.statement.StatementInstance;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.method.parts.statement.StatementType;
@@ -30,15 +31,6 @@ public class StatementService {
         return statements;
     }
 
-    public int countControlStatements(List<StatementInstance> statements) {
-        return (int) statements.stream()
-                .filter(statement -> statement.getType() == StatementType.IF ||
-                        statement.getType() == StatementType.FOR ||
-                        statement.getType() == StatementType.WHILE ||
-                        statement.getType() == StatementType.SWITCH)
-                .count();
-    }
-
     public int countExecutableStatements(List<StatementInstance> statements) {
         return (int) statements.stream()
                 .filter(statement -> statement.getType() == StatementType.IF ||
@@ -57,8 +49,40 @@ public class StatementService {
         StatementsInfo info = new StatementsInfo();
         info.setStatements(statements);
         info.setNumberOfStatements(statements.size());
-        info.setNumberOfControlStatements(countControlStatements(statements));
-        info.setNumberOfExecutableStatements(countExecutableStatements(statements));
+        info.setNumberOfControlStatements((int) statements.stream().filter(s ->
+                s.getType() == StatementType.IF ||
+                        s.getType() == StatementType.FOR ||
+                        s.getType() == StatementType.WHILE ||
+                        s.getType() == StatementType.SWITCH ||
+                        s.getType() == StatementType.TRY ||
+                        s.getType() == StatementType.CATCH).count());
+        info.setNumberOfExecutableStatements((int) statements.stream().filter(s ->
+                s.getType() == StatementType.IF ||
+                        s.getType() == StatementType.FOR ||
+                        s.getType() == StatementType.WHILE ||
+                        s.getType() == StatementType.SWITCH ||
+                        s.getType() == StatementType.EXPRESSION ||
+                        s.getType() == StatementType.RETURN ||
+                        s.getType() == StatementType.THROW ||
+                        s.getType() == StatementType.TRY).count());
+        info.setNumberOfReturnStatements((int) statements.stream()
+                .filter(statementInstance -> statementInstance.getType() == StatementType.RETURN).count());
+        info.setNumberOfThrowStatements((int) statements.stream()
+                .filter(statementInstance -> statementInstance.getType() == StatementType.THROW).count());
+        info.setNumberOfCatchClauses((int) statements.stream()
+                .filter(statementType -> statementType.getType() == StatementType.CATCH).count());
+
+        // Count logical and ternary operators
+        int logicalOps = 0;
+        int ternaryOps = 0;
+        if (method.getBody().isPresent()) {
+            for (Expression expr : method.getBody().get().findAll(Expression.class)) {
+                logicalOps += StatementVisitor.countLogicalOperators(expr);
+                ternaryOps += StatementVisitor.countTernaryOperators(expr);
+            }
+        }
+        info.setNumberOfLogicalOperators(logicalOps);
+        info.setNumberOfTernaryOperators(ternaryOps);
         return info;
     }
 }

@@ -13,6 +13,8 @@ public class ComplexityMetricsDTO {
      */
     private int approxMcCabeCC;
 
+    private int maxMethodMcCabeCC;
+
     /**
      * Improved Cyclomatic Complexity (ICC_p) = (N + S + I + O) / LOC
      * where:

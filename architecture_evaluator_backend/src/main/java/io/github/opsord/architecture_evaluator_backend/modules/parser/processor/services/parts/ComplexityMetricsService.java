@@ -2,6 +2,7 @@ package io.github.opsord.architecture_evaluator_backend.modules.parser.processor
 
 import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.method.MethodInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.method.parts.StatementsInfo;
 import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.parts.ComplexityMetricsDTO;
 import org.springframework.stereotype.Service;
 
@@ -35,6 +36,7 @@ public class ComplexityMetricsService {
             if (method.getMethodMetrics() != null) {
                 method.getMethodMetrics().setMcCabeComplexity(methodMcCabeCC);
             }
+            complexityMetrics.setMaxMethodMcCabeCC(Math.max(complexityMetrics.getMaxMethodMcCabeCC(), methodMcCabeCC));
             compUnitApproxMcCabeCC += methodMcCabeCC;
         }
 
@@ -48,31 +50,37 @@ public class ComplexityMetricsService {
     }
 
     /**
-     * Warning:
-     * This model is an approximation. In reality, not all control statements produce exactly two outputs,
-     * and simple statements (although part of the flow) are sometimes connected sequentially
-     * without an additional "branch".
-     * Therefore, this formula will give you an approximate figure, but it may differ from what
-     * would be obtained if the real CFG (Control Flow Graph) of the method is built.
-     * The formula is:
-     * CC = E - N + 2P
-     * where:
-     * E = number of edges in the control flow graph
-     * N = number of nodes in the control flow graph
-     * P = number of connected components in the control flow graph
-     * In most cases, P = 1, since the method is a single block of code.
+     * Calculates an improved approximation of McCabe Cyclomatic Complexity
+     * by inspecting various control structures in the AST.
      *
      * @param methodInstance the method instance to analyze
-     * @return the approximate McCabe cyclomatic complexity
+     * @return approximate McCabe cyclomatic complexity
      */
     private int calculateApproxMcCabeCC(MethodInstance methodInstance) {
-        int nodes = methodInstance.getStatementsInfo().getStatements().size()
-                + methodInstance.getStatementsInfo().getNumberOfControlStatements();
-        int edges = methodInstance.getStatementsInfo().getStatements().size()
-                + 2 * methodInstance.getStatementsInfo().getNumberOfControlStatements();
-        int connectedComponents = 1; // Assuming a single connected component for simplicity
-        return edges - nodes + (2 * connectedComponents);
+        StatementsInfo info = methodInstance.getStatementsInfo();
+
+        // Base node count: all statements and explicit control nodes
+        int nodeCount = info.getStatements().size()
+                + info.getNumberOfControlStatements()        // if, for, while, switch
+                + info.getNumberOfReturnStatements()         // return
+                + info.getNumberOfThrowStatements()          // throw
+                + info.getNumberOfCatchClauses();            // catch
+
+        // Edge count: each control adds two edges, plus sequential edges
+        int sequentialEdges = info.getStatements().size() - 1;
+        int controlEdges = 2 * info.getNumberOfControlStatements()
+                + info.getNumberOfLogicalOperators()        // "&&" or "||"
+                + info.getNumberOfTernaryOperators();       // ?:
+
+        int edgeCount = sequentialEdges + controlEdges + info.getNumberOfReturnStatements();
+
+        // Usually a single connected component
+        int connectedComponents = 1;
+
+        // CC = E - N + 2P
+        return edgeCount - nodeCount + (2 * connectedComponents);
     }
+
 
     /**
      * Calculates the Improved Cyclomatic Complexity (ICC_p).
@@ -98,4 +106,5 @@ public class ComplexityMetricsService {
                 / totalLinesOfCode
                 : 0;
     }
+
 }

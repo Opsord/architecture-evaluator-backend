@@ -122,7 +122,13 @@ public class CohesionMetricsService {
             return Collections.emptySet();
         return methodInstance.getStatementsInfo().getStatements().stream()
                 .filter(s -> s.getType().name().equals("EXPRESSION"))
-                .map(s -> s.getStructure().replaceAll("\\s*\\(\\)\\s*;", ""))
+                .map(s -> {
+                    String structure = s.getStructure();
+                    if (structure.endsWith("();")) {
+                        structure = structure.substring(0, structure.length() - 3).trim();
+                    }
+                    return structure;
+                })
                 .collect(Collectors.toSet());
     }
 
