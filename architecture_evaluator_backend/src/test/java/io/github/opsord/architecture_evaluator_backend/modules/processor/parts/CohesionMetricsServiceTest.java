@@ -47,7 +47,7 @@ class CohesionMetricsServiceTest {
         ClassInstance c = classInstance(Collections.emptyList(), Collections.emptyList());
         CohesionMetricsDTO dto = service.calculateCohesionMetrics(c);
         assertEquals(0, dto.getLackOfCohesion1());
-        assertEquals(0.0, dto.getLackOfCohesion2());
+        assertEquals(0, dto.getLackOfCohesion2());
         assertEquals(0, dto.getLackOfCohesion3());
         assertEquals(0, dto.getLackOfCohesion4());
         assertEquals(0.0, dto.getLackOfCohesion5());
@@ -59,9 +59,9 @@ class CohesionMetricsServiceTest {
         ClassInstance c = classInstance(Collections.emptyList(), List.of(m1));
         CohesionMetricsDTO dto = service.calculateCohesionMetrics(c);
         assertEquals(0, dto.getLackOfCohesion1());
-        assertEquals(0.0, dto.getLackOfCohesion2());
-        assertEquals(0, dto.getLackOfCohesion3());
-        assertEquals(0, dto.getLackOfCohesion4());
+        assertEquals(0, dto.getLackOfCohesion2());
+        assertEquals(1, dto.getLackOfCohesion3());
+        assertEquals(1, dto.getLackOfCohesion4());
         assertEquals(0.0, dto.getLackOfCohesion5());
     }
 
@@ -73,11 +73,11 @@ class CohesionMetricsServiceTest {
         MethodInstance m2 = method("m2", v2);
         ClassInstance c = classInstance(List.of(v1, v2), List.of(m1, m2));
         CohesionMetricsDTO dto = service.calculateCohesionMetrics(c);
-        assertTrue(dto.getLackOfCohesion1() > 0);
-        assertTrue(dto.getLackOfCohesion2() > 0.0);
-        assertTrue(dto.getLackOfCohesion3() > 0);
-        assertTrue(dto.getLackOfCohesion4() >= 0);
-        assertTrue(dto.getLackOfCohesion5() > 0.0);
+        assertEquals(1, dto.getLackOfCohesion1()); // 2 methods => 1 pair => no shared var
+        assertEquals(1, dto.getLackOfCohesion2()); // 1 disconnected - 0 connected
+        assertEquals(2, dto.getLackOfCohesion3()); // 2 isolated nodes
+        assertEquals(2, dto.getLackOfCohesion4()); // no calls => same as LCOM3
+        assertEquals(0.5, dto.getLackOfCohesion5()); // (1 + 1) / (2*2) = 0.5 => 1 - 0.5 = 0.5
     }
 
     @Test
@@ -87,11 +87,11 @@ class CohesionMetricsServiceTest {
         MethodInstance m2 = method("m2", v1);
         ClassInstance c = classInstance(List.of(v1), List.of(m1, m2));
         CohesionMetricsDTO dto = service.calculateCohesionMetrics(c);
-        assertEquals(0, dto.getLackOfCohesion1());
-        assertEquals(0.0, dto.getLackOfCohesion2());
-        assertEquals(0, dto.getLackOfCohesion3());
-        assertEquals(0, dto.getLackOfCohesion4());
-        assertEquals(0.0, dto.getLackOfCohesion5());
+        assertEquals(0, dto.getLackOfCohesion1()); // shared var
+        assertEquals(0, dto.getLackOfCohesion2()); // 0 disconnected - 1 connected => 0
+        assertEquals(1, dto.getLackOfCohesion3()); // one connected component
+        assertEquals(1, dto.getLackOfCohesion4()); // no calls, still one part
+        assertEquals(0.0, dto.getLackOfCohesion5()); // both methods access the same var => full coverage
     }
 
     @Test
@@ -103,11 +103,11 @@ class CohesionMetricsServiceTest {
         MethodInstance m3 = method("m3", v2);
         ClassInstance c = classInstance(List.of(v1, v2), List.of(m1, m2, m3));
         CohesionMetricsDTO dto = service.calculateCohesionMetrics(c);
-        assertTrue(dto.getLackOfCohesion1() >= 0);
-        assertTrue(dto.getLackOfCohesion2() >= 0.0);
-        assertTrue(dto.getLackOfCohesion3() >= 0);
-        assertTrue(dto.getLackOfCohesion4() >= 0);
-        assertTrue(dto.getLackOfCohesion5() >= 0.0);
+        assertEquals(1, dto.getLackOfCohesion1()); // all pairs connected through shared vars
+        assertEquals(0, dto.getLackOfCohesion2()); // 0 disconnected - 3 connected = 0
+        assertEquals(1, dto.getLackOfCohesion3()); // full-connected graph
+        assertEquals(1, dto.getLackOfCohesion4()); // no method calls, same as LCOM3
+        assertEquals(0.333, dto.getLackOfCohesion5(), 0.001); // (1+2+1) / 6 = 0.666 => 1 - 0.666 = 0.333
     }
 
     @Test
@@ -116,10 +116,10 @@ class CohesionMetricsServiceTest {
         MethodInstance m2 = method("m2");
         ClassInstance c = classInstance(Collections.emptyList(), List.of(m1, m2));
         CohesionMetricsDTO dto = service.calculateCohesionMetrics(c);
-        assertEquals(1, dto.getLackOfCohesion1());
-        assertEquals(0.0, dto.getLackOfCohesion2());
-        assertEquals(1, dto.getLackOfCohesion3());
-        assertEquals(1, dto.getLackOfCohesion4());
-        assertEquals(0.0, dto.getLackOfCohesion5());
+        assertEquals(1, dto.getLackOfCohesion1()); // no shared vars
+        assertEquals(1, dto.getLackOfCohesion2()); // 1 disconnected - 0 connected
+        assertEquals(2, dto.getLackOfCohesion3()); // 2 components
+        assertEquals(2, dto.getLackOfCohesion4()); // no calls
+        assertEquals(0.0, dto.getLackOfCohesion5()); // no attrs => return 0
     }
 }
