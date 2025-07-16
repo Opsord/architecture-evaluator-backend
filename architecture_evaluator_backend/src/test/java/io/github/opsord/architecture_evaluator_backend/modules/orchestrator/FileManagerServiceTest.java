@@ -279,17 +279,19 @@ class FileManagerServiceTest {
                 // If we can create it, permissions are too loose, skip the test
                 Assumptions.assumeTrue(false, "Skipping: unable to simulate permission failure on this environment.");
             }
-            Exception ex = assertThrows(Exception.class, () -> {
-                try {
-                    var method = FileManagerService.class.getDeclaredMethod("createSecureTempDirectory", String.class);
-                    method.setAccessible(true);
-                    method.invoke(fileManagerService, "/root/forbidden");
-                } catch (java.lang.reflect.InvocationTargetException e) {
-                    throw e.getCause();
-                }
-            });
+            var method = FileManagerService.class.getDeclaredMethod("createSecureTempDirectory", String.class);
+            method.setAccessible(true);
+            Exception ex = assertThrows(Exception.class, () -> invokeCreateSecureTempDirectory(method));
             assertTrue(ex instanceof IOException || ex instanceof IllegalArgumentException,
                     "Expected IOException or IllegalArgumentException but got: " + ex.getClass());
+        }
+    }
+
+    private void invokeCreateSecureTempDirectory(java.lang.reflect.Method method) throws Exception {
+        try {
+            method.invoke(fileManagerService, "/root/forbidden");
+        } catch (java.lang.reflect.InvocationTargetException e) {
+            throw (Exception) e.getCause();
         }
     }
 
