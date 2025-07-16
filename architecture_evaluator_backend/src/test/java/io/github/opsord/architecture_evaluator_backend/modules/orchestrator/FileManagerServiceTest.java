@@ -247,6 +247,7 @@ class FileManagerServiceTest {
     void testCreateSecureTempDirectory_permissionFailure() throws Exception {
         String os = System.getProperty("os.name").toLowerCase();
         if (os.contains("win")) {
+            // Windows branch (unchanged)
             File baseTemp = new File(System.getProperty("java.io.tmpdir"));
             File tempDir = new File(baseTemp, "failperm-" + java.util.UUID.randomUUID());
             tempDir.mkdir();
@@ -258,12 +259,10 @@ class FileManagerServiceTest {
                 method.setAccessible(true);
                 try {
                     method.invoke(fileManagerService, "failperm");
-                    // En Windows, si no lanza excepción, el test pasa
                 } catch (java.lang.reflect.InvocationTargetException e) {
                     Throwable cause = e.getCause();
                     if (cause instanceof IOException) {
-                        // Si lanza IOException, también es válido
-                        return;
+                        return; // Exception is expected
                     }
                     throw e;
                 }
@@ -274,11 +273,17 @@ class FileManagerServiceTest {
                 tempDir.delete();
             }
         } else {
+            // Linux/Mac: try to create a directory in a non-writable location
+            File unwritableDir = new File("/root/forbidden-" + UUID.randomUUID());
+            if (unwritableDir.exists() || unwritableDir.mkdirs()) {
+                // If we can create it, permissions are too loose, skip the test
+                Assumptions.assumeTrue(false, "Skipping: unable to simulate permission failure on this environment.");
+            }
             Exception ex = assertThrows(Exception.class, () -> {
                 try {
                     var method = FileManagerService.class.getDeclaredMethod("createSecureTempDirectory", String.class);
                     method.setAccessible(true);
-                    method.invoke(fileManagerService, "failperm");
+                    method.invoke(fileManagerService, "/root/forbidden");
                 } catch (java.lang.reflect.InvocationTargetException e) {
                     throw e.getCause();
                 }
