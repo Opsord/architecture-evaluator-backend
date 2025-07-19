@@ -19,10 +19,11 @@
 <div class="breadCrumbs">
 Current scope:     <a href="../../index.html">all classes</a>
     <span class="separator">|</span>
-    <a href="../index.html">io.github.opsord.architecture_evaluator_backend.modules.parser.orchestrator.services</a>
+    <a href="../index.html">io.github.opsord.architecture_evaluator_backend.modules.api.orchestrator.services</a>
 </div>
 
-<h1>Coverage Summary for Class: OrchestratorService (io.github.opsord.architecture_evaluator_backend.modules.parser.orchestrator.services)</h1>
+<h1>Coverage Summary for Class: OrchestratorService
+    (io.github.opsord.architecture_evaluator_backend.modules.api.orchestrator.services)</h1>
 
 <table class="coverageStats">
 <tr>
@@ -88,21 +89,21 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <pre>
 <code class="sourceCode" id="sourceCode">&nbsp;// backend/architecture-evaluator-backend/src/main/java/io/github/opsord/architecture_evaluator_backend/modules/parser/orchestrator/services/OrchestratorService.java
-&nbsp;package io.github.opsord.architecture_evaluator_backend.modules.parser.orchestrator.services;
+&nbsp;package io.github.opsord.architecture_evaluator_backend.modules.api.orchestrator.services;
 &nbsp;
-&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
-&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.LayerAnnotation;
-&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_instance.FileInstance;
-&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_instance.FileInstanceService;
-&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.ProcessedClassInstance;
-&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.services.FileAnalysisService;
-&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.instances.pom.PomFileInstance;
-&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.instances.gradle.GradleFileInstance;
-&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.PomScannerService;
-&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.GradleScannerService;
-&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.ScannerService;
-&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.SrcScannerService;
-&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.orchestrator.instances.ProjectAnalysisInstance;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.api.parser.instances.class_instance.ClassInstance;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.api.parser.instances.class_instance.parts.LayerAnnotation;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.api.parser.instances.file_instance.FileInstance;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.api.parser.services.file_instance.FileInstanceService;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.api.processor.dto.ProcessedClassInstance;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.api.processor.services.FileAnalysisService;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.api.project_scanner.instances.pom.PomFileInstance;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.api.project_scanner.instances.gradle.GradleFileInstance;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.api.project_scanner.services.PomScannerService;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.api.project_scanner.services.GradleScannerService;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.api.project_scanner.services.ScannerService;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.api.project_scanner.services.SrcScannerService;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.api.orchestrator.instances.ProjectAnalysisInstance;
 &nbsp;import lombok.RequiredArgsConstructor;
 &nbsp;import org.slf4j.Logger;
 &nbsp;import org.slf4j.LoggerFactory;

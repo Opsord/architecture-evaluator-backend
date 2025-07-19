@@ -1,13 +1,13 @@
 package io.github.opsord.architecture_evaluator_backend.modules.processor;
 
-import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.ClassAnalysisInstance;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.parts.*;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.services.ClassAnalysisService;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.services.parts.CohesionMetricsService;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.services.parts.ComplexityMetricsService;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.services.parts.CouplingMetricsService;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.services.parts.ProgramMetricsService;
+import io.github.opsord.architecture_evaluator_backend.modules.api.parser.instances.class_instance.ClassInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.api.processor.dto.ClassAnalysisInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.api.processor.dto.parts.*;
+import io.github.opsord.architecture_evaluator_backend.modules.api.processor.services.ClassAnalysisService;
+import io.github.opsord.architecture_evaluator_backend.modules.api.processor.services.parts.CohesionMetricsService;
+import io.github.opsord.architecture_evaluator_backend.modules.api.processor.services.parts.ComplexityMetricsService;
+import io.github.opsord.architecture_evaluator_backend.modules.api.processor.services.parts.CouplingMetricsService;
+import io.github.opsord.architecture_evaluator_backend.modules.api.processor.services.parts.ProgramMetricsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

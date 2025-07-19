@@ -1,8 +1,8 @@
 package io.github.opsord.architecture_evaluator_backend.modules.project_scanner;
 
-import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.instances.pom.PomFileInstance;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.PomScannerService;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.ScannerService;
+import io.github.opsord.architecture_evaluator_backend.modules.api.project_scanner.instances.pom.PomFileInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.api.project_scanner.services.PomScannerService;
+import io.github.opsord.architecture_evaluator_backend.modules.api.project_scanner.services.ScannerService;
 import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
 

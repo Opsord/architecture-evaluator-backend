@@ -19,10 +19,11 @@
 <div class="breadCrumbs">
 Current scope:     <a href="../../index.html">all classes</a>
     <span class="separator">|</span>
-    <a href="../index.html">io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance</a>
+    <a href="../index.html">io.github.opsord.architecture_evaluator_backend.modules.api.parser.services.class_instance</a>
 </div>
 
-<h1>Coverage Summary for Class: ClassVisitor (io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance)</h1>
+<h1>Coverage Summary for Class: ClassVisitor
+  (io.github.opsord.architecture_evaluator_backend.modules.api.parser.services.class_instance)</h1>
 
 <table class="coverageStats">
 <tr>
@@ -87,21 +88,21 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 
 <pre>
-<code class="sourceCode" id="sourceCode">&nbsp;package io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance;
+<code class="sourceCode" id="sourceCode">&nbsp;package io.github.opsord.architecture_evaluator_backend.modules.api.parser.services.class_instance;
 &nbsp;
 &nbsp;import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 &nbsp;import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
 &nbsp;import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
-&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
-&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.JavaFileType;
-&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.LayerAnnotation;
-&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.annotation.AnnotationService;
-&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.constructor.ConstructorService;
-&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.exception_handler.ExceptionHandlerService;
-&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.interface_instance.InterfaceService;
-&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.method.MethodService;
-&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.statement.StatementService;
-&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.class_instance.parts.variable.VariableService;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.api.parser.instances.class_instance.ClassInstance;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.api.parser.instances.class_instance.parts.JavaFileType;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.api.parser.instances.class_instance.parts.LayerAnnotation;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.api.parser.services.class_instance.parts.annotation.AnnotationService;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.api.parser.services.class_instance.parts.constructor.ConstructorService;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.api.parser.services.class_instance.parts.exception_handler.ExceptionHandlerService;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.api.parser.services.class_instance.parts.interface_instance.InterfaceService;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.api.parser.services.class_instance.parts.method.MethodService;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.api.parser.services.class_instance.parts.statement.StatementService;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.api.parser.services.class_instance.parts.variable.VariableService;
 &nbsp;import lombok.RequiredArgsConstructor;
 &nbsp;
 &nbsp;import java.util.ArrayList;

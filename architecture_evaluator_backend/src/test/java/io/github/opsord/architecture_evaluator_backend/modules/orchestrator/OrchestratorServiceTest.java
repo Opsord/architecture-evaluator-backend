@@ -1,17 +1,17 @@
 package io.github.opsord.architecture_evaluator_backend.modules.orchestrator;
 
-import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.LayerAnnotation;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_instance.FileInstance;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_instance.FileInstanceService;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.orchestrator.instances.ProjectAnalysisInstance;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.orchestrator.services.OrchestratorService;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.ProcessedClassInstance;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.services.FileAnalysisService;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.GradleScannerService;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.PomScannerService;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.ScannerService;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.SrcScannerService;
+import io.github.opsord.architecture_evaluator_backend.modules.api.parser.instances.class_instance.ClassInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.api.parser.instances.class_instance.parts.LayerAnnotation;
+import io.github.opsord.architecture_evaluator_backend.modules.api.parser.instances.file_instance.FileInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.api.parser.services.file_instance.FileInstanceService;
+import io.github.opsord.architecture_evaluator_backend.modules.api.orchestrator.instances.ProjectAnalysisInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.api.orchestrator.services.OrchestratorService;
+import io.github.opsord.architecture_evaluator_backend.modules.api.processor.dto.ProcessedClassInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.api.processor.services.FileAnalysisService;
+import io.github.opsord.architecture_evaluator_backend.modules.api.project_scanner.services.GradleScannerService;
+import io.github.opsord.architecture_evaluator_backend.modules.api.project_scanner.services.PomScannerService;
+import io.github.opsord.architecture_evaluator_backend.modules.api.project_scanner.services.ScannerService;
+import io.github.opsord.architecture_evaluator_backend.modules.api.project_scanner.services.SrcScannerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

@@ -1,14 +1,14 @@
 package io.github.opsord.architecture_evaluator_backend.modules.processor;
 
-import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.JavaFileType;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_instance.FileInstance;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.ClassAnalysisInstance;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.ProcessedClassInstance;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.parts.ImportCategory;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.services.ClassAnalysisService;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.services.FileAnalysisService;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.services.parts.ImportClassifierService;
+import io.github.opsord.architecture_evaluator_backend.modules.api.parser.instances.class_instance.ClassInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.api.parser.instances.class_instance.parts.JavaFileType;
+import io.github.opsord.architecture_evaluator_backend.modules.api.parser.instances.file_instance.FileInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.api.processor.dto.ClassAnalysisInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.api.processor.dto.ProcessedClassInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.api.processor.dto.parts.ImportCategory;
+import io.github.opsord.architecture_evaluator_backend.modules.api.processor.services.ClassAnalysisService;
+import io.github.opsord.architecture_evaluator_backend.modules.api.processor.services.FileAnalysisService;
+import io.github.opsord.architecture_evaluator_backend.modules.api.processor.services.parts.ImportClassifierService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

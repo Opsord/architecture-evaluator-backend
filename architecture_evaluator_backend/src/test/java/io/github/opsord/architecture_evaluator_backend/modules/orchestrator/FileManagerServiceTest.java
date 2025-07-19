@@ -1,6 +1,6 @@
 package io.github.opsord.architecture_evaluator_backend.modules.orchestrator;
 
-import io.github.opsord.architecture_evaluator_backend.modules.parser.orchestrator.services.FileManagerService;
+import io.github.opsord.architecture_evaluator_backend.modules.api.orchestrator.services.FileManagerService;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;

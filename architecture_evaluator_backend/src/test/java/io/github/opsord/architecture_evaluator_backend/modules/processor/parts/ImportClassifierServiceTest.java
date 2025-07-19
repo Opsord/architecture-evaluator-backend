@@ -1,11 +1,11 @@
 package io.github.opsord.architecture_evaluator_backend.modules.processor.parts;
 
-import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_instance.FileInstance;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.parts.ImportCategory;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.services.parts.ImportClassifierService;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.instances.pom.PomDependencyInstance;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.instances.pom.ParentSectionDTO;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.instances.pom.PomFileInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.api.parser.instances.file_instance.FileInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.api.processor.dto.parts.ImportCategory;
+import io.github.opsord.architecture_evaluator_backend.modules.api.processor.services.parts.ImportClassifierService;
+import io.github.opsord.architecture_evaluator_backend.modules.api.project_scanner.instances.pom.PomDependencyInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.api.project_scanner.instances.pom.ParentSectionDTO;
+import io.github.opsord.architecture_evaluator_backend.modules.api.project_scanner.instances.pom.PomFileInstance;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;

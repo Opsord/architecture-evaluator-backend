@@ -1,8 +1,8 @@
 package io.github.opsord.architecture_evaluator_backend.modules.processor.parts;
 
-import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.parts.CouplingMetricsDTO;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.services.parts.CouplingMetricsService;
+import io.github.opsord.architecture_evaluator_backend.modules.api.parser.instances.class_instance.ClassInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.api.processor.dto.parts.CouplingMetricsDTO;
+import io.github.opsord.architecture_evaluator_backend.modules.api.processor.services.parts.CouplingMetricsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

@@ -1,10 +1,10 @@
 // File: OrchestratorControllerTest.java
 package io.github.opsord.architecture_evaluator_backend.modules.orchestrator;
 
-import io.github.opsord.architecture_evaluator_backend.modules.parser.orchestrator.controllers.OrchestratorController;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.orchestrator.instances.ProjectAnalysisInstance;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.orchestrator.services.FileManagerService;
-import io.github.opsord.architecture_evaluator_backend.modules.parser.orchestrator.services.OrchestratorService;
+import io.github.opsord.architecture_evaluator_backend.modules.api.orchestrator.controllers.OrchestratorController;
+import io.github.opsord.architecture_evaluator_backend.modules.api.orchestrator.instances.ProjectAnalysisInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.api.orchestrator.services.FileManagerService;
+import io.github.opsord.architecture_evaluator_backend.modules.api.orchestrator.services.OrchestratorService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
