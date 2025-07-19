@@ -1,0 +1,226 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > ComplexityMetricsService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">io.github.opsord.architecture_evaluator_backend.modules.parser.processor.services.parts</a>
+</div>
+
+<h1>Coverage Summary for Class: ComplexityMetricsService (io.github.opsord.architecture_evaluator_backend.modules.parser.processor.services.parts)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">ComplexityMetricsService</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (4/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    90%
+  </span>
+  <span class="absValue">
+    (9/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    97.5%
+  </span>
+  <span class="absValue">
+    (39/40)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package io.github.opsord.architecture_evaluator_backend.modules.parser.processor.services.parts;
+&nbsp;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.method.MethodInstance;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.method.parts.StatementsInfo;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.parts.ComplexityMetricsDTO;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;
+&nbsp;@Service
+<b class="fc">&nbsp;public class ComplexityMetricsService {</b>
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Calculates complexity metrics for a given class instance.
+&nbsp;     *
+&nbsp;     * @param classInstance the class instance to analyze
+&nbsp;     * @return a ComplexityMetricsDTO containing the calculated metrics
+&nbsp;     */
+&nbsp;    public ComplexityMetricsDTO calculateComplexityMetrics(ClassInstance classInstance) {
+<b class="fc">&nbsp;        ComplexityMetricsDTO complexityMetrics = new ComplexityMetricsDTO();</b>
+&nbsp;
+<b class="fc">&nbsp;        int compUnitApproxMcCabeCC = 0;</b>
+<b class="fc">&nbsp;        int numberOfMethods = classInstance.getMethods().size();</b>
+<b class="fc">&nbsp;        int sumOfExecutableStatements = classInstance.getStatements().size();</b>
+<b class="fc">&nbsp;        int maxInputParameters = 0;</b>
+<b class="fc">&nbsp;        int maxOutputParameters = 0;</b>
+<b class="fc">&nbsp;        int totalLinesOfCode = classInstance.getLinesOfCode();</b>
+&nbsp;
+<b class="fc">&nbsp;        for (MethodInstance method : classInstance.getMethods()) {</b>
+<b class="fc">&nbsp;            int inputParameters = method.getInputParameters() != null ? method.getInputParameters().size() : 0;</b>
+<b class="fc">&nbsp;            int outputParameters = method.getOutputParameters() != null ? method.getOutputParameters().size() : 0;</b>
+&nbsp;
+<b class="fc">&nbsp;            maxInputParameters = Math.max(maxInputParameters, inputParameters);</b>
+<b class="fc">&nbsp;            maxOutputParameters = Math.max(maxOutputParameters, outputParameters);</b>
+&nbsp;
+<b class="fc">&nbsp;            int methodMcCabeCC = calculateApproxMcCabeCC(method);</b>
+<b class="pc">&nbsp;            if (method.getMethodMetrics() != null) {</b>
+<b class="nc">&nbsp;                method.getMethodMetrics().setMcCabeComplexity(methodMcCabeCC);</b>
+&nbsp;            }
+<b class="fc">&nbsp;            complexityMetrics.setMaxMethodMcCabeCC(Math.max(complexityMetrics.getMaxMethodMcCabeCC(), methodMcCabeCC));</b>
+<b class="fc">&nbsp;            compUnitApproxMcCabeCC += methodMcCabeCC;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        double improvedCC = calculateImprovedCC(numberOfMethods, sumOfExecutableStatements, maxInputParameters,</b>
+<b class="fc">&nbsp;                maxOutputParameters, totalLinesOfCode);</b>
+&nbsp;
+<b class="fc">&nbsp;        complexityMetrics.setApproxMcCabeCC(compUnitApproxMcCabeCC);</b>
+<b class="fc">&nbsp;        complexityMetrics.setImprovedCC(improvedCC);</b>
+&nbsp;
+<b class="fc">&nbsp;        return complexityMetrics;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Calculates an improved approximation of McCabe Cyclomatic Complexity
+&nbsp;     * by inspecting various control structures in the AST.
+&nbsp;     *
+&nbsp;     * @param methodInstance the method instance to analyze
+&nbsp;     * @return approximate McCabe cyclomatic complexity
+&nbsp;     */
+&nbsp;    private int calculateApproxMcCabeCC(MethodInstance methodInstance) {
+<b class="fc">&nbsp;        StatementsInfo info = methodInstance.getStatementsInfo();</b>
+&nbsp;
+&nbsp;        // Base node count: all statements and explicit control nodes
+<b class="fc">&nbsp;        int nodeCount = info.getStatements().size()</b>
+<b class="fc">&nbsp;                + info.getNumberOfControlStatements()        // if, for, while, switch</b>
+<b class="fc">&nbsp;                + info.getNumberOfReturnStatements()         // return</b>
+<b class="fc">&nbsp;                + info.getNumberOfThrowStatements()          // throw</b>
+<b class="fc">&nbsp;                + info.getNumberOfCatchClauses();            // catch</b>
+&nbsp;
+&nbsp;        // Edge count: each control adds two edges, plus sequential edges
+<b class="fc">&nbsp;        int sequentialEdges = info.getStatements().size() - 1;</b>
+<b class="fc">&nbsp;        int controlEdges = 2 * info.getNumberOfControlStatements()</b>
+<b class="fc">&nbsp;                + info.getNumberOfLogicalOperators()        // &quot;&amp;&amp;&quot; or &quot;||&quot;</b>
+<b class="fc">&nbsp;                + info.getNumberOfTernaryOperators();       // ?:</b>
+&nbsp;
+<b class="fc">&nbsp;        int edgeCount = sequentialEdges + controlEdges + info.getNumberOfReturnStatements();</b>
+&nbsp;
+&nbsp;        // Usually a single connected component
+<b class="fc">&nbsp;        int connectedComponents = 1;</b>
+&nbsp;
+&nbsp;        // CC = E - N + 2P
+<b class="fc">&nbsp;        return edgeCount - nodeCount + (2 * connectedComponents);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Calculates the Improved Cyclomatic Complexity (ICC_p).
+&nbsp;     * Formula: ICC_p = (N + S + I + O) / LOC
+&nbsp;     * where:
+&nbsp;     * N = number of methods
+&nbsp;     * S = sum of executable statements
+&nbsp;     * I = maximum number of input parameters
+&nbsp;     * O = maximum number of output parameters
+&nbsp;     * LOC = total lines of code
+&nbsp;     *
+&nbsp;     * @param numberOfMethods number of methods in the class
+&nbsp;     * @param sumOfExecutableStatements total number of executable statements
+&nbsp;     * @param maxInputParameters maximum number of input parameters in any method
+&nbsp;     * @param maxOutputParameters maximum number of output parameters in any method
+&nbsp;     * @param totalLinesOfCode total lines of code in the class
+&nbsp;     * @return the improved cyclomatic complexity value
+&nbsp;     */
+&nbsp;    private double calculateImprovedCC(int numberOfMethods, int sumOfExecutableStatements, int maxInputParameters,
+&nbsp;                                       int maxOutputParameters, int totalLinesOfCode) {
+<b class="fc">&nbsp;        return totalLinesOfCode &gt; 0</b>
+<b class="fc">&nbsp;                ? (double) (numberOfMethods + sumOfExecutableStatements + maxInputParameters + maxOutputParameters)</b>
+<b class="fc">&nbsp;                / totalLinesOfCode</b>
+<b class="fc">&nbsp;                : 0;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-07-18 23:48</div>
+</div>
+</body>
+</html>

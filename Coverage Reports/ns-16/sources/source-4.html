@@ -1,0 +1,173 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > SrcScannerService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services</a>
+</div>
+
+<h1>Coverage Summary for Class: SrcScannerService (io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">SrcScannerService</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (3/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    41.7%
+  </span>
+  <span class="absValue">
+    (5/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (18/18)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services;
+&nbsp;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_instance.FileInstance;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_instance.FileInstanceService;
+&nbsp;import lombok.RequiredArgsConstructor;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;
+&nbsp;import java.io.File;
+&nbsp;import java.io.IOException;
+&nbsp;import java.nio.file.Files;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;@Service
+&nbsp;@RequiredArgsConstructor
+&nbsp;public class SrcScannerService {
+&nbsp;
+<b class="fc">&nbsp;    private static final Logger logger = LoggerFactory.getLogger(SrcScannerService.class);</b>
+&nbsp;    private final FileInstanceService fileInstanceService;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Scans the `src` folder for all `.java` files.
+&nbsp;     */
+&nbsp;    public List&lt;File&gt; scanSrcFolder(File srcFolder) throws IOException {
+<b class="pc">&nbsp;        if (!srcFolder.exists() || !srcFolder.isDirectory()) {</b>
+<b class="fc">&nbsp;            logger.warn(&quot;Invalid `src` folder: {}&quot;, srcFolder.getAbsolutePath());</b>
+<b class="fc">&nbsp;            return List.of();</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        List&lt;File&gt; javaFiles = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;        try (var paths = Files.walk(srcFolder.toPath())) {</b>
+<b class="fc">&nbsp;            paths.filter(Files::isRegularFile)</b>
+<b class="fc">&nbsp;                    .filter(path -&gt; path.toString().endsWith(&quot;.java&quot;))</b>
+<b class="fc">&nbsp;                    .forEach(path -&gt; javaFiles.add(path.toFile()));</b>
+<b class="pc">&nbsp;        }</b>
+<b class="fc">&nbsp;        logger.info(&quot;Found {} Java files in `src` folder: {}&quot;, javaFiles.size(), srcFolder.getAbsolutePath());</b>
+<b class="fc">&nbsp;        return javaFiles;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Parses Java files into FileInstance objects.
+&nbsp;     */
+&nbsp;    public List&lt;FileInstance&gt; parseJavaFiles(List&lt;File&gt; javaFiles, File projectRoot) {
+<b class="fc">&nbsp;        List&lt;FileInstance&gt; fileInstances = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;        for (File javaFile : javaFiles) {</b>
+&nbsp;            try {
+<b class="fc">&nbsp;                FileInstance unit = fileInstanceService.parseJavaFile(javaFile, projectRoot);</b>
+<b class="fc">&nbsp;                fileInstances.add(unit);</b>
+&nbsp;            } catch (Exception e) {
+<b class="fc">&nbsp;                logger.error(&quot;Failed to parse file: {}&quot;, javaFile.getAbsolutePath(), e);</b>
+&nbsp;            }
+&nbsp;        }
+<b class="fc">&nbsp;        return fileInstances;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-07-18 23:48</div>
+</div>
+</body>
+</html>

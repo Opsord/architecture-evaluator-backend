@@ -1,0 +1,344 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > PomScannerService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services</a>
+</div>
+
+<h1>Coverage Summary for Class: PomScannerService (io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">PomScannerService</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (8/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    78.1%
+  </span>
+  <span class="absValue">
+    (25/32)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    95.1%
+  </span>
+  <span class="absValue">
+    (77/81)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services;
+&nbsp;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.instances.pom.PomDependencyInstance;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.instances.pom.ParentSectionDTO;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.instances.pom.PomFileInstance;
+&nbsp;import lombok.RequiredArgsConstructor;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;import org.w3c.dom.Document;
+&nbsp;import org.w3c.dom.Element;
+&nbsp;import org.w3c.dom.NodeList;
+&nbsp;
+&nbsp;import javax.xml.parsers.DocumentBuilder;
+&nbsp;import javax.xml.parsers.DocumentBuilderFactory;
+&nbsp;import javax.xml.parsers.ParserConfigurationException;
+&nbsp;import org.xml.sax.SAXException;
+&nbsp;import java.io.File;
+&nbsp;import java.io.IOException;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Optional;
+&nbsp;
+&nbsp;/**
+&nbsp; * Service for scanning and parsing Maven pom.xml files.
+&nbsp; */
+&nbsp;@Service
+&nbsp;@RequiredArgsConstructor
+&nbsp;public class PomScannerService {
+&nbsp;
+&nbsp;    // XML Tag Constants
+&nbsp;    private static final String TAG_GROUP_ID = &quot;groupId&quot;;
+&nbsp;    private static final String TAG_ARTIFACT_ID = &quot;artifactId&quot;;
+&nbsp;    private static final String TAG_VERSION = &quot;version&quot;;
+&nbsp;    private static final String TAG_DESCRIPTION = &quot;description&quot;;
+&nbsp;    private static final String TAG_URL = &quot;url&quot;;
+&nbsp;    private static final String TAG_LICENSE = &quot;license&quot;;
+&nbsp;    private static final String TAG_DEVELOPER = &quot;developer&quot;;
+&nbsp;    private static final String TAG_NAME = &quot;name&quot;;
+&nbsp;    private static final String TAG_JAVA_VERSION = &quot;java.version&quot;;
+&nbsp;    private static final String TAG_DEPENDENCY = &quot;dependency&quot;;
+&nbsp;    private static final String TAG_PARENT = &quot;parent&quot;;
+&nbsp;
+&nbsp;    // XML Security Feature Constants
+&nbsp;    private static final String FEATURE_DISALLOW_DOCTYPE = &quot;http://apache.org/xml/features/disallow-doctype-decl&quot;;
+&nbsp;    private static final String FEATURE_EXTERNAL_GENERAL_ENTITIES = &quot;http://xml.org/sax/features/external-general-entities&quot;;
+&nbsp;    private static final String FEATURE_EXTERNAL_PARAMETER_ENTITIES = &quot;http://xml.org/sax/features/external-parameter-entities&quot;;
+&nbsp;    private static final String FEATURE_LOAD_EXTERNAL_DTD = &quot;http://apache.org/xml/features/nonvalidating/load-external-dtd&quot;;
+&nbsp;
+<b class="fc">&nbsp;    private static final Logger logger = LoggerFactory.getLogger(PomScannerService.class);</b>
+&nbsp;    private final ScannerService scannerService;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Scans and parses the pom.xml file in the given project directory.
+&nbsp;     *
+&nbsp;     * @param projectDirectory the directory containing the pom.xml
+&nbsp;     * @return Optional containing PomFileInstance if parsing succeeds, otherwise empty
+&nbsp;     */
+&nbsp;    public Optional&lt;PomFileInstance&gt; scanPomFile(File projectDirectory) {
+<b class="pc">&nbsp;        if (projectDirectory == null || !projectDirectory.isDirectory()) {</b>
+<b class="fc">&nbsp;            logger.warn(&quot;Invalid project directory: {}&quot;,</b>
+<b class="pc">&nbsp;                    projectDirectory != null ? projectDirectory.getAbsolutePath() : &quot;null&quot;);</b>
+<b class="fc">&nbsp;            return Optional.empty();</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        File pomFile = scannerService.findPomFile(projectDirectory);</b>
+<b class="fc">&nbsp;        if (pomFile == null) {</b>
+<b class="fc">&nbsp;            logger.warn(&quot;No pom.xml found in directory: {}&quot;, projectDirectory.getAbsolutePath());</b>
+<b class="fc">&nbsp;            return Optional.empty();</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        try {
+<b class="fc">&nbsp;            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();</b>
+<b class="fc">&nbsp;            factory.setFeature(FEATURE_DISALLOW_DOCTYPE, true);</b>
+<b class="fc">&nbsp;            factory.setFeature(FEATURE_EXTERNAL_GENERAL_ENTITIES, false);</b>
+<b class="fc">&nbsp;            factory.setFeature(FEATURE_EXTERNAL_PARAMETER_ENTITIES, false);</b>
+<b class="fc">&nbsp;            factory.setFeature(FEATURE_LOAD_EXTERNAL_DTD, false);</b>
+<b class="fc">&nbsp;            factory.setXIncludeAware(false);</b>
+<b class="fc">&nbsp;            factory.setExpandEntityReferences(false);</b>
+&nbsp;
+<b class="fc">&nbsp;            DocumentBuilder builder = factory.newDocumentBuilder();</b>
+<b class="fc">&nbsp;            Document document = builder.parse(pomFile);</b>
+<b class="fc">&nbsp;            document.getDocumentElement().normalize();</b>
+&nbsp;
+<b class="fc">&nbsp;            PomFileInstance pomFileInstance = new PomFileInstance();</b>
+<b class="fc">&nbsp;            pomFileInstance.setParentSection(getParentInfo(document));</b>
+<b class="fc">&nbsp;            pomFileInstance.setGroupId(getTagValue(document, TAG_GROUP_ID));</b>
+<b class="fc">&nbsp;            pomFileInstance.setArtifactId(getTagValue(document, TAG_ARTIFACT_ID));</b>
+<b class="fc">&nbsp;            pomFileInstance.setVersion(getTagValue(document, TAG_VERSION));</b>
+<b class="fc">&nbsp;            pomFileInstance.setDescription(getTagValue(document, TAG_DESCRIPTION));</b>
+<b class="fc">&nbsp;            pomFileInstance.setUrl(getTagValue(document, TAG_URL));</b>
+<b class="fc">&nbsp;            pomFileInstance.setLicense(getLicense(document));</b>
+<b class="fc">&nbsp;            pomFileInstance.setDevelopers(getDevelopers(document));</b>
+<b class="fc">&nbsp;            pomFileInstance.setJavaVersion(getTagValue(document, TAG_JAVA_VERSION));</b>
+<b class="fc">&nbsp;            pomFileInstance.setDependencies(parseDependencies(document));</b>
+&nbsp;
+<b class="fc">&nbsp;            return Optional.of(pomFileInstance);</b>
+&nbsp;        } catch (ParserConfigurationException e) {
+<b class="nc">&nbsp;            logger.error(&quot;Parser configuration error while parsing pom.xml in directory: {}&quot;, projectDirectory.getAbsolutePath(), e);</b>
+&nbsp;        } catch (SAXException e) {
+<b class="fc">&nbsp;            logger.error(&quot;SAX error while parsing pom.xml in directory: {}&quot;, projectDirectory.getAbsolutePath(), e);</b>
+&nbsp;        } catch (IOException e) {
+<b class="nc">&nbsp;            logger.error(&quot;IO error while parsing pom.xml in directory: {}&quot;, projectDirectory.getAbsolutePath(), e);</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            logger.error(&quot;Unexpected error while parsing pom.xml in directory: {}&quot;, projectDirectory.getAbsolutePath(), e);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return Optional.empty();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Parses the dependencies from the given XML document.
+&nbsp;     *
+&nbsp;     * @param document the XML document representing the pom.xml
+&nbsp;     * @return a list of PomDependencyInstance objects
+&nbsp;     */
+&nbsp;    private List&lt;PomDependencyInstance&gt; parseDependencies(Document document) {
+<b class="fc">&nbsp;        List&lt;PomDependencyInstance&gt; dependencyList = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;        NodeList dependencyNodes = document.getElementsByTagName(TAG_DEPENDENCY);</b>
+&nbsp;
+<b class="fc">&nbsp;        for (int i = 0; i &lt; dependencyNodes.getLength(); i++) {</b>
+<b class="fc">&nbsp;            Element dependency = (Element) dependencyNodes.item(i);</b>
+<b class="fc">&nbsp;            String groupId = getTagValue(dependency, TAG_GROUP_ID);</b>
+<b class="fc">&nbsp;            String artifactId = getTagValue(dependency, TAG_ARTIFACT_ID);</b>
+<b class="fc">&nbsp;            String version = getTagValue(dependency, TAG_VERSION);</b>
+&nbsp;
+<b class="pc">&nbsp;            if (groupId != null &amp;&amp; artifactId != null) {</b>
+<b class="fc">&nbsp;                dependencyList.add(new PomDependencyInstance(groupId, artifactId, version));</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return dependencyList;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Extracts the parent section information from the pom.xml document.
+&nbsp;     *
+&nbsp;     * @param document the XML document representing the pom.xml
+&nbsp;     * @return a ParentSectionDTO with parent info, or null if not present
+&nbsp;     */
+&nbsp;    private ParentSectionDTO getParentInfo(Document document) {
+<b class="fc">&nbsp;        NodeList parentNodes = document.getElementsByTagName(TAG_PARENT);</b>
+<b class="fc">&nbsp;        if (parentNodes.getLength() &gt; 0) {</b>
+<b class="fc">&nbsp;            Element parentElement = (Element) parentNodes.item(0);</b>
+<b class="fc">&nbsp;            ParentSectionDTO parentDTO = new ParentSectionDTO();</b>
+<b class="fc">&nbsp;            parentDTO.setGroupId(getTagValue(parentElement, TAG_GROUP_ID));</b>
+<b class="fc">&nbsp;            parentDTO.setArtifactId(getTagValue(parentElement, TAG_ARTIFACT_ID));</b>
+<b class="fc">&nbsp;            parentDTO.setVersion(getTagValue(parentElement, TAG_VERSION));</b>
+<b class="fc">&nbsp;            return parentDTO;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Extracts the license name from the pom.xml document.
+&nbsp;     *
+&nbsp;     * @param document the XML document representing the pom.xml
+&nbsp;     * @return the license name or null if not present
+&nbsp;     */
+&nbsp;    private String getLicense(Document document) {
+<b class="fc">&nbsp;        NodeList licenses = document.getElementsByTagName(TAG_LICENSE);</b>
+<b class="fc">&nbsp;        if (licenses.getLength() &gt; 0) {</b>
+<b class="fc">&nbsp;            Element license = (Element) licenses.item(0);</b>
+<b class="fc">&nbsp;            return getTagValue(license, TAG_NAME);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Extracts the list of developer names from the pom.xml document.
+&nbsp;     *
+&nbsp;     * @param document the XML document representing the pom.xml
+&nbsp;     * @return a list of developer names
+&nbsp;     */
+&nbsp;    private List&lt;String&gt; getDevelopers(Document document) {
+<b class="fc">&nbsp;        List&lt;String&gt; developers = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;        NodeList developerNodes = document.getElementsByTagName(TAG_DEVELOPER);</b>
+&nbsp;
+<b class="fc">&nbsp;        for (int i = 0; i &lt; developerNodes.getLength(); i++) {</b>
+<b class="fc">&nbsp;            Element developer = (Element) developerNodes.item(i);</b>
+<b class="fc">&nbsp;            String name = getTagValue(developer, TAG_NAME);</b>
+<b class="pc">&nbsp;            if (name != null) {</b>
+<b class="fc">&nbsp;                developers.add(name);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return developers;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Retrieves the value of a tag from a given XML element.
+&nbsp;     *
+&nbsp;     * @param element the XML element
+&nbsp;     * @param tagName the tag name to search for
+&nbsp;     * @return the tag value, or null if not found
+&nbsp;     */
+&nbsp;    private String getTagValue(Element element, String tagName) {
+<b class="fc">&nbsp;        NodeList nodeList = element.getElementsByTagName(tagName);</b>
+<b class="pc">&nbsp;        if (nodeList.getLength() &gt; 0 &amp;&amp; nodeList.item(0).getTextContent() != null) {</b>
+<b class="fc">&nbsp;            return nodeList.item(0).getTextContent().trim();</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Retrieves the value of a tag from the root of the XML document.
+&nbsp;     *
+&nbsp;     * @param document the XML document
+&nbsp;     * @param tagName the tag name to search for
+&nbsp;     * @return the tag value, or null if not found
+&nbsp;     */
+&nbsp;    private String getTagValue(Document document, String tagName) {
+&nbsp;        try {
+<b class="fc">&nbsp;            NodeList nodes = document.getDocumentElement().getElementsByTagName(tagName);</b>
+<b class="fc">&nbsp;            for (int i = 0; i &lt; nodes.getLength(); i++) {</b>
+<b class="fc">&nbsp;                Element element = (Element) nodes.item(i);</b>
+<b class="fc">&nbsp;                if (&quot;project&quot;.equals(element.getParentNode().getNodeName())) {</b>
+<b class="fc">&nbsp;                    String value = element.getTextContent();</b>
+<b class="pc">&nbsp;                    if (value != null) {</b>
+<b class="fc">&nbsp;                        return value.trim();</b>
+&nbsp;                    }
+&nbsp;                }
+&nbsp;            }
+&nbsp;        } catch (Exception exception) {
+<b class="nc">&nbsp;            logger.error(&quot;Error retrieving tag value for: {}&quot;, tagName, exception);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return null;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-07-18 23:48</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,204 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > FileAnalysisService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">io.github.opsord.architecture_evaluator_backend.modules.parser.processor.services</a>
+</div>
+
+<h1>Coverage Summary for Class: FileAnalysisService (io.github.opsord.architecture_evaluator_backend.modules.parser.processor.services)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">FileAnalysisService</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (3/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    88.9%
+  </span>
+  <span class="absValue">
+    (16/18)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (33/33)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package io.github.opsord.architecture_evaluator_backend.modules.parser.processor.services;
+&nbsp;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_instance.FileInstance;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.ClassAnalysisInstance;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.ProcessedClassInstance;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.parts.ImportCategory;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.services.parts.ImportClassifierService;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.instances.pom.PomFileInstance;
+&nbsp;import lombok.RequiredArgsConstructor;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Map;
+&nbsp;import java.util.Optional;
+&nbsp;
+&nbsp;@Service
+&nbsp;@RequiredArgsConstructor
+&nbsp;public class FileAnalysisService {
+&nbsp;
+&nbsp;    private final ClassAnalysisService classAnalysisService;
+&nbsp;    private final ImportClassifierService importClassifierService;
+&nbsp;
+&nbsp;    public List&lt;ProcessedClassInstance&gt; analyseFileInstance(
+&nbsp;            FileInstance fileInstance,
+&nbsp;            String internalBasePackage,
+&nbsp;            Optional&lt;PomFileInstance&gt; pomFileInstance) {
+<b class="fc">&nbsp;        int[] metrics = computeBasicMetrics(fileInstance);</b>
+<b class="fc">&nbsp;        Map&lt;ImportCategory, List&lt;String&gt;&gt; classifiedDependencies = classifyFileDependencies(</b>
+<b class="fc">&nbsp;                pomFileInstance, fileInstance, internalBasePackage);</b>
+<b class="fc">&nbsp;        if (fileInstance.getClasses() == null || fileInstance.getClasses().isEmpty()) {</b>
+<b class="fc">&nbsp;            return List.of();</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Replace stream with direct list creation for better performance
+<b class="fc">&nbsp;        List&lt;ProcessedClassInstance&gt; result = new ArrayList&lt;&gt;(fileInstance.getClasses().size());</b>
+<b class="fc">&nbsp;        for (var classInstance : fileInstance.getClasses()) {</b>
+<b class="fc">&nbsp;            ClassAnalysisInstance analysis = classAnalysisService.analyseClassInstance(</b>
+<b class="fc">&nbsp;                    classInstance,</b>
+<b class="fc">&nbsp;                    classifiedDependencies);</b>
+<b class="fc">&nbsp;            analysis.setClassCount(metrics[0]);</b>
+<b class="fc">&nbsp;            analysis.setInterfaceCount(metrics[1]);</b>
+<b class="fc">&nbsp;            analysis.setStatementCount(metrics[2]);</b>
+&nbsp;
+<b class="fc">&nbsp;            ProcessedClassInstance pci = new ProcessedClassInstance();</b>
+<b class="fc">&nbsp;            pci.setClassInstance(classInstance);</b>
+<b class="fc">&nbsp;            pci.setClassAnalysisInstance(analysis);</b>
+<b class="fc">&nbsp;            result.add(pci);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return result;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private int[] computeBasicMetrics(FileInstance fileInstance) {
+<b class="fc">&nbsp;        int classCount = 0;</b>
+<b class="fc">&nbsp;        int interfaceCount = 0;</b>
+<b class="fc">&nbsp;        int statementCount = 0;</b>
+&nbsp;
+<b class="fc">&nbsp;        if (fileInstance.getClasses() != null) {</b>
+&nbsp;            // Replace multiple streams with a single pass through the collection
+<b class="fc">&nbsp;            for (var classInstance : fileInstance.getClasses()) {</b>
+&nbsp;                // Count class types
+<b class="pc">&nbsp;                if (classInstance.getJavaFileType() != null) {</b>
+<b class="fc">&nbsp;                    String type = classInstance.getJavaFileType().name();</b>
+<b class="fc">&nbsp;                    if (&quot;CLASS&quot;.equals(type)) {</b>
+<b class="fc">&nbsp;                        classCount++;</b>
+<b class="pc">&nbsp;                    } else if (&quot;INTERFACE&quot;.equals(type)) {</b>
+<b class="fc">&nbsp;                        interfaceCount++;</b>
+&nbsp;                    }
+&nbsp;                }
+&nbsp;
+&nbsp;                // Count statements in a single pass
+<b class="fc">&nbsp;                if (classInstance.getStatements() != null) {</b>
+<b class="fc">&nbsp;                    statementCount += classInstance.getStatements().size();</b>
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return new int[] { classCount, interfaceCount, statementCount };</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private Map&lt;ImportCategory, List&lt;String&gt;&gt; classifyFileDependencies(
+&nbsp;            Optional&lt;PomFileInstance&gt; pomFileInstance,
+&nbsp;            FileInstance fileInstance,
+&nbsp;            String internalBasePackage) {
+<b class="fc">&nbsp;        return importClassifierService.classifyDependencies(pomFileInstance, fileInstance, internalBasePackage);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-07-18 23:48</div>
+</div>
+</body>
+</html>

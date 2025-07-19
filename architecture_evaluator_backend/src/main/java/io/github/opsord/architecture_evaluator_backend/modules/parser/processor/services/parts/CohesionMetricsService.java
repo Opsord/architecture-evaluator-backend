@@ -22,7 +22,7 @@ public class CohesionMetricsService {
         // Cache core data
         List<MethodInstance> methods = classInstance.getMethods();
         List<VariableInstance> vars = classInstance.getClassVariables().stream()
-                .filter(v -> INSTANCE_SCOPE.equals(v.getScope()))
+                .filter(variableInstance -> INSTANCE_SCOPE.equals(variableInstance.getScope()))
                 .toList();
 
         // Precompute field-sharing adjacency

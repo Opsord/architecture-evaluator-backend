@@ -1,0 +1,110 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > ClassInstance</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance</a>
+</div>
+
+<h1>Coverage Summary for Class: ClassInstance (io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+</tr>
+<tr>
+  <td class="name">ClassInstance</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance;
+&nbsp;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.*;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.method.MethodInstance;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.method.parts.statement.StatementInstance;
+&nbsp;import lombok.Data;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;@Data
+&nbsp;public class ClassInstance {
+&nbsp;    // --- Identity ---
+&nbsp;    private String name;                  // class name
+&nbsp;    private JavaFileType javaFileType;    // CLASS, INTERFACE, ENUM...
+&nbsp;    private LayerAnnotation layerAnnotation;          // CONTROLLER, SERVICE...
+&nbsp;
+&nbsp;    // --- Inheritance &amp; Interfaces ---
+&nbsp;    private List&lt;String&gt; superClasses;    // extends
+&nbsp;    private List&lt;String&gt; implementedInterfaces; // implements
+&nbsp;
+&nbsp;    // --- Annotations on the type ---
+&nbsp;    private List&lt;String&gt; annotations;     // @Entity, @RestController...
+&nbsp;
+&nbsp;    // --- Members ---
+&nbsp;    private List&lt;ConstructorInstance&gt; constructors;
+&nbsp;    private List&lt;MethodInstance&gt; methods;
+&nbsp;    private List&lt;StatementInstance&gt; statements;
+&nbsp;    private List&lt;VariableInstance&gt; classVariables;
+&nbsp;    private List&lt;ClassInstance&gt; innerClasses;  // nested types
+&nbsp;
+&nbsp;    // --- Dependencies within the class ---
+&nbsp;    private List&lt;String&gt; usedClasses;     // Every class used in the class
+&nbsp;    private List&lt;String&gt; classDependencies; // Other program classes used in the class
+&nbsp;    private List&lt;String&gt; dependentClasses; // Classes that depend on this class
+&nbsp;    private List&lt;GenericUsageInstance&gt; genericUsages;
+&nbsp;
+&nbsp;    // --- Exception handling blocks (try/catch) ---
+&nbsp;    private List&lt;ExceptionHandlingInstance&gt; exceptionHandling;
+&nbsp;
+&nbsp;    // --- Metrics ---
+&nbsp;    private int linesOfCode;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-07-18 23:48</div>
+</div>
+</body>
+</html>

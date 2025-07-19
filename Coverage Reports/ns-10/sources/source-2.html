@@ -1,0 +1,271 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > OrchestratorService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">io.github.opsord.architecture_evaluator_backend.modules.parser.orchestrator.services</a>
+</div>
+
+<h1>Coverage Summary for Class: OrchestratorService (io.github.opsord.architecture_evaluator_backend.modules.parser.orchestrator.services)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">OrchestratorService</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (11/11)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    75%
+  </span>
+  <span class="absValue">
+    (18/24)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    97.1%
+  </span>
+  <span class="absValue">
+    (68/70)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;// backend/architecture-evaluator-backend/src/main/java/io/github/opsord/architecture_evaluator_backend/modules/parser/orchestrator/services/OrchestratorService.java
+&nbsp;package io.github.opsord.architecture_evaluator_backend.modules.parser.orchestrator.services;
+&nbsp;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.ClassInstance;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.class_instance.parts.LayerAnnotation;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.instances.file_instance.FileInstance;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.compilation_unit.services.file_instance.FileInstanceService;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.dto.ProcessedClassInstance;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.processor.services.FileAnalysisService;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.instances.pom.PomFileInstance;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.instances.gradle.GradleFileInstance;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.PomScannerService;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.GradleScannerService;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.ScannerService;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services.SrcScannerService;
+&nbsp;import io.github.opsord.architecture_evaluator_backend.modules.parser.orchestrator.instances.ProjectAnalysisInstance;
+&nbsp;import lombok.RequiredArgsConstructor;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;
+&nbsp;import java.io.File;
+&nbsp;import java.io.IOException;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Optional;
+&nbsp;
+&nbsp;@Service
+&nbsp;@RequiredArgsConstructor
+&nbsp;public class OrchestratorService {
+&nbsp;
+<b class="fc">&nbsp;    private static final Logger logger = LoggerFactory.getLogger(OrchestratorService.class);</b>
+&nbsp;
+&nbsp;    private final ScannerService scannerService;
+&nbsp;    private final PomScannerService pomScannerService;
+&nbsp;    private final GradleScannerService gradleScannerService;
+&nbsp;    private final SrcScannerService srcScannerService;
+&nbsp;    private final FileAnalysisService analysisService;
+&nbsp;    private final FileInstanceService fileInstanceService;
+&nbsp;
+&nbsp;    public ProjectAnalysisInstance orchestrateProjectAnalysis(String projectPath) throws IOException {
+<b class="fc">&nbsp;        logger.info(&quot;Starting orchestration for project&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        File projectRoot = scannerService.findProjectRoot(new File(projectPath));</b>
+<b class="fc">&nbsp;        if (projectRoot == null) {</b>
+<b class="fc">&nbsp;            logger.warn(&quot;Project root not found&quot;);</b>
+<b class="fc">&nbsp;            throw new IOException(&quot;Project root not found&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        List&lt;File&gt; srcFiles = srcScannerService.scanSrcFolder(new File(projectRoot, &quot;src&quot;));</b>
+<b class="fc">&nbsp;        List&lt;FileInstance&gt; fileInstances = srcScannerService.parseJavaFiles(srcFiles, projectRoot);</b>
+<b class="fc">&nbsp;        if (fileInstances.isEmpty()) {</b>
+<b class="fc">&nbsp;            logger.warn(&quot;No Java files found in the project&quot;);</b>
+<b class="fc">&nbsp;            throw new IOException(&quot;No Java files found in the project&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Filter files without tests
+<b class="fc">&nbsp;        List&lt;FileInstance&gt; fileInstancesWithoutTests = fileInstances.stream()</b>
+<b class="pc">&nbsp;                .filter(fi -&gt; !fi.getClasses().isEmpty() &amp;&amp; fi.getClasses().stream()</b>
+<b class="pc">&nbsp;                        .noneMatch(cls -&gt; cls.getLayerAnnotation() == LayerAnnotation.TESTING))</b>
+<b class="fc">&nbsp;                .toList();</b>
+&nbsp;
+<b class="fc">&nbsp;        Optional&lt;PomFileInstance&gt; pomFileInstance = pomScannerService.scanPomFile(projectRoot);</b>
+<b class="fc">&nbsp;        Optional&lt;GradleFileInstance&gt; gradleFileInstance = gradleScannerService.scanGradleFile(projectRoot);</b>
+&nbsp;
+&nbsp;        // Populate class dependencies
+<b class="fc">&nbsp;        populateClassDependencies(fileInstancesWithoutTests);</b>
+&nbsp;
+<b class="fc">&nbsp;        List&lt;ProcessedClassInstance&gt; processedClasses = analyzeCompilationUnits(</b>
+<b class="fc">&nbsp;                fileInstances,</b>
+<b class="fc">&nbsp;                pomFileInstance,</b>
+<b class="fc">&nbsp;                gradleFileInstance);</b>
+&nbsp;
+<b class="fc">&nbsp;        ProjectAnalysisInstance projectAnalysisInstance = organizeProjectAnalysis(processedClasses);</b>
+<b class="fc">&nbsp;        projectAnalysisInstance.setProjectName(projectRoot.getName());</b>
+<b class="fc">&nbsp;        pomFileInstance.ifPresent(projectAnalysisInstance::setPomFile);</b>
+<b class="fc">&nbsp;        gradleFileInstance.ifPresent(projectAnalysisInstance::setGradleFile);</b>
+&nbsp;
+<b class="fc">&nbsp;        logger.info(&quot;Orchestration completed for project at path: {}&quot;, projectRoot.getAbsolutePath());</b>
+<b class="fc">&nbsp;        return projectAnalysisInstance;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private String determineInternalBasePackage(Optional&lt;PomFileInstance&gt; pomFileInstance, Optional&lt;GradleFileInstance&gt; gradleFileInstance) {
+<b class="pc">&nbsp;        if (pomFileInstance.isPresent()) {</b>
+<b class="nc">&nbsp;            return pomFileInstance.get().getGroupId();</b>
+<b class="pc">&nbsp;        } else if (gradleFileInstance.isPresent()) {</b>
+<b class="nc">&nbsp;            return gradleFileInstance.get().getGroup();</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;            return &quot;io.github.opsord.architecture_evaluator_backend&quot;;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private List&lt;ProcessedClassInstance&gt; analyzeCompilationUnits(
+&nbsp;            List&lt;FileInstance&gt; projectCompUnits,
+&nbsp;            Optional&lt;PomFileInstance&gt; pomFileInstance,
+&nbsp;            Optional&lt;GradleFileInstance&gt; gradleFileInstance) {
+<b class="fc">&nbsp;        String internalBasePackage = determineInternalBasePackage(pomFileInstance, gradleFileInstance);</b>
+&nbsp;
+&nbsp;        // Analyze all files and flatten the list of processed classes
+<b class="fc">&nbsp;        return projectCompUnits.stream()</b>
+<b class="fc">&nbsp;                .flatMap(compilationUnit -&gt; analysisService.analyseFileInstance(</b>
+<b class="fc">&nbsp;                        compilationUnit,</b>
+<b class="fc">&nbsp;                        internalBasePackage,</b>
+<b class="fc">&nbsp;                        pomFileInstance).stream())</b>
+<b class="fc">&nbsp;                .toList();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public ProjectAnalysisInstance organizeProjectAnalysis(List&lt;ProcessedClassInstance&gt; processedClasses) {
+<b class="fc">&nbsp;        ProjectAnalysisInstance projectAnalysisInstance = new ProjectAnalysisInstance();</b>
+<b class="fc">&nbsp;        projectAnalysisInstance.setEntities(filterByLayerAnnotation(processedClasses, LayerAnnotation.ENTITY));</b>
+<b class="fc">&nbsp;        projectAnalysisInstance.setDocuments(filterByLayerAnnotation(processedClasses, LayerAnnotation.DOCUMENT));</b>
+<b class="fc">&nbsp;        projectAnalysisInstance.setRepositories(filterByLayerAnnotation(processedClasses, LayerAnnotation.REPOSITORY));</b>
+<b class="fc">&nbsp;        projectAnalysisInstance.setServices(filterByLayerAnnotation(processedClasses, LayerAnnotation.SERVICE));</b>
+<b class="fc">&nbsp;        projectAnalysisInstance.setControllers(filterByLayerAnnotation(processedClasses, LayerAnnotation.CONTROLLER));</b>
+<b class="fc">&nbsp;        projectAnalysisInstance.setTestClasses(filterByLayerAnnotation(processedClasses, LayerAnnotation.TESTING));</b>
+&nbsp;        // Other classes without any of the above annotations
+<b class="fc">&nbsp;        List&lt;ProcessedClassInstance&gt; otherClasses = processedClasses.stream()</b>
+<b class="fc">&nbsp;                .filter(pci -&gt; pci.getClassInstance().getLayerAnnotation() == LayerAnnotation.OTHER</b>
+<b class="pc">&nbsp;                        || pci.getClassInstance().getLayerAnnotation() == LayerAnnotation.UNKNOWN)</b>
+<b class="fc">&nbsp;                .toList();</b>
+<b class="fc">&nbsp;        projectAnalysisInstance.setOtherClasses(otherClasses);</b>
+&nbsp;
+<b class="fc">&nbsp;        return projectAnalysisInstance;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private List&lt;ProcessedClassInstance&gt; filterByLayerAnnotation(
+&nbsp;            List&lt;ProcessedClassInstance&gt; classes,
+&nbsp;            LayerAnnotation layerAnnotation) {
+<b class="fc">&nbsp;        return classes.stream()</b>
+<b class="fc">&nbsp;                .filter(pci -&gt; pci.getClassInstance().getLayerAnnotation() == layerAnnotation)</b>
+<b class="fc">&nbsp;                .toList();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void populateClassDependencies(List&lt;FileInstance&gt; allFiles) {
+&nbsp;        // 1. Set classDependencies for each class
+<b class="fc">&nbsp;        List&lt;ClassInstance&gt; allClasses = allFiles.stream()</b>
+<b class="fc">&nbsp;                .flatMap(f -&gt; f.getClasses().stream())</b>
+<b class="fc">&nbsp;                .toList();</b>
+&nbsp;
+<b class="fc">&nbsp;        for (ClassInstance cls : allClasses) {</b>
+<b class="fc">&nbsp;            List&lt;String&gt; dependencies = fileInstanceService.getDependentClassNamesFromClass(cls, allFiles);</b>
+<b class="fc">&nbsp;            cls.setClassDependencies(dependencies);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // 2. Set dependentClasses for each class
+<b class="fc">&nbsp;        for (ClassInstance cls : allClasses) {</b>
+<b class="fc">&nbsp;            String className = cls.getName();</b>
+<b class="fc">&nbsp;            List&lt;String&gt; dependents = allClasses.stream()</b>
+<b class="pc">&nbsp;                    .filter(other -&gt; other.getClassDependencies() != null</b>
+<b class="fc">&nbsp;                            &amp;&amp; other.getClassDependencies().contains(className))</b>
+<b class="fc">&nbsp;                    .map(ClassInstance::getName)</b>
+<b class="fc">&nbsp;                    .toList();</b>
+<b class="fc">&nbsp;            cls.setDependentClasses(dependents);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-07-18 23:48</div>
+</div>
+</body>
+</html>

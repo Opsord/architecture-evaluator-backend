@@ -1,0 +1,214 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > ScannerService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services</a>
+</div>
+
+<h1>Coverage Summary for Class: ScannerService (io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">ScannerService</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (7/7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    93.8%
+  </span>
+  <span class="absValue">
+    (30/32)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    97.7%
+  </span>
+  <span class="absValue">
+    (43/44)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package io.github.opsord.architecture_evaluator_backend.modules.parser.project_scanner.services;
+&nbsp;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;
+&nbsp;import java.io.File;
+&nbsp;import java.util.Set;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;@Service
+<b class="fc">&nbsp;public class ScannerService {</b>
+&nbsp;
+<b class="fc">&nbsp;    private static final Logger logger = LoggerFactory.getLogger(ScannerService.class);</b>
+&nbsp;
+<b class="fc">&nbsp;    private static final Set&lt;String&gt; DEFAULT_IGNORED_FOLDERS = Set.of(</b>
+<b class="fc">&nbsp;            &quot;target&quot;, &quot;build&quot;, &quot;.git&quot;, &quot;node_modules&quot;,</b>
+<b class="fc">&nbsp;            &quot;.idea&quot;, &quot;.vscode&quot;, &quot;out&quot;, &quot;dist&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;    private static final List&lt;String&gt; GRADLE_FILES = List.of(&quot;build.gradle&quot;, &quot;build.gradle.kts&quot;);</b>
+&nbsp;
+&nbsp;    public File findProjectRoot(File file) {
+<b class="fc">&nbsp;        if (!isValidDirectory(file)) {</b>
+<b class="fc">&nbsp;            return null;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        logger.info(&quot;Scanning directory: {}&quot;, file.getAbsolutePath());</b>
+<b class="fc">&nbsp;        if (isProjectRoot(file)) {</b>
+<b class="fc">&nbsp;            logger.info(&quot;Project root found: {}&quot;, file.getAbsolutePath());</b>
+<b class="fc">&nbsp;            return file;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return scanSubdirectoriesForProjectRoot(file);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public File findPomFile(File projectDirectory) {
+<b class="fc">&nbsp;        if (projectDirectory == null || !projectDirectory.isDirectory()) {</b>
+<b class="fc">&nbsp;            logger.warn(&quot;Invalid project directory: {}&quot;,</b>
+<b class="fc">&nbsp;                    projectDirectory != null ? projectDirectory.getAbsolutePath() : &quot;null&quot;);</b>
+<b class="fc">&nbsp;            return null;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        File pomFile = new File(projectDirectory, &quot;pom.xml&quot;);</b>
+<b class="fc">&nbsp;        if (pomFile.exists()) {</b>
+<b class="fc">&nbsp;            logger.info(&quot;Found `pom.xml` file at: {}&quot;, pomFile.getAbsolutePath());</b>
+<b class="fc">&nbsp;            return pomFile;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        logger.warn(&quot;No `pom.xml` file found in directory: {}&quot;, projectDirectory.getAbsolutePath());</b>
+<b class="fc">&nbsp;        return null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private boolean isValidDirectory(File file) {
+<b class="fc">&nbsp;        if (file == null || !file.isDirectory()) {</b>
+<b class="fc">&nbsp;            logger.warn(&quot;Invalid starting directory&quot;);</b>
+<b class="fc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        if (DEFAULT_IGNORED_FOLDERS.contains(file.getName())) {</b>
+<b class="fc">&nbsp;            logger.info(&quot;Skipping ignored folder&quot;);</b>
+<b class="fc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return true;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Checks if a directory is a project root by verifying the presence of
+&nbsp;     * `pom.xml` or Gradle build file and `src`.
+&nbsp;     */
+&nbsp;    private boolean isProjectRoot(File directory) {
+<b class="fc">&nbsp;        boolean hasSrc = new File(directory, &quot;src&quot;).exists();</b>
+<b class="fc">&nbsp;        boolean hasPom = new File(directory, &quot;pom.xml&quot;).exists();</b>
+<b class="fc">&nbsp;        boolean hasGradle = GRADLE_FILES.stream().anyMatch(f -&gt; new File(directory, f).exists());</b>
+<b class="fc">&nbsp;        return hasSrc &amp;&amp; (hasPom || hasGradle);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private File scanSubdirectoriesForProjectRoot(File directory) {
+<b class="fc">&nbsp;        File[] subDirectories = directory.listFiles(File::isDirectory);</b>
+<b class="pc">&nbsp;        if (subDirectories == null) {</b>
+<b class="nc">&nbsp;            return null;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        for (File subDir : subDirectories) {</b>
+<b class="pc">&nbsp;            if (DEFAULT_IGNORED_FOLDERS.contains(subDir.getName())) {</b>
+&nbsp;                continue;
+&nbsp;            }
+&nbsp;
+<b class="fc">&nbsp;            File projectRoot = findProjectRoot(subDir);</b>
+<b class="fc">&nbsp;            if (projectRoot != null) {</b>
+<b class="fc">&nbsp;                return projectRoot;</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        logger.warn(&quot;No project root found in directory: {}&quot;, directory.getAbsolutePath());</b>
+<b class="fc">&nbsp;        return null;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-07-18 23:48</div>
+</div>
+</body>
+</html>
