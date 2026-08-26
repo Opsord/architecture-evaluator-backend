@@ -218,6 +218,20 @@ class FileManagerServiceTest {
     }
 
     @Test
+    void testExtractArchive_analysisPathOutsideExtractionDir() throws Exception {
+        File tempDir = Files.createTempDirectory("ziptest").toFile();
+        File zipFile = new File(tempDir, "test.zip");
+        try (ZipArchiveOutputStream zos = new ZipArchiveOutputStream(zipFile)) {
+            ZipArchiveEntry entry = new ZipArchiveEntry("../src/Evil.java");
+            zos.putArchiveEntry(entry);
+            zos.write("class Evil {}".getBytes());
+            zos.closeArchiveEntry();
+        }
+        assertThrows(IOException.class, () -> fileManagerService.extractArchive(zipFile));
+        fileManagerService.deleteRecursively(tempDir);
+    }
+
+    @Test
     void testProcessArchiveEntry_skipsDirectoryEntries() throws Exception {
         File tempDir = Files.createTempDirectory("faildirtest").toFile();
         File extractedDir = new File(tempDir, "extracted");

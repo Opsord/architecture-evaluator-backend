@@ -1,5 +1,6 @@
 package io.github.opsord.architecture_evaluator_backend.modules.api.parser.services.class_instance.parts.statement;
 
+import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.stmt.*;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import io.github.opsord.architecture_evaluator_backend.modules.api.parser.instances.class_instance.parts.method.parts.statement.StatementInstance;
@@ -36,7 +37,12 @@ public class StatementVisitor extends VoidVisitorAdapter<List<StatementInstance>
     @Override
     public void visit(ExpressionStmt expressionStmt, List<StatementInstance> collector) {
         super.visit(expressionStmt, collector);
-        addStatement(StatementType.EXPRESSION, expressionStmt, collector);
+        StatementInstance statementInstance = new StatementInstance();
+        statementInstance.setType(StatementType.EXPRESSION);
+        if (expressionStmt.getExpression() instanceof MethodCallExpr call) {
+            statementInstance.setStructure(call.getNameAsString());
+        }
+        collector.add(statementInstance);
     }
 
     @Override
