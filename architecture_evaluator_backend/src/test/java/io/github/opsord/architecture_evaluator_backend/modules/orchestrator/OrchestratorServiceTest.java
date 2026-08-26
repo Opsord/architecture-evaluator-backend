@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.Mockito.*;
 
 class OrchestratorServiceTest {
@@ -74,7 +75,7 @@ class OrchestratorServiceTest {
         when(pomScannerService.scanPomFile(any())).thenReturn(Optional.empty());
         when(gradleScannerService.scanGradleFile(any())).thenReturn(Optional.empty());
         when(analysisService.analyseFileInstance(any(), any(), any())).thenReturn(List.of(processed));
-        when(fileInstanceService.getDependentClassNamesFromClass(any(), any())).thenReturn(List.of());
+        when(fileInstanceService.getDependentClassNamesFromClass(any(), anySet())).thenReturn(List.of());
 
         ProjectAnalysisInstance result = orchestratorService.orchestrateProjectAnalysis("testProject");
 
@@ -146,8 +147,8 @@ class OrchestratorServiceTest {
         FileInstance fileB = new FileInstance(); fileB.setClasses(List.of(b));
         List<FileInstance> allFiles = List.of(fileA, fileB);
 
-        when(fileInstanceService.getDependentClassNamesFromClass(a, allFiles)).thenReturn(List.of("B"));
-        when(fileInstanceService.getDependentClassNamesFromClass(b, allFiles)).thenReturn(List.of());
+        when(fileInstanceService.getDependentClassNamesFromClass(eq(a), anySet())).thenReturn(List.of("B"));
+        when(fileInstanceService.getDependentClassNamesFromClass(eq(b), anySet())).thenReturn(List.of());
 
         orchestratorService.populateClassDependencies(allFiles);
 

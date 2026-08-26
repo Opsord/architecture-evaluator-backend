@@ -3,6 +3,7 @@ package io.github.opsord.architecture_evaluator_backend.modules.api.processor.se
 import io.github.opsord.architecture_evaluator_backend.modules.api.parser.instances.class_instance.ClassInstance;
 import io.github.opsord.architecture_evaluator_backend.modules.api.parser.instances.class_instance.parts.VariableInstance;
 import io.github.opsord.architecture_evaluator_backend.modules.api.parser.instances.class_instance.parts.method.MethodInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.api.parser.instances.class_instance.parts.method.parts.statement.StatementType;
 import io.github.opsord.architecture_evaluator_backend.modules.api.processor.dto.parts.CohesionMetricsDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -148,17 +149,18 @@ public class CohesionMetricsService {
     }
 
     private Set<String> extractCalledNames(MethodInstance methodInstance) {
-        if (methodInstance.getStatementsInfo() == null)
+        if (methodInstance.getStatementsInfo() == null
+                || methodInstance.getStatementsInfo().getStatements() == null) {
             return Collections.emptySet();
+        }
         return methodInstance.getStatementsInfo().getStatements().stream()
-                .filter(statementInstance -> statementInstance.getType().name().equals("EXPRESSION"))
-                .map(statementInstance -> {
-                    String structure = statementInstance.getStructure();
-                    if (structure.endsWith("();")) {
-                        structure = structure.substring(0, structure.length() - 3).trim();
-                    }
-                    return structure;
-                })
+                .filter(statementInstance -> statementInstance.getType() == StatementType.EXPRESSION)
+                .map(statementInstance -> statementInstance.getStructure())
+                .filter(Objects::nonNull)
+                .map(structure -> structure.endsWith("();")
+                        ? structure.substring(0, structure.length() - 3).trim()
+                        : structure)
+                .filter(name -> !name.isBlank())
                 .collect(Collectors.toSet());
     }
 

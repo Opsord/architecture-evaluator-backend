@@ -31,7 +31,6 @@ public class ConstructorVisitor extends VoidVisitorAdapter<List<ConstructorInsta
         ci.setModifiers(constructor.getModifiers().stream().map(Object::toString).toList());
         ci.setThrownExceptions(
                 constructor.getThrownExceptions().stream().map(Object::toString).toList());
-        ci.setBody(constructor.getBody().toString());
         ci.setLineCount(constructor.getBody().getStatements().size());
         // Comments can be added if needed
         collector.add(ci);

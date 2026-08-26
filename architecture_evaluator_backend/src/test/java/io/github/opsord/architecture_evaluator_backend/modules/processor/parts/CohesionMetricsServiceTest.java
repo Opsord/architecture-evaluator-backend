@@ -3,6 +3,9 @@ package io.github.opsord.architecture_evaluator_backend.modules.processor.parts;
 import io.github.opsord.architecture_evaluator_backend.modules.api.parser.instances.class_instance.ClassInstance;
 import io.github.opsord.architecture_evaluator_backend.modules.api.parser.instances.class_instance.parts.VariableInstance;
 import io.github.opsord.architecture_evaluator_backend.modules.api.parser.instances.class_instance.parts.method.MethodInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.api.parser.instances.class_instance.parts.method.parts.StatementsInfo;
+import io.github.opsord.architecture_evaluator_backend.modules.api.parser.instances.class_instance.parts.method.parts.statement.StatementInstance;
+import io.github.opsord.architecture_evaluator_backend.modules.api.parser.instances.class_instance.parts.method.parts.statement.StatementType;
 import io.github.opsord.architecture_evaluator_backend.modules.api.processor.dto.parts.CohesionMetricsDTO;
 import io.github.opsord.architecture_evaluator_backend.modules.api.processor.services.parts.CohesionMetricsService;
 import org.junit.jupiter.api.BeforeEach;
@@ -121,5 +124,36 @@ class CohesionMetricsServiceTest {
         assertEquals(2, dto.getLackOfCohesion3()); // 2 components
         assertEquals(2, dto.getLackOfCohesion4()); // no calls
         assertEquals(0.0, dto.getLackOfCohesion5()); // no attrs => return 0
+    }
+
+    @Test
+    void testExpressionStatementsWithNullStructureDoNotThrow() {
+        MethodInstance m1 = method("m1");
+        MethodInstance m2 = method("m2");
+        StatementsInfo info = new StatementsInfo();
+        StatementInstance expression = new StatementInstance();
+        expression.setType(StatementType.EXPRESSION);
+        info.setStatements(List.of(expression));
+        m1.setStatementsInfo(info);
+
+        ClassInstance c = classInstance(Collections.emptyList(), List.of(m1, m2));
+        CohesionMetricsDTO dto = assertDoesNotThrow(() -> service.calculateCohesionMetrics(c));
+        assertEquals(2, dto.getLackOfCohesion4());
+    }
+
+    @Test
+    void testLcom4ConnectsMethodsUsingCallNameWithoutFullSource() {
+        MethodInstance caller = method("caller");
+        MethodInstance callee = method("callee");
+        StatementsInfo info = new StatementsInfo();
+        StatementInstance call = new StatementInstance();
+        call.setType(StatementType.EXPRESSION);
+        call.setStructure("callee");
+        info.setStatements(List.of(call));
+        caller.setStatementsInfo(info);
+
+        ClassInstance c = classInstance(Collections.emptyList(), List.of(caller, callee));
+        CohesionMetricsDTO dto = service.calculateCohesionMetrics(c);
+        assertEquals(1, dto.getLackOfCohesion4());
     }
 }

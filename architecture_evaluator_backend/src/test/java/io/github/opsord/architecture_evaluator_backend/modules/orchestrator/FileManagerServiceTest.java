@@ -112,22 +112,32 @@ class FileManagerServiceTest {
 
     @Test
     void testExtractArchive_zip() throws Exception {
-        // Create a zip file with a single file inside
         File tempDir = Files.createTempDirectory("ziptest").toFile();
         File zipFile = new File(tempDir, "test.zip");
         try (ZipArchiveOutputStream zos = new ZipArchiveOutputStream(zipFile)) {
-            ZipArchiveEntry entry = new ZipArchiveEntry("file.txt");
-            zos.putArchiveEntry(entry);
-            zos.write("hello".getBytes());
+            ZipArchiveEntry skipped = new ZipArchiveEntry("README.md");
+            zos.putArchiveEntry(skipped);
+            zos.write("docs".getBytes());
+            zos.closeArchiveEntry();
+            ZipArchiveEntry source = new ZipArchiveEntry("src/main/java/Demo.java");
+            zos.putArchiveEntry(source);
+            zos.write("class Demo {}".getBytes());
+            zos.closeArchiveEntry();
+            ZipArchiveEntry pom = new ZipArchiveEntry("pom.xml");
+            zos.putArchiveEntry(pom);
+            zos.write("<project/>".getBytes());
             zos.closeArchiveEntry();
         }
 
         File extracted = fileManagerService.extractArchive(zipFile);
-        File extractedFile = new File(extracted, "file.txt");
-        assertTrue(extractedFile.exists());
-        assertEquals("hello", Files.readString(extractedFile.toPath()));
+        File extractedSource = new File(extracted, "src/main/java/Demo.java");
+        File extractedPom = new File(extracted, "pom.xml");
+        File extractedReadme = new File(extracted, "README.md");
+        assertTrue(extractedSource.exists());
+        assertEquals("class Demo {}", Files.readString(extractedSource.toPath()));
+        assertTrue(extractedPom.exists());
+        assertFalse(extractedReadme.exists());
 
-        // Cleanup
         fileManagerService.deleteRecursively(tempDir);
     }
 
@@ -208,28 +218,34 @@ class FileManagerServiceTest {
     }
 
     @Test
-    void testProcessArchiveEntry_directoryCreationFailure() throws Exception {
+    void testExtractArchive_analysisPathOutsideExtractionDir() throws Exception {
+        File tempDir = Files.createTempDirectory("ziptest").toFile();
+        File zipFile = new File(tempDir, "test.zip");
+        try (ZipArchiveOutputStream zos = new ZipArchiveOutputStream(zipFile)) {
+            ZipArchiveEntry entry = new ZipArchiveEntry("../src/Evil.java");
+            zos.putArchiveEntry(entry);
+            zos.write("class Evil {}".getBytes());
+            zos.closeArchiveEntry();
+        }
+        assertThrows(IOException.class, () -> fileManagerService.extractArchive(zipFile));
+        fileManagerService.deleteRecursively(tempDir);
+    }
+
+    @Test
+    void testProcessArchiveEntry_skipsDirectoryEntries() throws Exception {
         File tempDir = Files.createTempDirectory("faildirtest").toFile();
         File extractedDir = new File(tempDir, "extracted");
-        extractedDir.delete(); // Ensure it does not exist
+        extractedDir.delete();
+        assertTrue(extractedDir.createNewFile());
 
         FileManagerService service = new FileManagerService();
         ArchiveEntry entry = mock(ArchiveEntry.class);
         when(entry.getName()).thenReturn("dir/");
         when(entry.isDirectory()).thenReturn(true);
 
-        // Make extractedDir a file, so mkdir() will fail
-        assertTrue(extractedDir.createNewFile());
-
         var method = FileManagerService.class.getDeclaredMethod("processArchiveEntry", ArchiveEntry.class, InputStream.class, File.class);
         method.setAccessible(true);
-        assertThrows(IOException.class, () -> {
-            try {
-                method.invoke(service, entry, new ByteArrayInputStream(new byte[0]), extractedDir);
-            } catch (java.lang.reflect.InvocationTargetException e) {
-                throw e.getCause();
-            }
-        });
+        method.invoke(service, entry, new ByteArrayInputStream(new byte[0]), extractedDir);
 
         extractedDir.delete();
         tempDir.delete();

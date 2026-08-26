@@ -43,11 +43,10 @@ class ExceptionHandlerServiceTest {
 
         assertEquals(1, handlers.size());
         ExceptionHandlingInstance instance = handlers.get(0);
-        assertTrue(instance.getTryBlock().contains("int x = 1 / 0;"));
+        assertNull(instance.getTryBlock());
         assertEquals(1, instance.getCatchBlocks().size());
-        assertTrue(instance.getCatchBlocks().get(0).contains("catch (ArithmeticException e)"));
-        assertNotNull(instance.getFinallyBlock());
-        assertTrue(instance.getFinallyBlock().contains("System.out.println(\"Done\");"));
+        assertEquals("ArithmeticException", instance.getCatchBlocks().get(0));
+        assertNull(instance.getFinallyBlock());
     }
 
     @Test

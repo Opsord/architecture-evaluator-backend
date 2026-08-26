@@ -15,12 +15,14 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 public class FileInstanceService {
 
     private static final Logger logger = LoggerFactory.getLogger(FileInstanceService.class);
+    private static final ThreadLocal<JavaParser> PARSER = ThreadLocal.withInitial(JavaParser::new);
 
     private final ClassService classService;
     private final PackageService packageService;
@@ -35,11 +37,10 @@ public class FileInstanceService {
      * @throws FileNotFoundException If the file does not exist or cannot be parsed.
      */
     public FileInstance parseJavaFile(File file, File projectRoot) throws FileNotFoundException {
-        logger.info("Starting to parse file: {}", file.getAbsolutePath());
-        JavaParser javaParser = new JavaParser();
-        CompilationUnit compilationUnit = javaParser.parse(file).getResult()
+        logger.debug("Starting to parse file: {}", file.getAbsolutePath());
+        CompilationUnit compilationUnit = PARSER.get().parse(file).getResult()
                 .orElseThrow(() -> new FileNotFoundException("File not found or could not be parsed"));
-        logger.info("Successfully parsed file: {}", file.getAbsolutePath());
+        logger.debug("Successfully parsed file: {}", file.getAbsolutePath());
 
         FileInstance fileInstance = new FileInstance();
         fileInstance.setFileName(file.getName());
@@ -59,19 +60,17 @@ public class FileInstanceService {
     /**
      * Returns a list of dependent class names used by a given ClassInstance.
      *
-     * @param classInstance The ClassInstance to analyze.
-     * @param allFiles      The list of all FileInstance objects in the project.
+     * @param classInstance      The ClassInstance to analyze.
+     * @param projectClassNames  Simple names of classes that belong to the project.
      * @return A list of dependent class names.
      */
-    public List<String> getDependentClassNamesFromClass(ClassInstance classInstance, List<FileInstance> allFiles) {
+    public List<String> getDependentClassNamesFromClass(ClassInstance classInstance, Set<String> projectClassNames) {
         if (classInstance.getUsedClasses() == null) {
             return List.of();
         }
         return classInstance.getUsedClasses().stream()
                 .distinct()
-                .filter(usedClass -> allFiles.stream()
-                        .anyMatch(file -> file.getClasses().stream()
-                                .anyMatch(cls -> cls.getName().equals(usedClass))))
+                .filter(projectClassNames::contains)
                 .toList();
     }
 
