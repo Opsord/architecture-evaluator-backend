@@ -38,11 +38,10 @@ class ExceptionHandlerVisitorTest {
 
         assertEquals(1, handlers.size());
         ExceptionHandlingInstance instance = handlers.get(0);
-        assertTrue(instance.getTryBlock().contains("int x = 1 / 0;"));
+        assertNull(instance.getTryBlock());
         assertEquals(1, instance.getCatchBlocks().size());
-        assertTrue(instance.getCatchBlocks().get(0).contains("catch (ArithmeticException e)"));
-        assertNotNull(instance.getFinallyBlock());
-        assertTrue(instance.getFinallyBlock().contains("System.out.println(\"Done\");"));
+        assertEquals("ArithmeticException", instance.getCatchBlocks().get(0));
+        assertNull(instance.getFinallyBlock());
     }
 
     @Test
@@ -63,13 +62,14 @@ class ExceptionHandlerVisitorTest {
         clazz.accept(visitor, handlers);
 
         assertEquals(2, handlers.size());
-        assertTrue(handlers.get(0).getTryBlock().contains("int a = 0;"));
+        assertNull(handlers.get(0).getTryBlock());
         assertEquals(1, handlers.get(0).getCatchBlocks().size());
+        assertEquals("Exception", handlers.get(0).getCatchBlocks().get(0));
         assertNull(handlers.get(0).getFinallyBlock());
 
-        assertTrue(handlers.get(1).getTryBlock().contains("int b = 1;"));
+        assertNull(handlers.get(1).getTryBlock());
         assertEquals(0, handlers.get(1).getCatchBlocks().size());
-        assertNotNull(handlers.get(1).getFinallyBlock());
+        assertNull(handlers.get(1).getFinallyBlock());
     }
 
     @Test

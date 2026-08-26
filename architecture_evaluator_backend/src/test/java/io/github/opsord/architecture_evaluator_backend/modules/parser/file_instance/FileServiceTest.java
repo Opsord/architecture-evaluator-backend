@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -73,21 +74,7 @@ class FileServiceTest {
         classA.setName("A");
         classA.setUsedClasses(List.of("B", "C", "D"));
 
-        ClassInstance classB = new ClassInstance();
-        classB.setName("B");
-        ClassInstance classC = new ClassInstance();
-        classC.setName("C");
-
-        FileInstance fileB = new FileInstance();
-        fileB.setClasses(List.of(classB));
-        FileInstance fileC = new FileInstance();
-        fileC.setClasses(List.of(classC));
-        FileInstance fileD = new FileInstance();
-        fileD.setClasses(List.of());
-
-        List<FileInstance> allFiles = List.of(fileB, fileC, fileD);
-
-        List<String> deps = fileInstanceService.getDependentClassNamesFromClass(classA, allFiles);
+        List<String> deps = fileInstanceService.getDependentClassNamesFromClass(classA, Set.of("B", "C"));
 
         assertTrue(deps.contains("B"));
         assertTrue(deps.contains("C"));

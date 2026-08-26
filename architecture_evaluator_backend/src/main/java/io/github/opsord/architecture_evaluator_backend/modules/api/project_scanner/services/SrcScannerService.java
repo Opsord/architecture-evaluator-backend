@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -29,29 +30,39 @@ public class SrcScannerService {
             return List.of();
         }
 
+        File scanRoot = resolveJavaSourceRoot(srcFolder);
         List<File> javaFiles = new ArrayList<>();
-        try (var paths = Files.walk(srcFolder.toPath())) {
+        try (var paths = Files.walk(scanRoot.toPath())) {
             paths.filter(Files::isRegularFile)
                     .filter(path -> path.toString().endsWith(".java"))
                     .forEach(path -> javaFiles.add(path.toFile()));
         }
-        logger.info("Found {} Java files in `src` folder: {}", javaFiles.size(), srcFolder.getAbsolutePath());
+        logger.info("Found {} Java files under: {}", javaFiles.size(), scanRoot.getAbsolutePath());
         return javaFiles;
+    }
+
+    private File resolveJavaSourceRoot(File srcFolder) {
+        File mainJava = new File(srcFolder, "main/java");
+        if (mainJava.isDirectory()) {
+            return mainJava;
+        }
+        return srcFolder;
     }
 
     /**
      * Parses Java files into FileInstance objects.
      */
     public List<FileInstance> parseJavaFiles(List<File> javaFiles, File projectRoot) {
-        List<FileInstance> fileInstances = new ArrayList<>();
-        for (File javaFile : javaFiles) {
-            try {
-                FileInstance unit = fileInstanceService.parseJavaFile(javaFile, projectRoot);
-                fileInstances.add(unit);
-            } catch (Exception e) {
-                logger.error("Failed to parse file: {}", javaFile.getAbsolutePath(), e);
-            }
-        }
-        return fileInstances;
+        return javaFiles.parallelStream()
+                .map(javaFile -> {
+                    try {
+                        return fileInstanceService.parseJavaFile(javaFile, projectRoot);
+                    } catch (Exception e) {
+                        logger.error("Failed to parse file: {}", javaFile.getAbsolutePath(), e);
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .toList();
     }
 }

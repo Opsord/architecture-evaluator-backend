@@ -53,13 +53,18 @@ public class FileManagerService {
         return getZipFile(tempDir, zipUrlString);
     }
 
+    private static final int CONNECT_TIMEOUT_MS = 15_000;
+    private static final int READ_TIMEOUT_MS = 120_000;
+
     private File getZipFile(File tempDir, String zipUrlString) throws IOException {
         File zipFile = new File(tempDir, "repo.zip");
 
-        // Download the ZIP file using URI (more secure than URL)
         try {
             java.net.URI uri = new java.net.URI(zipUrlString);
-            try (InputStream in = uri.toURL().openStream();
+            java.net.URLConnection connection = uri.toURL().openConnection();
+            connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
+            connection.setReadTimeout(READ_TIMEOUT_MS);
+            try (InputStream in = connection.getInputStream();
                  OutputStream out = new FileOutputStream(zipFile)) {
                 in.transferTo(out);
             }
@@ -208,19 +213,32 @@ public class FileManagerService {
             throw new IOException("Entry is outside of the target dir: " + entry.getName());
         }
 
-        if (entry.isDirectory()) {
-            if (!outputFile.exists() && !outputFile.mkdirs()) {
-                throw new IOException("Failed to create directory: " + outputFile.getAbsolutePath());
-            }
-        } else {
-            File parent = outputFile.getParentFile();
-            if (!parent.exists() && !parent.mkdirs()) {
-                throw new IOException("Failed to create parent directory: " + parent.getAbsolutePath());
-            }
-            try (OutputStream os = Files.newOutputStream(outputFile.toPath())) {
-                archiveStream.transferTo(os);
-            }
+        if (entry.isDirectory() || !isAnalysisPath(entryName)) {
+            return;
         }
+
+        File parent = outputFile.getParentFile();
+        if (!parent.exists() && !parent.mkdirs()) {
+            throw new IOException("Failed to create parent directory: " + parent.getAbsolutePath());
+        }
+        try (OutputStream os = Files.newOutputStream(outputFile.toPath())) {
+            archiveStream.transferTo(os);
+        }
+    }
+
+    /**
+     * Keeps source and build descriptors; skips docs, assets, and other zip noise.
+     */
+    boolean isAnalysisPath(String entryName) {
+        String normalized = entryName.replace("\\", "/");
+        int slash = normalized.lastIndexOf('/');
+        String fileName = slash >= 0 ? normalized.substring(slash + 1) : normalized;
+        if (fileName.equals("pom.xml")
+                || fileName.startsWith("build.gradle")
+                || fileName.startsWith("settings.gradle")) {
+            return true;
+        }
+        return normalized.startsWith("src/") || normalized.contains("/src/");
     }
 
     /**

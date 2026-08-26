@@ -35,6 +35,24 @@ class SrcScannerServiceTest {
     }
 
     @Test
+    void testScanSrcFolder_prefersMainJava() throws Exception {
+        File srcDir = java.nio.file.Files.createTempDirectory("src").toFile();
+        File skipped = new File(srcDir, "Skip.java");
+        try (FileWriter fw = new FileWriter(skipped)) {
+            fw.write("public class Skip {}");
+        }
+        File mainJava = new File(srcDir, "main/java");
+        assertTrue(mainJava.mkdirs());
+        File kept = new File(mainJava, "Keep.java");
+        try (FileWriter fw = new FileWriter(kept)) {
+            fw.write("public class Keep {}");
+        }
+        List<File> files = srcScannerService.scanSrcFolder(srcDir);
+        assertEquals(1, files.size());
+        assertEquals("Keep.java", files.get(0).getName());
+    }
+
+    @Test
     void testScanSrcFolder_invalidDir() throws Exception {
         File notExist = new File("not_exist_dir");
         List<File> files = srcScannerService.scanSrcFolder(notExist);

@@ -21,8 +21,13 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -136,20 +141,27 @@ public class OrchestratorService {
                 .flatMap(f -> f.getClasses().stream())
                 .toList();
 
+        Set<String> projectClassNames = allClasses.stream()
+                .map(ClassInstance::getName)
+                .collect(Collectors.toSet());
+
         for (ClassInstance cls : allClasses) {
-            List<String> dependencies = fileInstanceService.getDependentClassNamesFromClass(cls, allFiles);
-            cls.setClassDependencies(dependencies);
+            cls.setClassDependencies(
+                    fileInstanceService.getDependentClassNamesFromClass(cls, projectClassNames));
         }
 
-        // 2. Set dependentClasses for each class
+        Map<String, List<String>> dependentsByName = new HashMap<>();
         for (ClassInstance cls : allClasses) {
-            String className = cls.getName();
-            List<String> dependents = allClasses.stream()
-                    .filter(other -> other.getClassDependencies() != null
-                            && other.getClassDependencies().contains(className))
-                    .map(ClassInstance::getName)
-                    .toList();
-            cls.setDependentClasses(dependents);
+            List<String> dependencies = cls.getClassDependencies();
+            if (dependencies == null) {
+                continue;
+            }
+            for (String dependency : dependencies) {
+                dependentsByName.computeIfAbsent(dependency, ignored -> new ArrayList<>()).add(cls.getName());
+            }
+        }
+        for (ClassInstance cls : allClasses) {
+            cls.setDependentClasses(dependentsByName.getOrDefault(cls.getName(), List.of()));
         }
     }
 }

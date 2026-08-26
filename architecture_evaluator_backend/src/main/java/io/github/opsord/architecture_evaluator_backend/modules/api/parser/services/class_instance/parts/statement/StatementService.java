@@ -4,7 +4,8 @@ package io.github.opsord.architecture_evaluator_backend.modules.api.parser.servi
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.ast.expr.Expression;
+import com.github.javaparser.ast.expr.BinaryExpr;
+import com.github.javaparser.ast.expr.ConditionalExpr;
 import io.github.opsord.architecture_evaluator_backend.modules.api.parser.instances.class_instance.parts.method.parts.StatementsInfo;
 import io.github.opsord.architecture_evaluator_backend.modules.api.parser.instances.class_instance.parts.method.parts.statement.StatementInstance;
 import io.github.opsord.architecture_evaluator_backend.modules.api.parser.instances.class_instance.parts.method.parts.statement.StatementType;
@@ -72,17 +73,13 @@ public class StatementService {
         info.setNumberOfCatchClauses((int) statements.stream()
                 .filter(statementType -> statementType.getType() == StatementType.CATCH).count());
 
-        // Count logical and ternary operators
-        int logicalOps = 0;
-        int ternaryOps = 0;
-        if (method.getBody().isPresent()) {
-            for (Expression expr : method.getBody().get().findAll(Expression.class)) {
-                logicalOps += StatementVisitor.countLogicalOperators(expr);
-                ternaryOps += StatementVisitor.countTernaryOperators(expr);
-            }
-        }
-        info.setNumberOfLogicalOperators(logicalOps);
-        info.setNumberOfTernaryOperators(ternaryOps);
+        method.getBody().ifPresent(body -> {
+            info.setNumberOfLogicalOperators((int) body.findAll(BinaryExpr.class).stream()
+                    .filter(expr -> expr.getOperator() == BinaryExpr.Operator.AND
+                            || expr.getOperator() == BinaryExpr.Operator.OR)
+                    .count());
+            info.setNumberOfTernaryOperators(body.findAll(ConditionalExpr.class).size());
+        });
         return info;
     }
 }
